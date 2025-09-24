@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Material-ish paw icon -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M4.5,9C5.88,9 7,7.88 7,6.5S5.88,4 4.5,4 2,5.12 2,6.5 3.12,9 4.5,9zM19.5,9C20.88,9 22,7.88 22,6.5S20.88,4 19.5,4 17,5.12 17,6.5 18.12,9 19.5,9zM9,6.5C9,5.12 7.88,4 6.5,4S4,5.12 4,6.5 5.12,9 6.5,9 9,7.88 9,6.5zM12,12c-2.5,0 -4.5,2 -4.5,4.5V18h9v-1.5c0,-2.5 -2,-4.5 -4.5,-4.5z"/>
+</vector>
