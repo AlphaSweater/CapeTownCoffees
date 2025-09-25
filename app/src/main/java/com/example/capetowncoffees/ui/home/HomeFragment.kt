@@ -33,9 +33,7 @@ class HomeFragment : Fragment() {
     )
 
     private val featuredItems = listOf(
-        FeaturedItem("Cape Town Roasters", "0.5", 4.6),
-        FeaturedItem("Beans & Leaves", "1.2", 4.8),
-        FeaturedItem("The Daily Grind", "0.8", 4.4)
+        FeaturedItem("Cape Town Roasters", "0.5", 4.6)
     )
 
     override fun onCreateView(

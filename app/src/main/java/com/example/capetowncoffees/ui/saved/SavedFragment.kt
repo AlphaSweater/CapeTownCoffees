@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import android.graphics.Typeface
 import android.graphics.Color
 import android.widget.TextView
+import androidx.navigation.Navigation.findNavController
 
 class SavedFragment : Fragment() {
     override fun onCreateView(

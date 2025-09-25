@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import android.widget.TextView
 import android.widget.Button
 import androidx.appcompat.widget.PopupMenu
+import androidx.navigation.Navigation.findNavController
 
 class CreateListFragment : Fragment() {
     override fun onCreateView(
