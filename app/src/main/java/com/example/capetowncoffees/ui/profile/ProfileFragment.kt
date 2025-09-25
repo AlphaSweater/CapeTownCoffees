@@ -37,5 +37,10 @@ class ProfileFragment : Fragment() {
         view.findViewById<View>(R.id.btnSettings)?.setOnClickListener {
             findNavController().navigate(R.id.settingsFragment)
         }
+
+        // Edit profile button navigation
+        view.findViewById<View>(R.id.btnEditProfile)?.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_editProfileFragment)
+        }
     }
 }

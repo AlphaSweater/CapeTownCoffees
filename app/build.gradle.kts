@@ -50,6 +50,9 @@ dependencies {
     // Material Design
     implementation(libs.androidx.material)
     
+    // Circle Image View
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+    
     // Navigation Component
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
