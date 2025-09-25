@@ -103,6 +103,7 @@
                         <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_star"/>
 
                         <TextView
+                            android:id="@+id/tvRating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -118,6 +119,7 @@
                             android:tint="#7A7A7A"/>
 
                         <TextView
+                            android:id="@+id/tvDistance"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"

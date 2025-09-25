@@ -12,6 +12,7 @@ import com.example.capetowncoffees.R
 import com.example.capetowncoffees.databinding.FragmentHomeNewBinding
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.button.MaterialButton
 
 class HomeFragment : Fragment() {
@@ -61,18 +62,46 @@ class HomeFragment : Fragment() {
         }
 
         // Near Me RecyclerView
+        val nearMeAdapter = NearMeAdapter(nearMeCafes)
+        nearMeAdapter.setOnItemClickListener { cafe ->
+            navigateToCafeDetails(cafe.name, cafe.rating, cafe.distance, cafe.priceRange)
+        }
         binding.rvNearMe.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-            adapter = NearMeAdapter(nearMeCafes)
+            adapter = nearMeAdapter
             setHasFixedSize(true)
         }
 
         // Featured RecyclerView
+        val featuredAdapter = FeaturedAdapter(featuredItems)
+        featuredAdapter.setOnItemClickListener { featuredItem ->
+            // Convert FeaturedItem to Cafe with default values for missing fields
+            val cafe = Cafe(
+                name = featuredItem.title,
+                rating = featuredItem.rating,
+                distance = featuredItem.distance.toDoubleOrNull() ?: 0.0,
+                priceRange = "$$" // Default price range for featured items
+            )
+            navigateToCafeDetails(cafe.name, cafe.rating, cafe.distance, cafe.priceRange)
+        }
         binding.rvFeatured.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-            adapter = FeaturedAdapter(featuredItems)
+            adapter = featuredAdapter
             setHasFixedSize(true)
         }
+    }
+    
+    private fun navigateToCafeDetails(name: String, rating: Double, distance: Double, priceRange: String) {
+        // Create a bundle with cafe details
+        val bundle = Bundle().apply {
+            putString("cafeName", name)
+            putFloat("cafeRating", rating.toFloat())
+            putFloat("cafeDistance", distance.toFloat())
+            putString("cafePriceRange", priceRange)
+        }
+        
+        // Navigate to CafeDetailFragment using the action ID from the navigation graph
+        findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
     }
     
     private fun setupClickListeners() {
@@ -144,11 +173,18 @@ class CategoryAdapter(private val categories: List<Category>) :
 class NearMeAdapter(private val cafes: List<Cafe>) : 
     RecyclerView.Adapter<NearMeAdapter.ViewHolder>() {
     
+    private var onItemClick: ((Cafe) -> Unit)? = null
+    
+    fun setOnItemClickListener(listener: (Cafe) -> Unit) {
+        onItemClick = listener
+    }
+    
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView = view.findViewById(R.id.tvCafeName)
         val distance: TextView = view.findViewById(R.id.tvCafeDistance)
         val rating: TextView = view.findViewById(R.id.tvCafeRating)
         val image: ImageView = view.findViewById(R.id.ivCafeImage)
+        val rootView: View = view
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -164,6 +200,10 @@ class NearMeAdapter(private val cafes: List<Cafe>) :
         holder.rating.text = item.rating.toString()
         // ImageView already has a placeholder in layout
         holder.image.setImageResource(R.drawable.cafe_placeholder)
+        
+        holder.rootView.setOnClickListener {
+            onItemClick?.invoke(item)
+        }
     }
 
     override fun getItemCount() = cafes.size
@@ -172,11 +212,18 @@ class NearMeAdapter(private val cafes: List<Cafe>) :
 class FeaturedAdapter(private val items: List<FeaturedItem>) : 
     RecyclerView.Adapter<FeaturedAdapter.ViewHolder>() {
     
+    private var onItemClick: ((FeaturedItem) -> Unit)? = null
+    
+    fun setOnItemClickListener(listener: (FeaturedItem) -> Unit) {
+        onItemClick = listener
+    }
+    
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.findViewById(R.id.tvCafeName)
         val distance: TextView = view.findViewById(R.id.tvCafeDistance)
         val rating: TextView = view.findViewById(R.id.tvCafeRating)
         val image: ImageView = view.findViewById(R.id.ivFeaturedImage)
+        val rootView: View = view
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -192,6 +239,10 @@ class FeaturedAdapter(private val items: List<FeaturedItem>) :
         holder.rating.text = item.rating.toString()
         // ImageView already has a placeholder in layout
         holder.image.setImageResource(R.drawable.cafe_placeholder)
+        
+        holder.rootView.setOnClickListener {
+            onItemClick?.invoke(item)
+        }
     }
 
     override fun getItemCount() = items.size
