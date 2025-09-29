@@ -85,7 +85,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // --- Firebase ---
-    implementation(platform(libs.firebase.bom)) // Example, check for the latest
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
 
