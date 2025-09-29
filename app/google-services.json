@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1067620773075",
+    "project_id": "capetowncoffees-7171b",
+    "storage_bucket": "capetowncoffees-7171b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067620773075:android:2a69688ac1d4dc2bf1b826",
+        "android_client_info": {
+          "package_name": "com.synaptix.capetowncoffees"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjDY_P5DvUygPOKPArqAjQc3zpLzF2_4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

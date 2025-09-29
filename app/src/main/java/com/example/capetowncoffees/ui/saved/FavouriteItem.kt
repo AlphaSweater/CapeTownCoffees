@@ -1,7 +1,0 @@
-package com.example.capetowncoffees.ui.saved
-
-data class FavouriteItem(
-    val name: String,
-    val location: String,
-    val ratingText: String
-)
