@@ -3,6 +3,7 @@ package com.synaptix.capetowncoffees.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
@@ -16,8 +17,6 @@ class FirestoreUserRepository @Inject constructor(
 ) : BaseRepository<UserDTO>(firestoreInstance) {
 
     override val collection = firestoreInstance.collection("users")
-    override val subCollectionName = null // Users are at the root level
-
     override fun getType(): Class<UserDTO> = UserDTO::class.java
 
     // Get current Firebase authenticated user
@@ -43,7 +42,7 @@ class FirestoreUserRepository @Inject constructor(
                 updatedAt = System.currentTimeMillis()
             )
 
-            create(newUser, firebaseUser.uid, firebaseUser.uid)
+            create(newUser, firebaseUser.uid)
             Result.success(newUser)
         } catch (e: Exception) {
             Result.failure(e)
@@ -74,7 +73,7 @@ class FirestoreUserRepository @Inject constructor(
 
     // Get user profile
     suspend fun getUserProfile(userId: String): Result<UserDTO?> {
-        return getById(userId, userId)
+        return getById(userId)
     }
 
     // Get current user profile
@@ -85,17 +84,12 @@ class FirestoreUserRepository @Inject constructor(
 
     // Observe user profile changes in real-time
     fun observeUserProfile(userId: String): Flow<UserDTO?> {
-        return observeDocument(userId, userId)
+        return observeDocument(userId)
     }
 
     // Update user profile with provided fields
     suspend fun updateUserProfile(userId: String, user: UserDTO): Result<Unit> {
-        return try {
-            update(userId, userId, user)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return update(userId, user)
     }
 
     // Delete current user's account
@@ -104,7 +98,7 @@ class FirestoreUserRepository @Inject constructor(
             val user = auth.currentUser ?: throw Exception("No user logged in")
 
             // Delete Firestore document
-            delete(user.uid, user.uid)
+            delete(user.uid)
 
             // Delete from Firebase Auth
             user.delete().await()
@@ -118,8 +112,11 @@ class FirestoreUserRepository @Inject constructor(
     // Check if email is already registered
     suspend fun emailExists(email: String): Result<Boolean> {
         return try {
-            val methods = auth.fetchSignInMethodsForEmail(email).await()
-            Result.success(methods.signInMethods?.isNotEmpty() == true)
+            val snapshot = collection
+                .whereEqualTo("email", email)
+                .get()
+                .await()
+            Result.success(!snapshot.isEmpty)
         } catch (e: Exception) {
             Result.failure(e)
         }
