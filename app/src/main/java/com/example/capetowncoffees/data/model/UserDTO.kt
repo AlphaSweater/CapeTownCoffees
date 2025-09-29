@@ -1,5 +1,7 @@
 package com.example.capetowncoffees.data.model
 
+import com.google.firebase.firestore.DocumentId
+
 data class UserDTO(
     @DocumentId
     val id: String = "", // Firestore document ID

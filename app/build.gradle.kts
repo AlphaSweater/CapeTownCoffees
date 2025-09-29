@@ -85,10 +85,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // --- Firebase ---
-    implementation(platform("com.google.firebase:firebase-bom:33.0.0")) // Example, check for the latest
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    
+    implementation(platform(libs.firebase.bom)) // Example, check for the latest
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
     implementation(libs.androidx.ui.graphics.android)
     implementation(libs.androidx.foundation.android)
 

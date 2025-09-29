@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.0"
+firebaseBom = "33.0.0"
 googleServices = "4.4.3"
 hiltAndroid = "2.57.2"
 hiltAndroidCompiler = "2.57.2"
@@ -45,6 +46,10 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle" }
 
 # Firebase
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" } # Your existing BoM alias
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" } # ADD THIS - no version
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" } # ADD THIS - no version
+
 
 # Testing
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
