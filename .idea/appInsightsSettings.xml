@@ -8,8 +8,8 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.capetowncoffees" />
-                  <option name="mobileSdkAppId" value="1:1067620773075:android:69db24557a274114f1b826" />
+                  <option name="appId" value="com.synaptix.capetowncoffees" />
+                  <option name="mobileSdkAppId" value="1:1067620773075:android:2a69688ac1d4dc2bf1b826" />
                   <option name="projectId" value="capetowncoffees-7171b" />
                   <option name="projectNumber" value="1067620773075" />
                 </ConnectionSetting>

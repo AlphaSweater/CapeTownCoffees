@@ -3,7 +3,6 @@ package com.synaptix.capetowncoffees.data.repository
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.synaptix.capetowncoffees.utils.Result
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -32,9 +31,9 @@ abstract class BaseRepository<T : Any>(
                 targetCollection.document()
             }
             docRef.set(item).await()
-            Result.Success(docRef.id)
+            Result.success(docRef.id)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
@@ -42,9 +41,9 @@ abstract class BaseRepository<T : Any>(
         return try {
             val targetCollection = getSubCollection(userId) ?: collection
             targetCollection.document(id).set(item).await()
-            Result.Success(Unit)
+            Result.success(Unit)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
@@ -52,9 +51,9 @@ abstract class BaseRepository<T : Any>(
         return try {
             val targetCollection = getSubCollection(userId) ?: collection
             targetCollection.document(id).delete().await()
-            Result.Success(Unit)
+            Result.success(Unit)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
@@ -62,9 +61,9 @@ abstract class BaseRepository<T : Any>(
         return try {
             val targetCollection = getSubCollection(userId) ?: collection
             val snapshot = targetCollection.document(id).get().await()
-            Result.Success(snapshot.toObject(getType()))
+            Result.success(snapshot.toObject(getType()))
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
@@ -75,9 +74,9 @@ abstract class BaseRepository<T : Any>(
             val items = snapshot.documents.mapNotNull {
                 it.toObject(getType())
             }
-            Result.Success(items)
+            Result.success(items)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
@@ -92,7 +91,7 @@ abstract class BaseRepository<T : Any>(
 
     protected suspend fun getItemsByIds(userId: String, ids: List<String>): Result<List<T>> {
         if (ids.isEmpty()) {
-            return Result.Success(emptyList())
+            return Result.success(emptyList())
         }
 
         return try {
@@ -104,9 +103,9 @@ abstract class BaseRepository<T : Any>(
                 }
                 items.addAll(snapshots.mapNotNull { it.toObject(getType()) })
             }
-            Result.Success(items)
+            Result.success(items)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
@@ -118,9 +117,9 @@ abstract class BaseRepository<T : Any>(
                 .get()
                 .await()
 
-            Result.Success(!snapshot.isEmpty)
+            Result.success(!snapshot.isEmpty)
         } catch (e: Exception) {
-            Result.Error(e)
+            Result.failure(e)
         }
     }
 
