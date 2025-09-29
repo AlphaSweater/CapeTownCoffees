@@ -61,6 +61,36 @@
             app:popUpTo="@id/homeFragment"
             app:popUpToInclusive="true" />
             
+        <action
+            android:id="@+id/action_homeFragment_to_cafeDetailFragment"
+            app:destination="@id/cafeDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+            
+    </fragment>
+    
+    <fragment
+        android:id="@+id/cafeDetailFragment"
+        android:name="com.example.capetowncoffees.ui.saved.CafeDetailFragment"
+        android:label="Cafe Details"
+        tools:layout="@layout/fragment_cafe_detail">
+        <argument
+            android:name="cafeName"
+            app:argType="string" />
+        <argument
+            android:name="cafeRating"
+            app:argType="float"
+            android:defaultValue="0.0" />
+        <argument
+            android:name="cafeDistance"
+            app:argType="float"
+            android:defaultValue="0.0" />
+        <argument
+            android:name="cafePriceRange"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
     <fragment
@@ -73,7 +103,23 @@
         android:id="@+id/profileFragment"
         android:name="com.example.capetowncoffees.ui.profile.ProfileFragment"
         android:label="Profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+        
+        <action
+            android:id="@+id/action_profileFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+            
+    </fragment>
+    
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.capetowncoffees.ui.profile.EditProfileFragment"
+        android:label="Edit Profile"
+        tools:layout="@layout/fragment_edit_profile" />
 
     <fragment
         android:id="@+id/createListFragment"

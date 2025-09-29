@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -49,6 +50,9 @@ dependencies {
     
     // Material Design
     implementation(libs.androidx.material)
+    
+    // Circle Image View
+    implementation("de.hdodenhof:circleimageview:3.1.0")
     
     // Navigation Component
     implementation(libs.androidx.navigation.fragment.ktx)

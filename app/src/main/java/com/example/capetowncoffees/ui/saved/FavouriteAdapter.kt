@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.capetowncoffees.R
 
+
 class FavouriteAdapter(
     private val items: List<FavouriteItem>,
     private val onItemClick: (FavouriteItem) -> Unit = {}

@@ -73,12 +73,13 @@
                         android:layout_height="wrap_content"
                         android:gravity="center_vertical">
 
-                        <ImageView
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
+                        <de.hdodenhof.circleimageview.CircleImageView
+                            android:id="@+id/ivProfilePicture"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
                             android:src="@drawable/ic_profile_placeholder"
-                            android:background="@drawable/bg_input_rounded"
-                            android:scaleType="centerCrop" />
+                            app:civ_border_width="1dp"
+                            app:civ_border_color="@color/coffee_light" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -213,7 +214,7 @@
                 android:layout_height="wrap_content"
                 android:text="My Reviews"
                 android:textStyle="bold"
-                android:textSize="16sp"
+                android:textSize="24sp"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="20dp" />
 
@@ -223,8 +224,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
                 android:paddingBottom="5dp"
                 android:clipToPadding="false" />
 

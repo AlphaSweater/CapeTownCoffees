@@ -1,4 +1,16 @@
 <resources>
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile">Edit Profile</string>
+    <string name="profile_picture">Profile Picture</string>
+    <string name="change_photo">Change Photo</string>
+    <string name="account_information">Account Information</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="full_name">Full Name</string>
+    
+    <!-- Existing resources below -->
     <string name="app_name">Cape Town Coffees</string>
     
     <!-- Sign In Screen -->
