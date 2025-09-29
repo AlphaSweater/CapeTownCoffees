@@ -4,8 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
 
-    // Dependency Injection & Services
-    id("com.google.gms.google-services")
+    // Dependency Injection
     id("com.google.dagger.hilt.android")
 
     // Jetpack Compose (to be removed later)
@@ -13,6 +12,9 @@ plugins {
 
     // Navigation
     id("androidx.navigation.safeargs.kotlin")
+
+    // Google Services
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -31,6 +33,7 @@ android {
     buildFeatures {
         compose = true // Will be removed after fixing usages
         viewBinding = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -48,7 +51,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "11"
     }
 }
 
@@ -62,6 +65,7 @@ dependencies {
 
     // --- Material Design ---
     implementation(libs.androidx.material)
+    implementation(libs.androidx.material3.android)
 
     // --- Jetpack Lifecycle & ViewModel ---
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -81,15 +85,13 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // --- Firebase ---
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.analytics.ktx)
-
-    // --- Jetpack Compose (to be removed later) ---
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0")) // Example, check for the latest
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    
     implementation(libs.androidx.ui.graphics.android)
     implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.material3.android)
+
 
     // --- Optional helpers ---
     implementation("de.hdodenhof:circleimageview:3.1.0") // Circle Image View
