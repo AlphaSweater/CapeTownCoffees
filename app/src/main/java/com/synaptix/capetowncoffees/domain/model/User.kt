@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.domain.model
 
-// Domain model for user data in the application
+// Domain model for user data in the application domain layer
 data class User(
     val id: String,
     val email: String,
