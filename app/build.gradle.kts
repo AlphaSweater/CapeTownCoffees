@@ -18,11 +18,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.capetowncoffees"
+    namespace = "com.synaptix.capetowncoffees"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.capetowncoffees"
+        applicationId = "com.synaptix.capetowncoffees"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
