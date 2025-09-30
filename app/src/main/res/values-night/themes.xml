@@ -15,7 +15,7 @@
         <!-- Background colors (darker for dark theme) -->
         <item name="android:windowBackground">@color/coffee_dark</item>
         <item name="android:colorBackground">@color/coffee_dark</item>
-        <item name="colorSurface">@color/coffee_medium</item>
+        <item name="colorSurface">@color/black</item>
         
         <!-- Text colors -->
         <item name="android:textColorPrimary">@color/white</item>

@@ -4,26 +4,33 @@
     <color name="coffee_dark">#2B1E1B</color>       <!-- Darker brown base -->
     <color name="coffee_medium">#4A332E</color>     <!-- Medium brown for accents -->
     <color name="coffee_light">#70574F</color>      <!-- Muted light brown -->
-    <color name="coffee_cream">#1C1513</color>      <!-- Very dark cream tint -->
+    <color name="coffee_cream">#1f1c1b</color>      <!-- Very dark cream tint -->
+    <color name="coffee_accent">#6D4C41</color>    <!-- Accent brown -->
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
 
     <!-- Text Colors -->
     <color name="text_primary">#FFFFFF</color>
     <color name="text_secondary">#D7CCC8</color>
+    <color name="text_tip">#9e9998</color>
     <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_favourite">#d4ae96</color>
 
     <!-- Background Colors -->
-    <color name="background">#121212</color>   <!-- Standard dark background -->
-    <color name="surface">#1E1E1E</color>      <!-- Elevated surfaces -->
+    <color name="background">#1f1c1b</color>   <!-- Standard dark background -->
+    <color name="surface">#49362e</color>      <!-- Elevated surfaces -->
 
     <!-- Button Colors -->
     <color name="button_primary">@color/coffee_medium</color>
     <color name="button_text">#FFFFFF</color>
+    <color name="button_category">#e1c1ad</color>
 
     <!-- Input Fields -->
     <color name="input_background">#121212</color>
     <color name="input_stroke">#4A332E</color>
+
+    <!-- Icon Colors -->
+    <color name="icon_primary">#d4ae96</color>
 
     <!-- Google Button (keep contrast against dark bg) -->
     <color name="google_button">#2A2A2A</color>

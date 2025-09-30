@@ -2,6 +2,7 @@
 <androidx.cardview.widget.CardView 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardUseCompatPadding="false"
@@ -45,7 +46,7 @@
                     android:background="@drawable/circle_white_bg"
                     android:padding="4dp"
                     android:src="@drawable/ic_favorite_border"
-                    android:tint="@android:color/black" />
+                    app:tint="@android:color/black" />
             </FrameLayout>
         </androidx.cardview.widget.CardView>
 
@@ -69,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Cafe Name"
-                    android:textColor="@android:color/black"
+                    android:textColor="@color/text_primary"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
@@ -80,7 +81,7 @@
                     android:background="@drawable/circle_white_bg"
                     android:padding="8dp"
                     android:src="@drawable/ic_download"
-                    android:tint="@android:color/black" />
+                    app:tint="@android:color/black" />
             </LinearLayout>
 
             <LinearLayout
@@ -95,7 +96,8 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_location"
-                    android:tint="#757575" />
+                    android:tint="@color/icon_primary"
+                    tools:ignore="UseAppTint" />
 
                 <TextView
                     android:id="@+id/tvCafeDistance"
@@ -103,7 +105,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="Cape Town, City Centre"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_favourite"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -119,7 +121,8 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_star"
-                    android:tint="#757575" />
+                    android:tint="@color/icon_primary"
+                    tools:ignore="UseAppTint" />
 
                 <TextView
                     android:id="@+id/tvCafeRating"
@@ -127,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="4,6 (5203)"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_favourite"
                     android:textSize="14sp" />
 
                 <View

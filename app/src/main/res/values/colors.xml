@@ -12,7 +12,9 @@
     <!-- Text Colors -->
     <color name="text_primary">@color/black</color>
     <color name="text_secondary">#5D4037</color>
+    <color name="text_tip">#afacac</color>
     <color name="text_on_primary">@color/white</color>
+    <color name="text_favourite">#4d5e6a</color>
     
     <!-- Background Colors -->
     <color name="background">#fff5f0</color>  <!-- Very light cream -->
@@ -21,11 +23,15 @@
     <!-- Button Colors -->
     <color name="button_primary">@color/coffee_medium</color>
     <color name="button_text">@color/white</color>
-    
+    <color name="button_category">#382a23</color>
+
     <!-- Input Fields -->
     <color name="input_background">#fff5f0</color>
     <color name="input_stroke">@color/coffee_light</color>
-    
+
+    <!-- Icon Colors -->
+    <color name="icon_primary">#4d5e6a</color>
+
     <!-- Google Button -->
     <color name="google_button">@color/white</color>
     <color name="google_button_stroke">#DDDDDD</color>

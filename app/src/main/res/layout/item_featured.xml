@@ -72,7 +72,7 @@
                     android:background="@drawable/circle_white_bg"
                     android:padding="8dp"
                     android:src="@drawable/ic_download"
-                    android:tint="@color/text_primary" />
+                    app:tint="@color/text_primary" />
             </LinearLayout>
 
             <LinearLayout
@@ -87,7 +87,7 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_location"
-                    android:tint="#757575" />
+                    app:tint="@color/icon_primary" />
 
                 <TextView
                     android:id="@+id/tvCafeDistance"
@@ -95,7 +95,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="Cape Town, City Centre"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_favourite"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -111,7 +111,7 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_star"
-                    android:tint="#757575" />
+                    app:tint="@color/icon_primary" />
 
                 <TextView
                     android:id="@+id/tvCafeRating"
@@ -119,7 +119,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="4,6 (5203)"
-                    android:textColor="#757575"
+                    android:textColor="@color/text_favourite"
                     android:textSize="14sp" />
 
                 <View
