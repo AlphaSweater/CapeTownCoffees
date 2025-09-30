@@ -20,7 +20,7 @@
 
     <!-- Background Colors -->
     <color name="background">#1f1c1b</color>   <!-- Standard dark background -->
-    <color name="surface">#49362e</color>      <!-- Elevated surfaces -->
+    <color name="surface">#382a23</color>      <!-- Elevated surfaces -->
 
     <!-- Button Colors -->
     <color name="button_primary">#4A332E</color>
@@ -36,6 +36,8 @@
     <color name="icon_primary">#d4ae96</color>
     <color name="icon_download">#FF000000</color>
     <color name="icon_divider">#6c584c</color>
+    <color name="icon_heart">#382a23</color>
+    <color name="icon_star">#ffb056</color>
 
     <!-- Google Button (keep contrast against dark bg) -->
     <color name="google_button">#2A2A2A</color>

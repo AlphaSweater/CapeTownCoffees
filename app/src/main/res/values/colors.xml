@@ -36,6 +36,8 @@
     <color name="icon_primary">#4d5e6a</color>
     <color name="icon_download">#FFFFFFFF</color>
     <color name="icon_divider">#ebebeb</color>
+    <color name="icon_heart">#FFFFFF</color>
+    <color name="icon_star">#ffb056</color>
 
     <!-- Google Button -->
     <color name="google_button">#FFFFFFFF</color>
