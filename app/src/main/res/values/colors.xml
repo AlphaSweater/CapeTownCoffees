@@ -6,15 +6,17 @@
     <color name="coffee_light">#8D6E63</color>     <!-- Light brown -->
     <color name="coffee_cream">#fff5f0</color>      <!-- Cream color -->
     <color name="coffee_accent">#6D4C41</color>    <!-- Accent brown -->
+    <color name="coffee_accent_light">#d4ae96</color>ex
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
     
     <!-- Text Colors -->
-    <color name="text_primary">#FF000000</color>
+    <color name="text_primary">#1f1f1e</color>
     <color name="text_secondary">#5D4037</color>
     <color name="text_tip">#afacac</color>
     <color name="text_on_primary">#FFFFFFFF</color>
     <color name="text_favourite">#4d5e6a</color>
+    <color name="text_alt">#fff5f0</color>
     
     <!-- Background Colors -->
     <color name="background">#fff5f0</color>  <!-- Very light cream -->
@@ -33,6 +35,7 @@
     <!-- Icon Colors -->
     <color name="icon_primary">#4d5e6a</color>
     <color name="icon_download">#FFFFFFFF</color>
+    <color name="icon_divider">#ebebeb</color>
 
     <!-- Google Button -->
     <color name="google_button">#FFFFFFFF</color>
