@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Legacy (pre-Android 12) splash theme -->
-    <style name="Theme.Splash" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
