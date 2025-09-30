@@ -2,6 +2,7 @@ package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
@@ -12,12 +13,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 
 @Singleton
 class IUserRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     firestoreInstance: FirebaseFirestore
-) : BaseRepository<UserDTO>(firestoreInstance), IUserRepository  {
+) : BaseRepository<UserDTO>(firestoreInstance), IUserRepository {
 
     override val collection = firestoreInstance.collection("users")
     override fun getType(): Class<UserDTO> = UserDTO::class.java
@@ -57,7 +59,6 @@ class IUserRepositoryImpl @Inject constructor(
         return try {
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Failed to login user")
-
             Result.success(firebaseUser)
         } catch (e: Exception) {
             Result.failure(e)
@@ -115,11 +116,11 @@ class IUserRepositoryImpl @Inject constructor(
     // Check if email is already registered
     override suspend fun emailExists(email: String): Result<Boolean> {
         return try {
-            val snapshot = collection
-                .whereEqualTo("email", email)
-                .get()
-                .await()
-            Result.success(!snapshot.isEmpty)
+            val result = auth.fetchSignInMethodsForEmail(email).await()
+            Result.success(result.signInMethods?.isNotEmpty() == true)
+        } catch (e: FirebaseAuthInvalidUserException) {
+            // No user found with this email
+            Result.success(false)
         } catch (e: Exception) {
             Result.failure(e)
         }
