@@ -97,7 +97,8 @@ dependencies {
     // --- Optional helpers ---
     implementation("de.hdodenhof:circleimageview:3.1.0") // Circle Image View
 
-    // --- Testing ---
+    // --- Testing & Logging ---
+    implementation(libs.timber)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
