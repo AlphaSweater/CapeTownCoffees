@@ -36,9 +36,9 @@
     <color name="icon_primary">#d4ae96</color>
     <color name="icon_download">#FF000000</color>
     <color name="icon_divider">#6c584c</color>
-    <color name="icon_heart">#382a23@c</color>
+    <color name="icon_heart">#382a23</color>
     <color name="icon_star">#ffb056</color>
-    <color name="icon_blank_bar">#635d5b@</color>
+    <color name="icon_blank_bar">#635d5b</color>
 
     <!-- Google Button (keep contrast against dark bg) -->
     <color name="google_button">#2A2A2A</color>
