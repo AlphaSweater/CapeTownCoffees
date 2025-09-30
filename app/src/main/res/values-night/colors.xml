@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Coffee Theme Colors (Dark) -->
+    <color name="coffee_dark">#2B1E1B</color>       <!-- Darker brown base -->
+    <color name="coffee_medium">#4A332E</color>     <!-- Medium brown for accents -->
+    <color name="coffee_light">#70574F</color>      <!-- Muted light brown -->
+    <color name="coffee_cream">#1C1513</color>      <!-- Very dark cream tint -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#D7CCC8</color>
+    <color name="text_on_primary">#FFFFFF</color>
+
+    <!-- Background Colors -->
+    <color name="background">#121212</color>   <!-- Standard dark background -->
+    <color name="surface">#1E1E1E</color>      <!-- Elevated surfaces -->
+
+    <!-- Button Colors -->
+    <color name="button_primary">@color/coffee_medium</color>
+    <color name="button_text">#FFFFFF</color>
+
+    <!-- Input Fields -->
+    <color name="input_background">#121212</color>
+    <color name="input_stroke">#4A332E</color>
+
+    <!-- Google Button (keep contrast against dark bg) -->
+    <color name="google_button">#2A2A2A</color>
+    <color name="google_button_stroke">#444444</color>
+    <color name="google_button_text">#FFFFFF</color>
+</resources>

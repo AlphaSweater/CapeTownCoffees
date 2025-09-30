@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatDelegate
 class CapeTownCoffeesApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Force light theme
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        // Apply saved theme choice (defaults to SYSTEM)
+        ThemeManager.applySavedTheme(this)
     }
 }

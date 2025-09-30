@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.appbar.MaterialToolbar
+import android.view.Menu
+import android.view.MenuItem
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -12,9 +15,6 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_CapeTownCoffees)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // No need to set up action bar with navigation controller
-        // as we're not using an ActionBar in this app
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -30,6 +30,29 @@ class MainActivity : AppCompatActivity() {
 
                 else -> bottomNav.visibility = android.view.View.VISIBLE
             }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.theme_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_theme_light -> {
+                ThemeManager.setTheme(this, ThemeManager.ThemeMode.LIGHT)
+                true
+            }
+            R.id.action_theme_dark -> {
+                ThemeManager.setTheme(this, ThemeManager.ThemeMode.DARK)
+                true
+            }
+            R.id.action_theme_system -> {
+                ThemeManager.setTheme(this, ThemeManager.ThemeMode.SYSTEM)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }

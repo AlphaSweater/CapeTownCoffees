@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Cape Towns"
-            android:textColor="@color/coffee_dark"
+            android:textColor="@color/text_primary"
             android:textSize="32sp"
             android:textStyle="bold" />
 
@@ -45,7 +45,7 @@
             android:text="COFFEES"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
-            android:textColor="@color/coffee_dark"
+            android:textColor="@color/text_primary"
             android:textSize="14sp" />
 
         <!-- Name Input -->
@@ -181,9 +181,9 @@
             android:layout_marginBottom="24dp"
             android:text="Sign Up"
             android:textAllCaps="false"
-            android:textColor="@color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="15sp"
-            android:backgroundTint="@color/coffee_dark"
+            android:backgroundTint="?attr/colorPrimary"
             app:cornerRadius="28dp"/>
 
         <!-- Divider with "or" text -->
@@ -196,7 +196,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_centerVertical="true"
-                android:background="@color/coffee_light"/>
+                android:background="@color/text_secondary"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -205,7 +205,7 @@
                 android:background="@color/background"
                 android:paddingHorizontal="16dp"
                 android:text="or continue with"
-                android:textColor="@color/coffee_medium"/>
+                android:textColor="@color/text_secondary"/>
         </RelativeLayout>
 
         <!-- Google Sign Up Button -->
@@ -234,7 +234,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Already have an account? "
-                android:textColor="@color/coffee_medium"/>
+                android:textColor="@color/text_secondary"/>
 
             <TextView
                 android:id="@+id/textSignIn"
@@ -242,7 +242,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:text="Sign In"
-                android:textColor="@color/coffee_dark"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"/>
         </LinearLayout>
     </LinearLayout>

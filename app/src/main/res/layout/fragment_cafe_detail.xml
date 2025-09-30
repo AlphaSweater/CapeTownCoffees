@@ -71,7 +71,7 @@
                 app:cardCornerRadius="18dp"
                 app:cardElevation="2dp"
                 app:cardUseCompatPadding="true"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="@color/surface">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -84,7 +84,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Truth Coffee Roasting"
-                        android:textColor="@android:color/black"
+                        android:textColor="@color/text_primary"
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
@@ -108,7 +108,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:text="4.5"
-                            android:textColor="#7A7A7A"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp"/>
 
                         <ImageView
@@ -116,7 +116,7 @@
                             android:layout_height="16dp"
                             android:layout_marginStart="12dp"
                             android:src="@drawable/ic_pin"
-                            android:tint="#7A7A7A"/>
+                            android:tint="@color/text_secondary"/>
 
                         <TextView
                             android:id="@+id/tvDistance"
@@ -124,7 +124,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
                             android:text="1.2 km away"
-                            android:textColor="#7A7A7A"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp"/>
                     </LinearLayout>
 
@@ -134,7 +134,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="About"
-                        android:textColor="@android:color/black"
+                        android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
 
@@ -143,7 +143,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:text="Quirky cafe that's a steampunk world of pipes and old metal, with gourmet, home-roasted coffee."
-                        android:textColor="#333333"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"/>
 
                     <!-- Opening hours -->
@@ -152,7 +152,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Opening Hours"
-                        android:textColor="@android:color/black"
+                        android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
 
@@ -166,13 +166,13 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Monday - Saturday      7:00 am - 10:00 pm"
-                            android:textColor="#333333"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Sunday                     8:00 am - 10:00 pm"
-                            android:textColor="#333333"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
 
@@ -182,7 +182,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Contact"
-                        android:textColor="@android:color/black"
+                        android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
 
@@ -197,13 +197,13 @@
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:src="@drawable/ic_location"
-                            android:tint="#7A7A7A"/>
+                            android:tint="@color/text_secondary"/>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:text="36 Buitenkant St, Cape Town City Centre, Cape Town, 8000"
-                            android:textColor="#333333"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
 
@@ -219,13 +219,13 @@
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:src="@drawable/ic_phone"
-                            android:tint="#7A7A7A"/>
+                            android:tint="@color/text_secondary"/>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:text="021 201 7000"
-                            android:textColor="#333333"
+                            android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
 
@@ -245,19 +245,18 @@
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Top Reviews header -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Top Reviews"
-                android:textStyle="bold"
-                android:textColor="@android:color/black"
-                android:textSize="20sp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Top Reviews"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"/>
 
             <!-- Sample review items (static includes) -->
             <include layout="@layout/item_review"/>
             <include layout="@layout/item_review"/>
         </LinearLayout>
-
     </LinearLayout>
 </ScrollView>
