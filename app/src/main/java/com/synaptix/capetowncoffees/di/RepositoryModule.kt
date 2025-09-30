@@ -1,7 +1,7 @@
 package com.synaptix.capetowncoffees.di
 
-import com.synaptix.capetowncoffees.data.repository.UserRepositoryImpl
-import com.synaptix.capetowncoffees.domain.repository.UserRepository
+import com.synaptix.capetowncoffees.data.repository.IUserRepositoryImpl
+import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        impl: UserRepositoryImpl
-    ): UserRepository
+        impl: IUserRepositoryImpl
+    ): IUserRepository
 
 }

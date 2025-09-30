@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.di
 
-import com.synaptix.capetowncoffees.domain.repository.UserRepository
+import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.LogoutUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegisterUserUseCase
@@ -16,20 +16,20 @@ object UseCaseModule {
     // ===================== AUTH USE CASES =====================
     @Provides
     @Singleton
-    fun provideLoginUserUseCase(userRepository: UserRepository): LoginUserUseCase {
-        return LoginUserUseCase(userRepository)
+    fun provideLoginUserUseCase(IUserRepository: IUserRepository): LoginUserUseCase {
+        return LoginUserUseCase(IUserRepository)
     }
 
     @Provides
     @Singleton
-    fun provideLogoutUserUseCase(userRepository: UserRepository): LogoutUserUseCase {
-        return LogoutUserUseCase(userRepository)
+    fun provideLogoutUserUseCase(IUserRepository: IUserRepository): LogoutUserUseCase {
+        return LogoutUserUseCase(IUserRepository)
     }
 
     @Provides
     @Singleton
-    fun provideRegisterUserUseCase(userRepository: UserRepository): RegisterUserUseCase {
-        return RegisterUserUseCase(userRepository)
+    fun provideRegisterUserUseCase(IUserRepository: IUserRepository): RegisterUserUseCase {
+        return RegisterUserUseCase(IUserRepository)
     }
     // =================== END AUTH USE CASES ===================
 

@@ -11,6 +11,7 @@ import androidx.navigation.fragment.findNavController
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentAuthLoginBinding
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
@@ -23,15 +24,18 @@ class LoginFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Timber.d("LoginFragment onCreateView called")
         _binding = FragmentAuthLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Timber.d("LoginFragment onViewCreated called")
 
         // Set up click listener for the Sign Up text
         binding.textRegisterSwap.setOnClickListener {
+            Timber.d("Register swap clicked, navigating to RegisterFragment")
             findNavController().navigate(R.id.action_authLoginFragment_to_authRegisterFragment)
         }
 
@@ -39,39 +43,45 @@ class LoginFragment : Fragment() {
         binding.buttonlogin.setOnClickListener {
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
+            Timber.d("Login button clicked with email=%s", email)
             viewModel.loginUser(email, password)
         }
 
         // Set up click listener for Google sign in button
         binding.buttonGoogleLogin.setOnClickListener {
-            // For now, just navigate to home screen
-            // In a real app, you would implement Google Sign-In
+            Timber.d("Google login button clicked, navigating to HomeFragment")
             findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
         }
 
         // TODO: Add error text view to show errors
         // Observe ViewModel state
         viewModel.loginState.observe(viewLifecycleOwner, Observer { state ->
+            Timber.d("Observed loginState: %s", state)
             when (state) {
                 is LoginUiState.Loading -> {
+                    Timber.d("UI state: Loading")
                     binding.buttonlogin.isEnabled = false
                 }
                 is LoginUiState.Success -> {
+                    Timber.d("UI state: Success, navigating to HomeFragment")
                     binding.buttonlogin.isEnabled = true
                     findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
                     viewModel.resetState()
                 }
                 is LoginUiState.Error -> {
+                    Timber.d("UI state: Error, message=%s", state.message)
                     binding.buttonlogin.isEnabled = true
                     // binding.errorTextView.text = state.message
                     // binding.errorTextView.visibility = View.VISIBLE
                 }
                 is LoginUiState.ValidationError -> {
+                    Timber.d("UI state: ValidationError, emailError=%s, passwordError=%s", state.emailError, state.passwordError)
                     binding.buttonlogin.isEnabled = true
                     binding.emailInputLayout.error = state.emailError
                     binding.passwordInputLayout.error = state.passwordError
                 }
                 is LoginUiState.Idle -> {
+                    Timber.d("UI state: Idle")
                     binding.buttonlogin.isEnabled = true
                     // binding.errorTextView.visibility = View.GONE
                     binding.emailInputLayout.error = null
@@ -82,6 +92,7 @@ class LoginFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        Timber.d("LoginFragment onDestroyView called")
         super.onDestroyView()
         _binding = null
     }

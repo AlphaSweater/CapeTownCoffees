@@ -4,7 +4,7 @@ import com.synaptix.capetowncoffees.domain.usecase.auth.AuthManager
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegisterUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.LogoutUserUseCase
-import com.synaptix.capetowncoffees.domain.repository.UserRepository
+import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,13 +21,13 @@ object ManagerModule {
         loginUserUseCase: LoginUserUseCase,
         registerUserUseCase: RegisterUserUseCase,
         logoutUserUseCase: LogoutUserUseCase,
-        userRepository: UserRepository
+        IUserRepository: IUserRepository
     ): AuthManager {
         return AuthManager(
             loginUserUseCase,
             registerUserUseCase,
             logoutUserUseCase,
-            userRepository
+            IUserRepository
         )
     }
     // =================== END AUTH MANAGER ===================
