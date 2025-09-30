@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.auth
+package com.synaptix.capetowncoffees.ui.auth.login
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,7 +11,7 @@ import com.synaptix.capetowncoffees.databinding.FragmentSignInBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SignInFragment : Fragment() {
+class LoginFragment : Fragment() {
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = _binding!!
 

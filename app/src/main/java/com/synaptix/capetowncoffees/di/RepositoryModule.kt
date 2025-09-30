@@ -11,7 +11,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
-
+// ===================== REPOSITORY BINDINGS =====================
     @Binds
     @Singleton
     abstract fun bindUserRepository(
