@@ -8,7 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentSignInBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SignInFragment : Fragment() {
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = _binding!!
