@@ -67,12 +67,13 @@
 
                 <ImageView
                     android:id="@+id/btnDownload"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
                     android:background="@drawable/circle_white_bg"
                     android:padding="8dp"
                     android:src="@drawable/ic_download"
-                    app:tint="@color/text_primary" />
+                    app:tint="@color/icon_download"
+                    android:backgroundTint="@color/button_download" />
             </LinearLayout>
 
             <LinearLayout

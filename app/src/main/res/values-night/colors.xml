@@ -10,7 +10,7 @@
     <color name="black">#FF000000</color>
 
     <!-- Text Colors -->
-    <color name="text_primary">#FFFFFF</color>
+    <color name="text_primary">#fff5f0</color>
     <color name="text_secondary">#D7CCC8</color>
     <color name="text_tip">#9e9998</color>
     <color name="text_on_primary">#FFFFFF</color>
@@ -21,9 +21,10 @@
     <color name="surface">#49362e</color>      <!-- Elevated surfaces -->
 
     <!-- Button Colors -->
-    <color name="button_primary">@color/coffee_medium</color>
+    <color name="button_primary">#4A332E</color>
     <color name="button_text">#FFFFFF</color>
     <color name="button_category">#e1c1ad</color>
+    <color name="button_download">#FFFFFFFF</color>
 
     <!-- Input Fields -->
     <color name="input_background">#121212</color>
@@ -31,6 +32,7 @@
 
     <!-- Icon Colors -->
     <color name="icon_primary">#d4ae96</color>
+    <color name="icon_download">#FF000000</color>
 
     <!-- Google Button (keep contrast against dark bg) -->
     <color name="google_button">#2A2A2A</color>

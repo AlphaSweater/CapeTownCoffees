@@ -10,10 +10,10 @@
     <color name="black">#FF000000</color>
     
     <!-- Text Colors -->
-    <color name="text_primary">@color/black</color>
+    <color name="text_primary">#FF000000</color>
     <color name="text_secondary">#5D4037</color>
     <color name="text_tip">#afacac</color>
-    <color name="text_on_primary">@color/white</color>
+    <color name="text_on_primary">#FFFFFFFF</color>
     <color name="text_favourite">#4d5e6a</color>
     
     <!-- Background Colors -->
@@ -21,19 +21,21 @@
     <color name="surface">#FFFFFF</color>     <!-- White surface -->
     
     <!-- Button Colors -->
-    <color name="button_primary">@color/coffee_medium</color>
-    <color name="button_text">@color/white</color>
+    <color name="button_primary">#5D4037</color>
+    <color name="button_text">#FFFFFFFF</color>
     <color name="button_category">#382a23</color>
+    <color name="button_download">#FF000000</color>
 
     <!-- Input Fields -->
     <color name="input_background">#fff5f0</color>
-    <color name="input_stroke">@color/coffee_light</color>
+    <color name="input_stroke">#8D6E63</color>
 
     <!-- Icon Colors -->
     <color name="icon_primary">#4d5e6a</color>
+    <color name="icon_download">#FFFFFFFF</color>
 
     <!-- Google Button -->
-    <color name="google_button">@color/white</color>
+    <color name="google_button">#FFFFFFFF</color>
     <color name="google_button_stroke">#DDDDDD</color>
     <color name="google_button_text">#444444</color>
 </resources>
