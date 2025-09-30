@@ -63,6 +63,10 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.core.splashscreen)
 
+    // --- Dependency Injection (Hilt) ---
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+
     // --- Material Design ---
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3.android)
@@ -76,10 +80,6 @@ dependencies {
     // --- Navigation Component ---
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-
-    // --- Dependency Injection (Hilt) ---
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
 
     // --- Kotlin Coroutines ---
     implementation(libs.kotlinx.coroutines.core)
