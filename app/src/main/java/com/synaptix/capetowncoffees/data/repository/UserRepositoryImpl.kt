@@ -5,28 +5,29 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
+import com.synaptix.capetowncoffees.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FirestoreUserRepository @Inject constructor(
+class UserRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     firestoreInstance: FirebaseFirestore
-) : BaseRepository<UserDTO>(firestoreInstance) {
+) : BaseRepository<UserDTO>(firestoreInstance), UserRepository  {
 
     override val collection = firestoreInstance.collection("users")
     override fun getType(): Class<UserDTO> = UserDTO::class.java
 
     // Get current Firebase authenticated user
-    fun getCurrentUser(): FirebaseUser? = auth.currentUser
+    override fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
     // Get current user ID
-    fun getCurrentUserId(): String? = auth.currentUser?.uid
+    override fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     // Register a new user
-    suspend fun registerUser(
+    override suspend fun registerUser(
         email: String,
         password: String,
         userData: UserDTO
@@ -50,7 +51,7 @@ class FirestoreUserRepository @Inject constructor(
     }
 
     // Login existing user
-    suspend fun loginUser(email: String, password: String): Result<FirebaseUser> {
+    override suspend fun loginUser(email: String, password: String): Result<FirebaseUser> {
         return try {
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Failed to login user")
@@ -62,7 +63,7 @@ class FirestoreUserRepository @Inject constructor(
     }
 
     // Logout current user
-    fun logoutUser(): Result<Unit> {
+    override fun logoutUser(): Result<Unit> {
         return try {
             auth.signOut()
             Result.success(Unit)
@@ -72,28 +73,28 @@ class FirestoreUserRepository @Inject constructor(
     }
 
     // Get user profile
-    suspend fun getUserProfile(userId: String): Result<UserDTO?> {
+    override suspend fun getUserProfile(userId: String): Result<UserDTO?> {
         return getById(userId)
     }
 
     // Get current user profile
-    suspend fun getCurrentUserProfile(): Result<UserDTO?> {
+    override suspend fun getCurrentUserProfile(): Result<UserDTO?> {
         val userId = getCurrentUserId() ?: return Result.failure(Exception("No user logged in"))
         return getUserProfile(userId)
     }
 
     // Observe user profile changes in real-time
-    fun observeUserProfile(userId: String): Flow<UserDTO?> {
+    override fun observeUserProfile(userId: String): Flow<UserDTO?> {
         return observeDocument(userId)
     }
 
     // Update user profile with provided fields
-    suspend fun updateUserProfile(userId: String, user: UserDTO): Result<Unit> {
+    override suspend fun updateUserProfile(userId: String, user: UserDTO): Result<Unit> {
         return update(userId, user)
     }
 
     // Delete current user's account
-    suspend fun deleteUserAccount(): Result<Unit> {
+    override suspend fun deleteUserAccount(): Result<Unit> {
         return try {
             val user = auth.currentUser ?: throw Exception("No user logged in")
 
@@ -110,7 +111,7 @@ class FirestoreUserRepository @Inject constructor(
     }
 
     // Check if email is already registered
-    suspend fun emailExists(email: String): Result<Boolean> {
+    override suspend fun emailExists(email: String): Result<Boolean> {
         return try {
             val snapshot = collection
                 .whereEqualTo("email", email)
@@ -123,7 +124,7 @@ class FirestoreUserRepository @Inject constructor(
     }
 
     // Send password reset email
-    suspend fun resetPassword(email: String): Result<Unit> {
+    override suspend fun resetPassword(email: String): Result<Unit> {
         return try {
             auth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
