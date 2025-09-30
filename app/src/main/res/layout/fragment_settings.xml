@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAF0E6"
+    android:background="@color/background"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -21,7 +22,7 @@
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_back"
             android:contentDescription="@string/action_back"
-            app:tint="@android:color/black" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -29,7 +30,7 @@
             android:text="Settings"
             android:textStyle="bold"
             android:textSize="22sp"
-            android:textColor="@color/black"
+            android:textColor="@color/text_primary"
             android:layout_marginStart="12dp"/>
     </LinearLayout>
 
@@ -40,7 +41,7 @@
         android:text="Account"
         android:textStyle="bold"
         android:textSize="20sp"
-        android:textColor="@color/black"
+        android:textColor="@color/text_primary"
         android:layout_marginTop="24dp"/>
 
     <!-- Each setting row -->
@@ -49,7 +50,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingVertical="12dp"
-        android:background="?android:attr/selectableItemBackground"
         android:gravity="center_vertical">
 
         <TextView
@@ -57,17 +57,18 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Share with friends"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary" />
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_forward"
-            android:tint="#757575"
+            android:tint="@color/text_secondary"
             android:contentDescription="@string/action_next" />
     </LinearLayout>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#DDDDDD"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -81,17 +82,19 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Push Notification"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_arrow_forward"
-            android:tint="#757575"
-            android:contentDescription="@string/action_next" />
+        <Switch
+            android:id="@+id/switchPushNotifications"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
+
     </LinearLayout>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#DDDDDD"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -105,17 +108,18 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Privacy Settings"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary" />
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_forward"
-            android:tint="#757575"
+            android:tint="@color/text_secondary"
             android:contentDescription="@string/action_next" />
     </LinearLayout>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#DDDDDD"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -129,15 +133,46 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Delete Account"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary" />
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_forward"
-            android:tint="#757575"
+            android:tint="@color/text_secondary"
             android:contentDescription="@string/action_next" />
     </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
+
+    <!-- Theme Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Appearance Mode"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary" />
+
+        <Switch
+            android:id="@+id/switchDarkMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Toggle dark mode" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/text_secondary"/>
 
     <!-- Data Section -->
     <TextView
@@ -146,7 +181,7 @@
         android:text="Data"
         android:textStyle="bold"
         android:textSize="20sp"
-        android:textColor="@color/black"
+        android:textColor="@color/text_primary"
         android:layout_marginTop="24dp"/>
 
     <LinearLayout
@@ -167,11 +202,11 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_forward"
-            android:tint="#757575"
+            android:tint="@color/text_secondary"
             android:contentDescription="@string/action_next" />
     </LinearLayout>
 
-    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#DDDDDD"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
     <!-- Logout -->
     <LinearLayout

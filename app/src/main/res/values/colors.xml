@@ -23,7 +23,7 @@
     <color name="button_text">@color/white</color>
     
     <!-- Input Fields -->
-    <color name="input_background">@color/white</color>
+    <color name="input_background">#fff5f0</color>
     <color name="input_stroke">@color/coffee_light</color>
     
     <!-- Google Button -->

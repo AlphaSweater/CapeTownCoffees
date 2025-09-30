@@ -22,7 +22,7 @@
     app:iconSize="18dp"
     app:iconPadding="8dp"
     app:iconGravity="textStart"
-    app:backgroundTint="@color/surface"
+    app:backgroundTint="@color/background"
     app:strokeColor="@color/coffee_dark"
     app:strokeWidth="1dp"
     app:cornerRadius="20dp" />

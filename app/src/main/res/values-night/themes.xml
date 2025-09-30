@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Dark theme overrides -->
+    <style name="Theme.CapeTownCoffees" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color (slightly lighter for dark theme) -->
+        <item name="colorPrimary">@color/coffee_light</item>
+        <item name="colorPrimaryVariant">@color/coffee_medium</item>
+        <item name="colorOnPrimary">@color/black</item>
+        
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/coffee_medium</item>
+        <item name="colorSecondaryVariant">@color/coffee_light</item>
+        <item name="colorOnSecondary">@color/black</item>
+        
+        <!-- Background colors (darker for dark theme) -->
+        <item name="android:windowBackground">@color/coffee_dark</item>
+        <item name="android:colorBackground">@color/coffee_dark</item>
+        <item name="colorSurface">@color/coffee_medium</item>
+        
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/coffee_cream</item>
+        
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        
+        <!-- Card style for dark theme -->
+        <item name="cardViewStyle">@style/Widget.App.CardView.Night</item>
+    </style>
+    
+    <!-- Card style for dark theme -->
+    <style name="Widget.App.CardView.Night" parent="Widget.MaterialComponents.CardView">
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="contentPadding">16dp</item>
+        <item name="cardBackgroundColor">@color/coffee_medium</item>
+    </style>
+    
+    <!-- Text styles for dark theme -->
+    <style name="TextAppearance.App.Headline1" parent="TextAppearance.MaterialComponents.Headline4">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
+    <style name="TextAppearance.App.Headline2" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
+    <style name="TextAppearance.App.Body1" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/white</item>
+    </style>
+    
+    <!-- Button style for dark theme -->
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:padding">12dp</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="backgroundTint">@color/coffee_light</item>
+    </style>
+    
+    <!-- TextInputLayout style for dark theme -->
+    <style name="Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox" tools:ignore="ResourceCycle">
+        <item name="boxStrokeColor">@color/coffee_light</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
+        <item name="hintTextColor">@color/coffee_light</item>
+        <item name="android:textColorHint">@color/coffee_light</item>
+        <item name="boxBackgroundColor">@color/coffee_dark</item>
+        <item name="hintTextAppearance">@style/TextAppearance.App.Caption</item>
+    </style>
+    
+    <style name="TextAppearance.App.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/coffee_light</item>
+    </style>
+</resources>
