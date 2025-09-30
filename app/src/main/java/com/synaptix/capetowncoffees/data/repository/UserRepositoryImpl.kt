@@ -6,7 +6,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
 import com.synaptix.capetowncoffees.domain.repository.UserRepository
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -131,5 +133,18 @@ class UserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Observe the current authentication state (true if logged in, false otherwise)
+     */
+    override fun observeAuthState(): Flow<Boolean> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            trySend(firebaseAuth.currentUser != null)
+        }
+        auth.addAuthStateListener(listener)
+        // Emit initial state
+        trySend(auth.currentUser != null)
+        awaitClose { auth.removeAuthStateListener(listener) }
     }
 }
