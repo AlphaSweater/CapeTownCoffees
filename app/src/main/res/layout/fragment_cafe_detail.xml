@@ -85,48 +85,77 @@
                         android:layout_height="wrap_content"
                         android:text="Truth Coffee Roasting"
                         android:textColor="@color/text_primary"
-                        android:textSize="20sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <!-- Stars + rating + distance row -->
-                    <LinearLayout
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
                         android:layout_marginTop="8dp">
 
-                        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_star"/>
-                        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_star"/>
-                        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_star"/>
-                        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_star"/>
-                        <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_star"/>
+                        <androidx.appcompat.widget.AppCompatRatingBar
+                            android:id="@+id/ratingBar"
+                            style="@style/Widget.AppCompat.RatingBar.Small"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:isIndicator="true"
+                            android:numStars="5"
+                            android:stepSize="0.5"
+                            android:rating="4.5"
+                            android:progressTint="@color/icon_star"
+                            android:secondaryProgressTint="@color/icon_star"
+                            android:indeterminateTint="@color/icon_star"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
 
                         <TextView
                             android:id="@+id/tvRating"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
                             android:text="4.5"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp"/>
+                            android:textSize="14sp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/ratingBar"
+                            android:layout_marginStart="8dp"/>
+
+                        <!-- Vertical divider -->
+                        <View
+                            android:id="@+id/divider"
+                            android:layout_width="2dp"
+                            android:layout_height="20dp"
+                            android:background="@color/icon_divider"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/tvRating"
+                            android:layout_marginStart="12dp"/>
 
                         <ImageView
+                            android:id="@+id/ivPin"
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:layout_marginStart="12dp"
                             android:src="@drawable/ic_pin"
-                            android:tint="@color/text_secondary"/>
+                            app:tint="@color/text_secondary"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/divider"
+                            android:layout_marginStart="12dp"/>
 
                         <TextView
                             android:id="@+id/tvDistance"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
                             android:text="1.2 km away"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp"/>
-                    </LinearLayout>
+                            android:textSize="14sp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/ivPin"
+                            android:layout_marginStart="4dp"/>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <!-- About -->
                     <TextView
