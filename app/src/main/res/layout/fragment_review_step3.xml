@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
@@ -16,11 +18,11 @@
 
         <ImageView
             android:id="@+id/btnClose"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="Close"
             android:padding="8dp"
-            android:src="@drawable/ic_close"
-            android:contentDescription="Close" />
+            android:src="@drawable/ic_close" />
     </LinearLayout>
 
     <TextView
@@ -29,7 +31,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Share Images"
-        android:textColor="@android:color/black"
+        android:textColor="@color/text_primary"
         android:textStyle="bold"
         android:textSize="28sp"/>
 
@@ -39,24 +41,38 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="Share your experience with the community"
-        android:textColor="#7A7A7A"
+        android:textColor="@color/text_primary"
         android:textSize="14sp"/>
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="240dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/rounded_rect_16dp">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_margin="50dp"
+        android:background="@drawable/rounded_square">
+
+        <ImageView
+            android:id="@+id/coffeeImage"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="50dp"
+            android:contentDescription="Coffee icon"
+            android:src="@drawable/ic_profile_placeholder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
+            android:id="@+id/coffeeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="COFFEE\nREVIEW"
             android:textColor="#BDBDBD"
-            android:textStyle="bold"
             android:textSize="28sp"
-            android:layout_gravity="center"/>
-    </FrameLayout>
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/coffeeImage" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -66,16 +82,16 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Progress: last step active -->
+        <!-- Progress bar dots/lines -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center">
 
-            <View android:layout_width="64dp" android:layout_height="4dp" android:background="#E0E0E0"/>
-            <View android:layout_width="64dp" android:layout_height="4dp" android:layout_marginStart="12dp" android:background="#E0E0E0"/>
-            <View android:layout_width="64dp" android:layout_height="4dp" android:layout_marginStart="12dp" android:background="#2C2118"/>
+            <View android:layout_width="70dp" android:layout_height="8dp" android:background="@color/button_category"/>
+            <View android:layout_width="70dp" android:layout_height="8dp" android:layout_marginStart="12dp" android:background="@color/button_category"/>
+            <View android:layout_width="70dp" android:layout_height="8dp" android:layout_marginStart="12dp" android:background="@color/button_category"/>
         </LinearLayout>
 
         <TextView
@@ -86,8 +102,9 @@
             android:layout_marginTop="16dp"
             android:paddingHorizontal="20dp"
             android:paddingVertical="12dp"
+            android:layout_margin="20sp"
             android:text="Next"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_alt"
             android:textStyle="bold"
             android:background="@drawable/bg_pill_dark"/>
     </LinearLayout>

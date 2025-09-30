@@ -38,6 +38,7 @@
     <color name="icon_divider">#ebebeb</color>
     <color name="icon_heart">#FFFFFF</color>
     <color name="icon_star">#ffb056</color>
+    <color name="icon_blank_bar">#c5beba</color>
 
     <!-- Google Button -->
     <color name="google_button">#FFFFFFFF</color>

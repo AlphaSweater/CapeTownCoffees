@@ -16,8 +16,8 @@
 
         <ImageView
             android:id="@+id/btnClose"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_close"
             android:contentDescription="Close" />
@@ -29,7 +29,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Tell others about your\nexperience"
-        android:textColor="@android:color/black"
+        android:textColor="@color/text_primary"
         android:textStyle="bold"
         android:textSize="28sp"/>
 
@@ -39,7 +39,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="Share your experience with the community"
-        android:textColor="#7A7A7A"
+        android:textColor="@color/text_primary"
         android:textSize="14sp"/>
 
     <EditText
@@ -47,11 +47,11 @@
         android:layout_width="match_parent"
         android:layout_height="160dp"
         android:layout_margin="16dp"
-        android:background="@drawable/bg_input_rounded"
+        android:background="@drawable/rounded_square"
         android:gravity="top|start"
         android:hint="Consider discussing the facilities, pricing and taste"
         android:padding="16dp"
-        android:textColorHint="#BDBDBD"/>
+        android:textColorHint="@color/text_secondary"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -61,16 +61,16 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Progress: middle step active -->
+        <!-- Progress bar dots/lines -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center">
 
-            <View android:layout_width="64dp" android:layout_height="4dp" android:background="#E0E0E0"/>
-            <View android:layout_width="64dp" android:layout_height="4dp" android:layout_marginStart="12dp" android:background="#2C2118"/>
-            <View android:layout_width="64dp" android:layout_height="4dp" android:layout_marginStart="12dp" android:background="#E0E0E0"/>
+            <View android:layout_width="70dp" android:layout_height="8dp" android:background="@color/button_category"/>
+            <View android:layout_width="70dp" android:layout_height="8dp" android:layout_marginStart="12dp" android:background="@color/button_category"/>
+            <View android:layout_width="70dp" android:layout_height="8dp" android:layout_marginStart="12dp" android:background="@color/icon_blank_bar"/>
         </LinearLayout>
 
         <TextView
@@ -81,8 +81,9 @@
             android:layout_marginTop="16dp"
             android:paddingHorizontal="20dp"
             android:paddingVertical="12dp"
+            android:layout_margin="20sp"
             android:text="Next"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_alt"
             android:textStyle="bold"
             android:background="@drawable/bg_pill_dark"/>
     </LinearLayout>
