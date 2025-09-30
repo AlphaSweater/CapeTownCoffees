@@ -28,11 +28,7 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     // LiveData to hold the current login state
     private val _loginState = MutableLiveData<LoginUiState>(LoginUiState.Idle)
-    val loginState: MutableLiveData<LoginUiState> get() = _loginState
-
-
-    private val _isLoading = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> = _isLoading
+    val loginState: LiveData<LoginUiState> get() = _loginState
 
     fun validateEmail(email: String): String? {
         return when {
@@ -60,18 +56,15 @@ class LoginViewModel @Inject constructor(
     }
 
     // Function to handle the login process
-    fun login(email: String, password: String) {
+    fun loginUser(email: String, password: String) {
         if (!validateInputs(email, password)) {
             return
         }
 
         viewModelScope.launch {
             try {
-                _isLoading.value = true
                 _loginState.value = LoginUiState.Loading
-
                 val result = loginUserUseCase(email, password)
-
                 _loginState.value = when (result) {
                     is LoginResult.Success -> LoginUiState.Success
                     is LoginResult.InvalidCredentials -> LoginUiState.Error("Incorrect email or password")
@@ -81,8 +74,6 @@ class LoginViewModel @Inject constructor(
                 _loginState.value = LoginUiState.Error(
                     e.localizedMessage ?: "An unexpected error occurred"
                 )
-            } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -90,6 +81,5 @@ class LoginViewModel @Inject constructor(
     // Function to reset the state back to idle
     fun resetState() {
         _loginState.value = LoginUiState.Idle
-        _isLoading.value = false
     }
 }

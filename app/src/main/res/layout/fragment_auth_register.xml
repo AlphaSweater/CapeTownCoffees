@@ -210,7 +210,7 @@
 
         <!-- Google Sign Up Button -->
         <ImageButton
-            android:id="@+id/googleSignUpButton"
+            android:id="@+id/button_google_register"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
@@ -237,7 +237,7 @@
                 android:textColor="@color/text_secondary"/>
 
             <TextView
-                android:id="@+id/textSignIn"
+                android:id="@+id/text_login_swap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"

@@ -9,10 +9,10 @@
         android:id="@+id/signInFragment"
         android:name="com.synaptix.capetowncoffees.ui.auth.login.LoginFragment"
         android:label="Sign In"
-        tools:layout="@layout/fragment_sign_in">
+        tools:layout="@layout/fragment_auth_login">
 
         <action
-            android:id="@+id/action_signInFragment_to_signUpFragment"
+            android:id="@+id/action_authLoginFragment_to_authRegisterFragment"
             app:destination="@id/signUpFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
@@ -20,7 +20,7 @@
             app:popExitAnim="@anim/slide_out_right" />
 
         <action
-            android:id="@+id/action_signInFragment_to_homeFragment"
+            android:id="@+id/action_authLoginFragment_to_homeFragment"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/signInFragment"
             app:popUpToInclusive="true" />
@@ -31,7 +31,7 @@
         android:id="@+id/signUpFragment"
         android:name="com.synaptix.capetowncoffees.ui.auth.register.RegisterFragment"
         android:label="Create Account"
-        tools:layout="@layout/fragment_sign_up">
+        tools:layout="@layout/fragment_auth_register">
 
         <action
             android:id="@+id/action_signUpFragment_to_signInFragment"
@@ -42,7 +42,7 @@
             app:popExitAnim="@anim/slide_out_left" />
 
         <action
-            android:id="@+id/action_signUpFragment_to_homeFragment"
+            android:id="@+id/action_authRegisterFragment_to_homeFragment"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/signInFragment"
             app:popUpToInclusive="true" />
