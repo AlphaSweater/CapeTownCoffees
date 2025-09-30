@@ -3,7 +3,7 @@
     <!-- Android 12+ splash theme using SplashScreen API attributes -->
     <style name="Theme.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/app_logo_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
         <item name="postSplashScreenTheme">@style/Theme.CapeTownCoffees</item>
         <item name="android:statusBarColor">@android:color/transparent</item>

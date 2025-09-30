@@ -66,6 +66,7 @@ dependencies {
     // --- Material Design ---
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3.android)
+    implementation("com.google.android.material:material:1.8.0")
 
     // --- Jetpack Lifecycle & ViewModel ---
     implementation(libs.androidx.lifecycle.runtime.ktx)

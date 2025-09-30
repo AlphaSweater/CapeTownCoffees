@@ -6,70 +6,112 @@
     android:layout_height="match_parent"
     android:background="@color/background"
     android:fillViewport="true">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="20dp"
+        android:paddingTop="56dp"
         android:paddingBottom="32dp">
 
-        <!-- Logo and Title -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Logo -->
+        <ImageView
+            android:id="@+id/appLogo"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="12dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/app_logo"
+            android:scaleType="fitCenter"
+            android:src="@mipmap/ic_launcher" />
+
+        <!-- Brand Text -->
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginBottom="16dp">
+            android:layout_gravity="center"
+            android:text="Cape Towns"
+            android:textColor="@color/coffee_dark"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
-            <ImageView
-                android:id="@+id/appLogo"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:scaleType="centerInside"
-                android:layout_marginBottom="12dp"
-                android:contentDescription="@string/app_logo"
-                android:src="@drawable/app_logo" />
-
-        </LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="center"
+            android:text="COFFEES"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15"
+            android:textColor="@color/coffee_dark"
+            android:textSize="14sp" />
 
         <!-- Email Input -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/emailInputLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginTop="48dp"
+
+            app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="@color/coffee_cream"
+            app:boxStrokeColor="@color/coffee_dark"
+            app:boxStrokeWidth="2dp"
+            app:boxStrokeWidthFocused="2dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusBottomEnd="8dp"
             app:startIconDrawable="@drawable/ic_email"
+            app:startIconTint="@color/coffee_dark"
             android:hint="@string/email">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/emailEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingVertical="14dp"
+                android:paddingStart="16dp"
                 android:inputType="textEmailAddress"
-                android:maxLines="1"/>
+                android:maxLines="1"
+                android:background="@null"/>
         </com.google.android.material.textfield.TextInputLayout>
+
 
         <!-- Password Input -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/passwordInputLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundMode="outline"
+            app:boxBackgroundColor="@color/coffee_cream"
+            app:boxStrokeColor="@color/coffee_dark"
+            app:boxStrokeWidth="2dp"
+            app:boxStrokeWidthFocused="2dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusBottomEnd="8dp"
             app:startIconDrawable="@drawable/ic_lock"
+            app:startIconTint="@color/coffee_dark"
             app:endIconMode="password_toggle"
+            app:endIconTint="@color/coffee_dark"
             android:hint="@string/password">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/passwordEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingVertical="14dp"
+                android:paddingStart="16dp"
                 android:inputType="textPassword"
-                android:maxLines="1"/>
+                android:maxLines="1"
+                android:background="@null"/>
         </com.google.android.material.textfield.TextInputLayout>
+
+
 
         <!-- Forgot Password Link -->
         <TextView
@@ -77,18 +119,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:layout_marginBottom="32dp"
+            android:layout_marginBottom="24dp"
             android:text="@string/forgot_password"
             android:textColor="@color/coffee_medium"/>
 
         <!-- Sign In Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signInButton"
-            style="@style/Widget.App.Button"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+
             android:layout_marginBottom="24dp"
-            android:text="@string/sign_in"/>
+            android:text="@string/sign_in"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:backgroundTint="@color/coffee_dark"
+            app:cornerRadius="28dp"/>
 
         <!-- Divider with "or" text -->
         <RelativeLayout
@@ -112,37 +160,21 @@
                 android:textColor="@color/coffee_medium"/>
         </RelativeLayout>
 
-        <!-- Google Sign In Button -->
-        <LinearLayout
+        <!-- Google Sign In Button (visual only) -->
+        <ImageButton
             android:id="@+id/googleSignInButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:background="@drawable/bg_google_button"
+            android:layout_gravity="center"
+            android:background="@color/background"
+            android:src="@drawable/android_light_rd_ctn"
+            android:contentDescription="@string/sign_in_with_google"
+            android:scaleType="centerInside"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="16dp"
             android:clickable="true"
-            android:focusable="true"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingVertical="12dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="16dp"
-                android:src="@drawable/ic_google"
-                android:contentDescription="@string/sign_in_with_google" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:text="@string/sign_in_with_google"
-                android:textAllCaps="false"
-                android:textColor="#3c4043"
-                android:textSize="14sp" />
-
-        </LinearLayout>
+            android:focusable="true" />
 
         <!-- Sign Up Link -->
         <LinearLayout
