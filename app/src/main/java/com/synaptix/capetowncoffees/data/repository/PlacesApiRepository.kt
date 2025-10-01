@@ -1,80 +1,94 @@
 package com.synaptix.capetowncoffees.data.repository
 
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.model.CircularBounds
-import com.google.android.libraries.places.api.model.LocationBias
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
-import com.google.android.libraries.places.api.net.SearchNearbyRequest
-import com.google.android.libraries.places.api.net.kotlin.awaitSearchNearby
-import com.google.android.libraries.places.ktx.api.net.awaitFetchPlace
-import com.google.android.libraries.places.ktx.api.net.awaitFindAutocompletePredictions
-import com.synaptix.capetowncoffees.domain.model.CoffeePlace
-import com.synaptix.capetowncoffees.domain.model.CoffeePlace.Companion.fromPlace
-import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
-import com.synaptix.capetowncoffees.domain.repository.ICoffeePlacesRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
+import com.google.android.libraries.places.api.model.*
+import com.google.android.libraries.places.api.net.*
+import com.synaptix.capetowncoffees.domain.model.*
+import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
+import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository.CoffeeSearchParams
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
 @Singleton
-class CoffeePlacesRepository @Inject constructor(
+class PlacesApiRepository @Inject constructor(
     private val placesClient: PlacesClient
-) : ICoffeePlacesRepository {
+) : IPlacesApiRepository {
 
-    override suspend fun searchNearbyCoffeePlaces(
-        lat: Double,
-        lng: Double,
-        radiusMeters: Int,
-        includedTypes: List<String>,
-        maxResults: Int
-    ): Result<List<CoffeePlace>> = runCatching {
-        val center = LatLng(lat, lng)
-        val circular = CircularBounds.newInstance(center, radiusMeters.toDouble())
-        val fields = ICoffeePlacesRepository.BASE_COFFEE_FIELDS
-        val requestBuilder = SearchNearbyRequest.builder(circular, fields)
-            .setMaxResultCount(maxResults)
-        val request = requestBuilder.build()
-        val response = placesClient.searchNearby(request).await()
-        val placeList = response.places ?: emptyList()
-        placeList.filterNotNull().map { place ->
-            fromPlace(place)
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun autocompleteCoffeePlace(
-        query: String,
-        locationBias: LocationBias?,
-        countries: List<String>,
-        includedTypes: List<String>
-    ): Result<List<CoffeePlaceSuggestion>> = runCatching {
-        val request = FindAutocompletePredictionsRequest.builder()
-            .setQuery(query)
-            .apply { if (locationBias != null) setLocationBias(locationBias) }
-            .apply { if (countries.isNotEmpty()) setCountries(countries) }
-            .apply { setTypesFilter(includedTypes) }
-            .build()
-        val response = placesClient.awaitFindAutocompletePredictions(request)
-        response.autocompletePredictions.map { p ->
-            CoffeePlaceSuggestion(
-                id = p.placeId,
-                description = p.getFullText(null).toString()
+    // ✅ 1. Search coffee places (Lite Models)
+    override suspend fun searchCoffeePlaces(
+        params: CoffeeSearchParams
+    ): Result<List<CoffeePlaceLite>> {
+        return try {
+            val locationBias: LocationBias = RectangularBounds.newInstance(
+                LatLng(params.location.latitude - 0.01, params.location.longitude - 0.01),
+                LatLng(params.location.latitude + 0.01, params.location.longitude + 0.01)
             )
+            val request = FindAutocompletePredictionsRequest.builder()
+                .setQuery(params.query ?: "coffee")
+                .setLocationBias(locationBias)
+                .setCountries("ZA")
+                .setTypesFilter(listOf("establishment"))
+                .build()
+            val response = placesClient.findAutocompletePredictions(request).await()
+            // Fetch Place details for each prediction and map using CoffeePlaceLite.fromPlace
+            val results = response.autocompletePredictions.take(params.maxResults).mapNotNull { prediction ->
+                try {
+                    val placeRequest = FetchPlaceRequest.builder(
+                        prediction.placeId,
+                        CoffeePlaceLite.fields
+                    ).build()
+                    val placeResponse = placesClient.fetchPlace(placeRequest).await()
+                    CoffeePlaceLite.fromPlace(placeResponse.place)
+                } catch (e: Exception) {
+                    null // skip failed fetches
+                }
+            }
+            Result.success(results)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun fetchCoffeePlaceDetails(
+    // ✅ 2. Get full coffee place details
+    override suspend fun getCoffeePlaceDetails(
         placeId: String,
         fields: List<Place.Field>
-    ): Result<CoffeePlace> = runCatching {
-        val response = placesClient.awaitFetchPlace(placeId, fields)
-        val place = response.place
-        fromPlace(place)
+    ): Result<CoffeePlaceFull> {
+        return try {
+            val request = FetchPlaceRequest.builder(placeId, fields).build()
+            val response = placesClient.fetchPlace(request).await()
+            val place = response.place
+            val details = CoffeePlaceFull.fromPlace(place)
+            Result.success(details)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ✅ 3. Get autocomplete suggestions
+    override suspend fun getSuggestions(
+        query: String,
+        location: LatLng?,
+        maxResults: Int
+    ): Result<List<CoffeePlaceSuggestion>> {
+        return try {
+            val request = FindAutocompletePredictionsRequest.builder()
+                .setQuery(query)
+                .setTypesFilter(listOf("establishment"))
+                .setCountries("ZA")
+                .build()
+            val response = placesClient.findAutocompletePredictions(request).await()
+            val suggestions = response.autocompletePredictions.take(maxResults).map { prediction ->
+                CoffeePlaceSuggestion(
+                    id = prediction.placeId,
+                    name = prediction.getPrimaryText(null).toString()
+                )
+            }
+            Result.success(suggestions)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

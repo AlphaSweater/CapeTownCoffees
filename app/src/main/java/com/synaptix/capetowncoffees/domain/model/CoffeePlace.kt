@@ -15,7 +15,6 @@ import com.google.android.libraries.places.api.model.Place
 interface CoffeePlaceBase {
     fun getId(): String?
     fun getName(): String?
-    fun getLocation(): LatLng?
 }
 
 // Interface for dynamic field mapping from Google Place API.
@@ -104,7 +103,8 @@ data class CoffeePlaceFull(
     }
     override fun getId() = id
     override fun getName() = name
-    override fun getLocation() = location
+    fun getAddress() = address
+    fun getLocation() = location
 }
 
 // Lightweight model for feed/search results.
@@ -166,14 +166,33 @@ data class CoffeePlaceLite(
     }
     override fun getId() = id
     override fun getName() = name
-    override fun getLocation() = location
+    fun getAddress() = address
+    fun getLocation() = location
 }
 
 // Model for search/autocomplete suggestions.
 data class CoffeePlaceSuggestion(
-    val id: String,
-    val description: String
-)
+    val id: String?,
+    val name: String?
+) : CoffeePlaceBase {
+    // ----------- Companion for mapping from Place -----------
+    companion object : CoffeePlaceCompanion<CoffeePlaceSuggestion> {
+        override val fields = listOf(
+            Place.Field.ID,
+            Place.Field.NAME,
+            Place.Field.ADDRESS,
+            Place.Field.LOCATION
+        )
+        override fun fromPlace(place: Place): CoffeePlaceSuggestion {
+            return CoffeePlaceSuggestion(
+                id = place.id,
+                name = place.displayName
+            )
+        }
+    }
+    override fun getId() = id
+    override fun getName() = name
+}
 
 // =============================
 // TagBuilder Helper
