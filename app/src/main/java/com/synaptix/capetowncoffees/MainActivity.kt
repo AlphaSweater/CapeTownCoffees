@@ -1,7 +1,15 @@
 package com.synaptix.capetowncoffees
 
+import android.Manifest
+import android.app.AlertDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -9,14 +17,16 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+
+    private var permissionDialogShown = false
+    private var permissionRequestInProgress = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Ensure that after the splash, we use the main app theme on pre-Android 12
         setTheme(R.style.Theme_CapeTownCoffees)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // No need to set up action bar with navigation controller
-        // as we're not using an ActionBar in this app
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -33,5 +43,82 @@ class MainActivity : AppCompatActivity() {
                 else -> bottomNav.visibility = android.view.View.VISIBLE
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Only check permissions if no dialog/request is active
+        if (!permissionDialogShown && !permissionRequestInProgress) {
+            checkLocationPermissionOnResume()
+        }
+    }
+
+    private fun checkLocationPermissionOnResume() {
+        if (hasLocationPermission()) {
+            permissionDialogShown = false
+            permissionRequestInProgress = false
+            // Continue as normal
+            return
+        }
+        // Always prompt for permission if not granted
+        permissionRequestInProgress = true
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        return fine == PackageManager.PERMISSION_GRANTED || coarse == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        permissionRequestInProgress = false
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
+                recreate()
+            } else {
+                // Only show guide if 'Don't ask again' is set for both permissions
+                val canPromptFine = ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.ACCESS_FINE_LOCATION
+                )
+                val canPromptCoarse = ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+                if (!canPromptFine && !canPromptCoarse) {
+                    permissionDialogShown = true
+                    showPermissionSettingsDialog()
+                }
+                // Otherwise, do nothing: user can be prompted again next time
+            }
+        }
+    }
+
+    private fun showPermissionSettingsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Location Permission Required")
+            .setMessage("This app needs location access to function. Please enable location permission in settings.")
+            .setPositiveButton("Open Settings") { _, _ ->
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = Uri.fromParts("package", packageName, null)
+                startActivity(intent)
+                permissionDialogShown = false // Reset so dialog can show again if needed
+            }
+            .setNegativeButton("Close App") { _, _ ->
+                finish()
+            }
+            .setCancelable(false)
+            .show()
     }
 }

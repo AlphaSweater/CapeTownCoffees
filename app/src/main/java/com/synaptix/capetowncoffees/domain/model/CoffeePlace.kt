@@ -12,10 +12,7 @@ import com.google.android.libraries.places.api.model.Place
 // =============================
 
 // Base interface for all coffee place models.
-interface CoffeePlaceBase {
-    fun getId(): String?
-    fun getName(): String?
-}
+interface CoffeePlaceBase
 
 // Interface for dynamic field mapping from Google Place API.
 interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
@@ -102,8 +99,6 @@ data class CoffeePlaceFull(
             priceLevel = place.priceLevel
         )
     }
-    override fun getId() = id
-    override fun getName() = name
 }
 
 // Lightweight model for feed/search results.
@@ -154,8 +149,6 @@ data class CoffeePlaceLite(
             tags = TagExtractor.extract(place)
         )
     }
-    override fun getId() = id
-    override fun getName() = name
 }
 
 // Model for search/autocomplete suggestions.
@@ -174,8 +167,6 @@ data class CoffeePlaceSuggestion(
             name = place.displayName
         )
     }
-    override fun getId() = id
-    override fun getName() = name
 }
 
 // =============================
