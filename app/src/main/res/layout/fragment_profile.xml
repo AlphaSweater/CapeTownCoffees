@@ -132,7 +132,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Edit"
-                                android:textColor="@color/white"
+                                android:textColor="@color/text_alt"
                                 android:background="@drawable/bg_pill_dark"
                                 android:paddingStart="12dp"
                                 android:paddingEnd="12dp"
