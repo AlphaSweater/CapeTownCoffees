@@ -122,6 +122,7 @@
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
     <LinearLayout
+        android:id="@+id/layoutDeleteAccount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -185,6 +186,7 @@
         android:layout_marginTop="24dp"/>
 
     <LinearLayout
+        android:id="@+id/layoutClearCache"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -210,6 +212,7 @@
 
     <!-- Logout -->
     <LinearLayout
+        android:id="@+id/layoutLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -228,8 +231,9 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_arrow_forward"
-            android:tint="#757575"
             android:contentDescription="@string/action_next" />
     </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
 </LinearLayout>

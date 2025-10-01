@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.synaptix.capetowncoffees.data.model.UserDTO
 import kotlinx.coroutines.flow.Flow
 
-interface UserRepository {
+interface IUserRepository {
     fun getCurrentUser(): FirebaseUser?
     fun getCurrentUserId(): String?
     suspend fun registerUser(email: String, password: String, userData: UserDTO): Result<UserDTO>
@@ -17,4 +17,8 @@ interface UserRepository {
     suspend fun deleteUserAccount(): Result<Unit>
     suspend fun emailExists(email: String): Result<Boolean>
     suspend fun resetPassword(email: String): Result<Unit>
+    /**
+     * Observe the current authentication state (true if logged in, false otherwise)
+     */
+    fun observeAuthState(): Flow<Boolean>
 }

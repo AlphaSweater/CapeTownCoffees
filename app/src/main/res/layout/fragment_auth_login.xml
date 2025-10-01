@@ -125,7 +125,7 @@
 
         <!-- Sign In Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/signInButton"
+            android:id="@+id/buttonlogin"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="60dp"
@@ -162,7 +162,7 @@
 
         <!-- Google Sign In Button (visual only) -->
         <ImageButton
-            android:id="@+id/googleSignInButton"
+            android:id="@+id/button_google_login"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
@@ -190,7 +190,7 @@
                 android:textColor="@color/text_secondary"/>
 
             <TextView
-                android:id="@+id/signUpText"
+                android:id="@+id/text_register_swap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"

@@ -2,20 +2,24 @@ package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
-import com.synaptix.capetowncoffees.domain.repository.UserRepository
+import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 
 @Singleton
-class UserRepositoryImpl @Inject constructor(
+class IUserRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     firestoreInstance: FirebaseFirestore
-) : BaseRepository<UserDTO>(firestoreInstance), UserRepository  {
+) : BaseRepository<UserDTO>(firestoreInstance), IUserRepository {
 
     override val collection = firestoreInstance.collection("users")
     override fun getType(): Class<UserDTO> = UserDTO::class.java
@@ -55,7 +59,6 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Failed to login user")
-
             Result.success(firebaseUser)
         } catch (e: Exception) {
             Result.failure(e)
@@ -113,11 +116,11 @@ class UserRepositoryImpl @Inject constructor(
     // Check if email is already registered
     override suspend fun emailExists(email: String): Result<Boolean> {
         return try {
-            val snapshot = collection
-                .whereEqualTo("email", email)
-                .get()
-                .await()
-            Result.success(!snapshot.isEmpty)
+            val result = auth.fetchSignInMethodsForEmail(email).await()
+            Result.success(result.signInMethods?.isNotEmpty() == true)
+        } catch (e: FirebaseAuthInvalidUserException) {
+            // No user found with this email
+            Result.success(false)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -131,5 +134,18 @@ class UserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Observe the current authentication state (true if logged in, false otherwise)
+     */
+    override fun observeAuthState(): Flow<Boolean> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            trySend(firebaseAuth.currentUser != null)
+        }
+        auth.addAuthStateListener(listener)
+        // Emit initial state
+        trySend(auth.currentUser != null)
+        awaitClose { auth.removeAuthStateListener(listener) }
     }
 }
