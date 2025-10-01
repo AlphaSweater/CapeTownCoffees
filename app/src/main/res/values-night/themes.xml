@@ -15,7 +15,7 @@
         <!-- Background colors (darker for dark theme) -->
         <item name="android:windowBackground">@color/coffee_dark</item>
         <item name="android:colorBackground">@color/coffee_dark</item>
-        <item name="colorSurface">@color/coffee_medium</item>
+        <item name="colorSurface">@color/black</item>
         
         <!-- Text colors -->
         <item name="android:textColorPrimary">@color/white</item>
@@ -60,6 +60,15 @@
         <item name="android:textColor">@color/black</item>
         <item name="backgroundTint">@color/coffee_light</item>
     </style>
+
+    <style name="Widget.App.Button.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:padding">12dp</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="strokeColor">@color/google_button_stroke</item>
+        <item name="android:textColor">@color/google_button_text</item>
+        <item name="android:backgroundTint">@color/google_button</item>
+    </style>
     
     <!-- TextInputLayout style for dark theme -->
     <style name="Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -76,8 +85,15 @@
         <item name="boxBackgroundColor">@color/coffee_dark</item>
         <item name="hintTextAppearance">@style/TextAppearance.App.Caption</item>
     </style>
-    
+
     <style name="TextAppearance.App.Caption" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textColor">@color/coffee_light</item>
+        <item name="android:textColor">@color/coffee_medium</item>
+    </style>
+
+    <!-- Card Style -->
+    <style name="Widget.App.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="contentPadding">16dp</item>
     </style>
 </resources>
