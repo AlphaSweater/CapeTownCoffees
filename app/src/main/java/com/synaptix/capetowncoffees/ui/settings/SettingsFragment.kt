@@ -73,8 +73,6 @@ class SettingsFragment : Fragment() {
     }
 
     private fun showLogoutConfirmation() {
-        // You can use a DialogFragment or a simple dialog here
-        // For simplicity, we'll use a basic dialog
         android.app.AlertDialog.Builder(requireContext())
             .setTitle("Logout")
             .setMessage("Are you sure you want to logout?")
