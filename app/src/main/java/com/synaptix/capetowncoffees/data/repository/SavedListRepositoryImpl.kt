@@ -1,5 +1,6 @@
 package com.synaptix.capetowncoffees.data.repository
 
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
@@ -10,11 +11,19 @@ import javax.inject.Singleton
 
 @Singleton
 class SavedListRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
-) : BaseRepository<SavedList>(db), ISavedListRepository {
+    private val auth: FirebaseAuth,
+    firestore: FirebaseFirestore
+) : BaseRepository<SavedList>(firestore), ISavedListRepository {
 
+    //creates list for currently signed in user as a subcollection of their user document
     override val collection: CollectionReference
-        get() = firestore.collection("saved_lists")
+        get() {
+            val userId = auth.currentUser?.uid ?: throw IllegalStateException("No User signed in")
+            return firestore
+                .collection("users")
+                .document(userId)
+                .collection("saved_lists")
+        }
 
     override fun getType(): Class<SavedList> = SavedList::class.java
 
@@ -29,7 +38,7 @@ class SavedListRepositoryImpl @Inject constructor(
             name = name.trim(),
             description = description?.trim()?.takeIf { it.isNotBlank() },
             isPublic = isPublic,
-            placeIds = emptyList(),
+            placeIds = emptyList()
         )
         return create(item, id).getOrElse { throw it }
     }
