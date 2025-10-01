@@ -2,7 +2,6 @@ package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
@@ -16,7 +15,7 @@ import javax.inject.Singleton
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 
 @Singleton
-class IUserRepositoryImpl @Inject constructor(
+class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     firestoreInstance: FirebaseFirestore
 ) : BaseRepository<UserDTO>(firestoreInstance), IUserRepository {

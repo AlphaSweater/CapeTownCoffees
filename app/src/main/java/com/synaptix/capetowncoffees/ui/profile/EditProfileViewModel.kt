@@ -23,6 +23,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import android.util.Base64
 import com.synaptix.capetowncoffees.data.mapper.toDTO
+import timber.log.Timber
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
@@ -89,7 +90,7 @@ class EditProfileViewModel @Inject constructor(
                     _uiState.value = errorOf(e.message ?: "Failed to load profile")
                 }
             } catch (e: Exception) {
-                Log.e("EditProfileViewModel", "Error loading user profile", e)
+                Timber.e(e, "Error loading user profile")
                 _uiState.value = errorOf("Failed to load profile: ${e.message ?: "Unknown error"}")
             }
         }
@@ -191,7 +192,7 @@ class EditProfileViewModel @Inject constructor(
                     _updateState.value = errorOf(e.message ?: "Failed to update profile")
                 }
             } catch (e: Exception) {
-                Log.e("EditProfileViewModel", "Error updating profile", e)
+                Timber.e(e, "Error updating profile")
                 _updateState.value =
                     errorOf("Failed to update profile: ${e.message ?: "Unknown error"}")
             }
@@ -251,7 +252,7 @@ class EditProfileViewModel @Inject constructor(
                     _updateState.value = errorOf("Failed to update profile: ${e.message}")
                 }
             } catch (e: Exception) {
-                Log.e("EditProfileViewModel", "Error updating profile picture", e)
+                Timber.e(e, "Error updating profile picture")
                 _updateState.value = errorOf("Failed to process image: ${e.message}")
             }
         }

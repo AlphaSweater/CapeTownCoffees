@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import androidx.activity.result.contract.ActivityResultContracts
 import android.util.Base64
 import com.synaptix.capetowncoffees.R
+import timber.log.Timber
 
 @AndroidEntryPoint
 class EditProfileFragment : Fragment() {
@@ -43,7 +44,7 @@ class EditProfileFragment : Fragment() {
                 // Pass the URI and context to the ViewModel
                 viewModel.updateProfilePicture(it, requireContext())
             } catch (e: Exception) {
-                Log.e("EditProfileFragment", "Error loading image", e)
+                Timber.e(e, "Error loading image")
                 Snackbar.make(binding.root, "Failed to load image", Snackbar.LENGTH_SHORT).show()
             }
         }
@@ -103,7 +104,7 @@ class EditProfileFragment : Fragment() {
                                         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                                         binding.ivProfilePicture.setImageBitmap(bitmap)
                                     } catch (e: Exception) {
-                                        Log.e("EditProfileFragment", "Error loading profile image", e)
+                                        Timber.e(e, "Error loading profile image")
                                         binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
                                     }
                                 } ?: run {
