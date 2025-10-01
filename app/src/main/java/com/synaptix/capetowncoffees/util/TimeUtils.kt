@@ -6,7 +6,7 @@ import java.time.temporal.ChronoUnit
 
 /**
  * Utility functions for time conversion, formatting, and comparison.
- * All timestamps are in UTC seconds unless otherwise specified.
+ * All timestamps are in UTC seconds internally unless otherwise specified.
  */
 object TimeUtils {
     // -----------------------------
@@ -17,8 +17,18 @@ object TimeUtils {
     private val FULL_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm")
 
     // -----------------------------
-    // Conversions
+    // Parsing / Conversion
     // -----------------------------
+
+    /** Parse ISO 8601 string to UTC seconds */
+    fun parseIsoToSeconds(isoString: String?): Long? {
+        if (isoString.isNullOrEmpty()) return null
+        return try {
+            Instant.parse(isoString).epochSecond
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     /** Convert milliseconds since epoch to UTC seconds */
     fun millisToSeconds(millis: Long): Long = millis / 1000
@@ -45,31 +55,15 @@ object TimeUtils {
     // Formatting
     // -----------------------------
 
-    /** Format timestamp as short date "01 Oct 2025" */
-    fun formatShortDate(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String {
-        if (utcSeconds == null) return ""
-        val date = toLocalDate(utcSeconds, zone)
-        return date.format(SHORT_DATE_FORMATTER)
-    }
+    fun formatShortDate(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String =
+        utcSeconds?.let { toLocalDate(it, zone).format(SHORT_DATE_FORMATTER) } ?: ""
 
-    /** Format timestamp as short time "14:30" */
-    fun formatShortTime(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String {
-        if (utcSeconds == null) return ""
-        val time = toLocalTime(utcSeconds, zone)
-        return time.format(SHORT_TIME_FORMATTER)
-    }
+    fun formatShortTime(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String =
+        utcSeconds?.let { toLocalTime(it, zone).format(SHORT_TIME_FORMATTER) } ?: ""
 
-    /** Format timestamp as full datetime "01 Oct 2025 14:30" */
-    fun formatFullDateTime(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String {
-        if (utcSeconds == null) return ""
-        val dateTime = toLocalDateTime(utcSeconds, zone)
-        return dateTime.format(FULL_DATETIME_FORMATTER)
-    }
+    fun formatFullDateTime(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String =
+        utcSeconds?.let { toLocalDateTime(it, zone).format(FULL_DATETIME_FORMATTER) } ?: ""
 
-    /**
-     * Format timestamp as relative time (e.g., "5 minutes ago", "in 2 hours", "just now").
-     * Handles future timestamps and uses Period for months/years.
-     */
     fun formatRelativeTime(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String {
         if (utcSeconds == null) return ""
         val now = Instant.now()
@@ -81,18 +75,9 @@ object TimeUtils {
         val label = when {
             absSeconds < 10 -> "just now"
             absSeconds < 60 -> "$absSeconds second${if (absSeconds == 1L) "" else "s"}"
-            absSeconds < 3600 -> {
-                val minutes = absSeconds / 60
-                "$minutes minute${if (minutes == 1L) "" else "s"}"
-            }
-            absSeconds < 86400 -> {
-                val hours = absSeconds / 3600
-                "$hours hour${if (hours == 1L) "" else "s"}"
-            }
-            absSeconds < 2592000 -> {
-                val days = absSeconds / 86400
-                "$days day${if (days == 1L) "" else "s"}"
-            }
+            absSeconds < 3600 -> "${absSeconds / 60} minute${if (absSeconds / 60 == 1L) "" else "s"}"
+            absSeconds < 86400 -> "${absSeconds / 3600} hour${if (absSeconds / 3600 == 1L) "" else "s"}"
+            absSeconds < 2592000 -> "${absSeconds / 86400} day${if (absSeconds / 86400 == 1L) "" else "s"}"
             else -> {
                 val nowDate = LocalDateTime.ofInstant(now, zone).toLocalDate()
                 val timeDate = LocalDateTime.ofInstant(time, zone).toLocalDate()
@@ -100,28 +85,46 @@ object TimeUtils {
                 when {
                     kotlin.math.abs(period.years) >= 1 -> "${kotlin.math.abs(period.years)} year${if (kotlin.math.abs(period.years) == 1) "" else "s"}"
                     kotlin.math.abs(period.months) >= 1 -> "${kotlin.math.abs(period.months)} month${if (kotlin.math.abs(period.months) == 1) "" else "s"}"
-                    else -> {
-                        val days = kotlin.math.abs(period.days)
-                        "$days day${if (days == 1) "" else "s"}"
-                    }
+                    else -> "${kotlin.math.abs(period.days)} day${if (period.days == 1) "" else "s"}"
                 }
             }
         }
-        return if (label == "just now") label else if (isPast) "$label ago" else "in $label"
+
+        return when (label) {
+            "just now" -> label
+            else -> if (isPast) "$label ago" else "in $label"
+        }
+    }
+
+    /**
+     * Returns a "smart" display string for a UTC seconds timestamp:
+     * - Today → shows time (HH:mm)
+     * - Within the last 7 days → shows relative time ("2 days ago")
+     * - Older → shows short date ("01 Oct 2025")
+     */
+    fun formatSmart(utcSeconds: Long?, zone: ZoneId = ZoneId.systemDefault()): String {
+        if (utcSeconds == null) return ""
+
+        val now = LocalDate.now(zone)
+        val date = toLocalDate(utcSeconds, zone)
+        val daysDiff = ChronoUnit.DAYS.between(date, now)
+
+        return when {
+            daysDiff == 0L -> formatShortTime(utcSeconds, zone)                     // today → time
+            daysDiff in 1..7 -> formatRelativeTime(utcSeconds, zone)          // last 7 days → relative
+            else -> formatShortDate(utcSeconds, zone)                               // older → date
+        }
     }
 
     // -----------------------------
     // Comparisons
     // -----------------------------
 
-    /** Check if a UTC seconds timestamp is in the past */
     fun isPast(utcSeconds: Long): Boolean = Instant.ofEpochSecond(utcSeconds).isBefore(Instant.now())
 
-    /** Check if a UTC seconds timestamp is today (device local date) */
     fun isToday(utcSeconds: Long, zone: ZoneId = ZoneId.systemDefault()): Boolean =
         toLocalDate(utcSeconds, zone) == LocalDate.now(zone)
 
-    /** Check if two timestamps are on the same day (device local date) */
     fun isSameDay(utcSeconds1: Long, utcSeconds2: Long, zone: ZoneId = ZoneId.systemDefault()): Boolean =
         toLocalDate(utcSeconds1, zone) == toLocalDate(utcSeconds2, zone)
 }
