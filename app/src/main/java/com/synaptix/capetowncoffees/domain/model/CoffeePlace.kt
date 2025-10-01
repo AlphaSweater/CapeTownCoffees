@@ -38,6 +38,10 @@ data class CoffeePlaceFull(
     val ratingCount: Int?,
     val images: List<PhotoMetadata>?, // Handles Google images
 
+    // 🏪 Types
+    val primaryType: String?,          // new SDK: exactly one primary type
+    val types: List<String>?,          // extra types list
+
     // ⏰ Hours
     val businessStatus: String?,
     val currentOpeningHours: List<String>?,
@@ -48,10 +52,7 @@ data class CoffeePlaceFull(
     val websiteUrl: String?,
 
     // 🍽️ Grouped Attributes
-    val foodOptions: List<FoodOption>,       // e.g. BREAKFAST, DESSERT
-    val atmosphere: List<Atmosphere>,        // e.g. PET_FRIENDLY, OUTDOOR_SEATING
-    val serviceOptions: List<ServiceOption>, // e.g. DINE_IN, TAKEOUT
-    val extras: List<ExtraFeature>,          // e.g. PARKING, WHEELCHAIR_ACCESS
+    val tags: List<Tag>, // Unified tags for UI
 
     // ⭐ Reviews
     val reviews: List<Review>?, // In-app and Google reviews combined
@@ -64,47 +65,45 @@ data class CoffeePlaceFull(
     companion object : CoffeePlaceCompanion<CoffeePlaceFull> {
         override val fields = listOf(
             Place.Field.ID,
-            Place.Field.NAME,
-            Place.Field.LAT_LNG,
-            Place.Field.ADDRESS,
+            Place.Field.DISPLAY_NAME,
+            Place.Field.FORMATTED_ADDRESS,
+            Place.Field.LOCATION,
+            Place.Field.PRIMARY_TYPE,
             Place.Field.TYPES,
             Place.Field.RATING,
+            Place.Field.USER_RATING_COUNT,
             Place.Field.PHOTO_METADATAS,
-            Place.Field.OPENING_HOURS,
+            Place.Field.CURRENT_OPENING_HOURS,
+            Place.Field.BUSINESS_STATUS,
+            Place.Field.NATIONAL_PHONE_NUMBER,
+            Place.Field.INTERNATIONAL_PHONE_NUMBER,
             Place.Field.WEBSITE_URI,
-            Place.Field.PHONE_NUMBER,
             Place.Field.PRICE_LEVEL,
-            Place.Field.USER_RATINGS_TOTAL,
-            Place.Field.BUSINESS_STATUS
+            Place.Field.GOOGLE_MAPS_URI
         )
-        override fun fromPlace(place: Place): CoffeePlaceFull {
-            return CoffeePlaceFull(
-                id = place.id,
-                name = place.displayName,
-                address = place.formattedAddress,
-                location = place.location,
-                googleMapsUrl = place.googleMapsUri?.toString(),
-                rating = place.rating,
-                ratingCount = place.userRatingCount,
-                images = place.photoMetadatas,
-                businessStatus = place.businessStatus?.name,
-                currentOpeningHours = place.currentOpeningHours?.weekdayText,
-                nationalPhoneNumber = place.nationalPhoneNumber,
-                internationalPhoneNumber = place.internationalPhoneNumber,
-                websiteUrl = place.websiteUri?.toString(),
-                foodOptions = TagBuilder.buildFoodOptions(place),
-                atmosphere = TagBuilder.buildAtmosphere(place),
-                serviceOptions = TagBuilder.buildServiceOptions(place),
-                extras = TagBuilder.buildExtras(place),
-                reviews = null,
-                priceLevel = place.priceLevel
-            )
-        }
+        override fun fromPlace(place: Place) = CoffeePlaceFull(
+            id = place.id,
+            name = place.displayName,
+            address = place.formattedAddress,
+            location = place.location,
+            googleMapsUrl = place.googleMapsUri?.toString(),
+            rating = place.rating,
+            ratingCount = place.userRatingCount,
+            images = place.photoMetadatas,
+            primaryType = place.primaryType,
+            types = place.placeTypes?.map { it.toString() },
+            businessStatus = place.businessStatus?.name,
+            currentOpeningHours = place.currentOpeningHours?.weekdayText,
+            nationalPhoneNumber = place.nationalPhoneNumber,
+            internationalPhoneNumber = place.internationalPhoneNumber,
+            websiteUrl = place.websiteUri?.toString(),
+            tags = TagExtractor.extract(place),
+            reviews = null,
+            priceLevel = place.priceLevel
+        )
     }
     override fun getId() = id
     override fun getName() = name
-    fun getAddress() = address
-    fun getLocation() = location
 }
 
 // Lightweight model for feed/search results.
@@ -113,61 +112,50 @@ data class CoffeePlaceLite(
     val name: String?,
     val address: String?,
     val location: LatLng?,
-    val googleMapsUrl: String?,
+    val primaryType: String?,
+    val types: List<String>?,
     val rating: Double?,
     val ratingCount: Int?,
     val images: List<PhotoMetadata>?,
-    val businessStatus: String?,
     val currentOpeningHours: List<String>?,
-    val nationalPhoneNumber: String?,
-    val internationalPhoneNumber: String? = null,
-    val foodOptions: List<FoodOption>,
-    val atmosphere: List<Atmosphere>,
-    val serviceOptions: List<ServiceOption>,
-    val extras: List<ExtraFeature>,
-    val priceLevel: Int? = null
+    val businessStatus: String?,
+    val priceLevel: Int? = null,
+    val tags: List<Tag> // Unified tags for UI
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {
         override val fields = listOf(
             Place.Field.ID,
-            Place.Field.NAME,
-            Place.Field.LAT_LNG,
-            Place.Field.ADDRESS,
+            Place.Field.DISPLAY_NAME,
+            Place.Field.FORMATTED_ADDRESS,
+            Place.Field.LOCATION,
+            Place.Field.PRIMARY_TYPE,
+            Place.Field.TYPES,
             Place.Field.RATING,
+            Place.Field.USER_RATING_COUNT,
             Place.Field.PHOTO_METADATAS,
-            Place.Field.OPENING_HOURS,
-            Place.Field.PHONE_NUMBER,
-            Place.Field.PRICE_LEVEL,
-            Place.Field.USER_RATINGS_TOTAL,
-            Place.Field.BUSINESS_STATUS
+            Place.Field.CURRENT_OPENING_HOURS,
+            Place.Field.BUSINESS_STATUS,
+            Place.Field.PRICE_LEVEL
         )
-        override fun fromPlace(place: Place): CoffeePlaceLite {
-            return CoffeePlaceLite(
-                id = place.id,
-                name = place.displayName,
-                address = place.formattedAddress,
-                location = place.location,
-                googleMapsUrl = place.googleMapsUri?.toString(),
-                rating = place.rating,
-                ratingCount = place.userRatingCount,
-                images = place.photoMetadatas,
-                businessStatus = place.businessStatus?.name,
-                currentOpeningHours = place.currentOpeningHours?.weekdayText,
-                nationalPhoneNumber = place.nationalPhoneNumber,
-                internationalPhoneNumber = place.internationalPhoneNumber,
-                foodOptions = TagBuilder.buildFoodOptions(place),
-                atmosphere = TagBuilder.buildAtmosphere(place),
-                serviceOptions = TagBuilder.buildServiceOptions(place),
-                extras = TagBuilder.buildExtras(place),
-                priceLevel = place.priceLevel
-            )
-        }
+        override fun fromPlace(place: Place) = CoffeePlaceLite(
+            id = place.id,
+            name = place.displayName,
+            address = place.formattedAddress,
+            location = place.location,
+            primaryType = place.primaryType,
+            types = place.placeTypes?.map { it.toString() },
+            rating = place.rating,
+            ratingCount = place.userRatingCount,
+            images = place.photoMetadatas,
+            currentOpeningHours = place.currentOpeningHours?.weekdayText,
+            businessStatus = place.businessStatus?.name,
+            priceLevel = place.priceLevel,
+            tags = TagExtractor.extract(place)
+        )
     }
     override fun getId() = id
     override fun getName() = name
-    fun getAddress() = address
-    fun getLocation() = location
 }
 
 // Model for search/autocomplete suggestions.
@@ -179,92 +167,98 @@ data class CoffeePlaceSuggestion(
     companion object : CoffeePlaceCompanion<CoffeePlaceSuggestion> {
         override val fields = listOf(
             Place.Field.ID,
-            Place.Field.NAME,
-            Place.Field.ADDRESS,
-            Place.Field.LOCATION
+            Place.Field.DISPLAY_NAME
         )
-        override fun fromPlace(place: Place): CoffeePlaceSuggestion {
-            return CoffeePlaceSuggestion(
-                id = place.id,
-                name = place.displayName
-            )
-        }
+        override fun fromPlace(place: Place) = CoffeePlaceSuggestion(
+            id = place.id,
+            name = place.displayName
+        )
     }
     override fun getId() = id
     override fun getName() = name
 }
 
 // =============================
-// TagBuilder Helper
+// Tag Model & Extractor
 // =============================
 
-// Helper object for building tag lists from Place attributes.
-object TagBuilder {
-    fun buildFoodOptions(place: Place): List<FoodOption> {
-        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
-        val list = mutableListOf<FoodOption>()
-        if (getBool(place.servesBreakfast)) list += FoodOption.BREAKFAST
-        if (getBool(place.servesBrunch)) list += FoodOption.BRUNCH
-        if (getBool(place.servesLunch)) list += FoodOption.LUNCH
-        if (getBool(place.servesDinner)) list += FoodOption.DINNER
-        if (getBool(place.servesDessert)) list += FoodOption.DESSERT
-        if (getBool(place.servesVegetarianFood)) list += FoodOption.VEGETARIAN
-        if (getBool(place.servesBeer)) list += FoodOption.BEER
-        if (getBool(place.servesWine)) list += FoodOption.WINE
-        if (getBool(place.servesCocktails)) list += FoodOption.COCKTAILS
-        return list
-    }
-    fun buildAtmosphere(place: Place): List<Atmosphere> {
-        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
-        val list = mutableListOf<Atmosphere>()
-        if (getBool(place.outdoorSeating)) list += Atmosphere.OUTDOOR_SEATING
-        if (getBool(place.allowsDogs)) list += Atmosphere.PET_FRIENDLY
-        if (getBool(place.goodForChildren)) list += Atmosphere.KID_FRIENDLY
-        if (getBool(place.goodForGroups)) list += Atmosphere.GROUP_FRIENDLY
-        if (getBool(place.liveMusic)) list += Atmosphere.LIVE_MUSIC
-        if (getBool(place.goodForWatchingSports)) list += Atmosphere.SPORTS_FRIENDLY
-        return list
-    }
-    fun buildServiceOptions(place: Place): List<ServiceOption> {
-        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
-        val list = mutableListOf<ServiceOption>()
-        if (getBool(place.dineIn)) list += ServiceOption.DINE_IN
-        if (getBool(place.takeout)) list += ServiceOption.TAKEOUT
-        if (getBool(place.delivery)) list += ServiceOption.DELIVERY
-        if (getBool(place.curbsidePickup)) list += ServiceOption.CURBSIDE_PICKUP
-        return list
-    }
-    fun buildExtras(place: Place): List<ExtraFeature> {
-        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
-        val list = mutableListOf<ExtraFeature>()
-        if (place.parkingOptions != null) list += ExtraFeature.PARKING
-        if (place.accessibilityOptions != null) list += ExtraFeature.WHEELCHAIR_ACCESS
-        if (getBool(place.restroom)) list += ExtraFeature.RESTROOM
-        if (getBool(place.menuForChildren)) list += ExtraFeature.KIDS_MENU
-        return list
-    }
+/**
+ * Unified tags used for displaying "chips" in UI.
+ */
+data class Tag(
+    val name: String,
+    val category: TagCategory
+)
+
+enum class TagCategory {
+    FOOD, SERVICE, ATMOSPHERE, EXTRA
 }
 
-// =============================
-// Enums for Tagging
-// =============================
+/**
+ * Extracts unified Tags from a Google Place.
+ * Uses new Places SDK fields: primaryType, types, and BooleanPlaceAttributeValue.
+ */
+object TagExtractor {
+    fun extract(place: Place): List<Tag> {
+        val tags = mutableListOf<Tag>()
 
-// Food options available at a coffee place.
-enum class FoodOption {
-    BREAKFAST, BRUNCH, LUNCH, DINNER, DESSERT, VEGETARIAN, BEER, WINE, COCKTAILS
-}
+        // 1. Primary Type → core identity tag
+        place.primaryType?.let { type ->
+            tags.add(Tag(type.lowercase().replace("_", " ").capitalizeWords(), TagCategory.FOOD))
+        }
 
-// Atmosphere attributes for a coffee place.
-enum class Atmosphere {
-    OUTDOOR_SEATING, PET_FRIENDLY, KID_FRIENDLY, GROUP_FRIENDLY, LIVE_MUSIC, SPORTS_FRIENDLY
-}
+        // 2. Secondary Types → more identity/context
+        place.placeTypes?.forEach { type ->
+            val clean = type.toString().lowercase().replace("_", " ").capitalizeWords()
+            when (type.toString().lowercase()) {
+                "bakery", "restaurant", "meal_takeaway" ->
+                    tags.add(Tag(clean, TagCategory.FOOD))
+                "bar", "night_club" ->
+                    tags.add(Tag("Nightlife", TagCategory.ATMOSPHERE))
+                "cafe" ->
+                    tags.add(Tag("Cafe", TagCategory.FOOD))
+            }
+        }
 
-// Service options available at a coffee place.
-enum class ServiceOption {
-    DINE_IN, TAKEOUT, DELIVERY, CURBSIDE_PICKUP
-}
+        // 3. Boolean attributes (new SDK style)
+        addIfTrue(tags, place, { it.servesCoffee }, "Coffee", TagCategory.FOOD)
+        addIfTrue(tags, place, { it.servesBreakfast }, "Breakfast", TagCategory.FOOD)
+        addIfTrue(tags, place, { it.servesBrunch }, "Brunch", TagCategory.FOOD)
+        addIfTrue(tags, place, { it.servesLunch }, "Lunch", TagCategory.FOOD)
+        addIfTrue(tags, place, { it.servesDinner }, "Dinner", TagCategory.FOOD)
+        addIfTrue(tags, place, { it.servesBeer }, "Beer", TagCategory.EXTRA)
+        addIfTrue(tags, place, { it.servesWine }, "Wine", TagCategory.EXTRA)
+        addIfTrue(tags, place, { it.servesCocktails }, "Cocktails", TagCategory.EXTRA)
+        addIfTrue(tags, place, { it.servesVegetarianFood }, "Vegetarian Options", TagCategory.FOOD)
 
-// Extra features available at a coffee place.
-enum class ExtraFeature {
-    PARKING, WHEELCHAIR_ACCESS, RESTROOM, KIDS_MENU
+        addIfTrue(tags, place, { it.dineIn }, "Dine In", TagCategory.SERVICE)
+        addIfTrue(tags, place, { it.takeout }, "Takeout", TagCategory.SERVICE)
+        addIfTrue(tags, place, { it.delivery }, "Delivery", TagCategory.SERVICE)
+
+        addIfTrue(tags, place, { it.outdoorSeating }, "Outdoor Seating", TagCategory.EXTRA)
+        addIfTrue(tags, place, { it.reservable }, "Reservable", TagCategory.SERVICE)
+        addIfTrue(tags, place, { it.goodForChildren }, "Kid Friendly", TagCategory.EXTRA)
+        addIfTrue(tags, place, { it.liveMusic }, "Live Music", TagCategory.ATMOSPHERE)
+
+        // Deduplicate & return
+        return tags.distinctBy { it.name }
+    }
+
+    // Helper for Place.BooleanPlaceAttributeValue
+    private fun addIfTrue(
+        tags: MutableList<Tag>,
+        place: Place,
+        getter: (Place) -> Place.BooleanPlaceAttributeValue?,
+        name: String,
+        category: TagCategory
+    ) {
+        val value = getter(place)
+        if (value == Place.BooleanPlaceAttributeValue.TRUE) {
+            tags.add(Tag(name, category))
+        }
+    }
+
+    // String formatting helper
+    private fun String.capitalizeWords(): String =
+        split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
 }

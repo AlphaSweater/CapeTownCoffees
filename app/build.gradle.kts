@@ -78,9 +78,9 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
 
-    // --- Places SDK (API) ---
-    implementation("com.google.android.libraries.places:places:4.4.1")
-    implementation("com.google.maps.android:places-ktx:3.5.0")
+    // --- Places API (SDK and Web) ---
+    implementation(libs.places)
+    implementation(libs.places.ktx)
 
     // Play Services - location & maps
     implementation("com.google.android.gms:play-services-location:21.0.1")
