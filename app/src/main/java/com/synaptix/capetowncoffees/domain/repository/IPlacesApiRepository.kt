@@ -6,52 +6,138 @@ import com.synaptix.capetowncoffees.domain.model.*
 
 interface IPlacesApiRepository {
 
-    suspend fun searchCoffeePlaces(
+    // -----------------------------
+    // Core Operations
+    // -----------------------------
+
+    /**
+     * Nearby search for coffee places.
+     * Uses new Places SDK FindNearbyPlaces API.
+     */
+    suspend fun searchNearbyCoffeePlaces(
         params: CoffeeSearchParams
     ): Result<List<CoffeePlaceLite>>
 
+    /**
+     * Fetch full details for a place.
+     */
     suspend fun getCoffeePlaceDetails(
-        placeId: String,
-        fields: List<Place.Field> = CoffeePlaceFull.fields
+        placeId: String
     ): Result<CoffeePlaceFull>
 
+    /**
+     * Get autocomplete suggestions (for search box).
+     */
     suspend fun getSuggestions(
         query: String,
-        location: LatLng? = null,
-        maxResults: Int = 10
+        location: LatLng? = null
     ): Result<List<CoffeePlaceSuggestion>>
 
+
     // -----------------------------
-    // Search parameter definitions
+    // Search Parameters
     // -----------------------------
 
     /**
-     * Immutable base params applied to every search.
-     * These cannot be overridden by caller.
+     * Immutable base search parameters and type filters for coffee searches.
+     * Includes strict vs relaxed modes and a primary type blacklist.
      */
     object BaseSearchParams {
-        val requiredTypes = listOf("cafe", "coffee_shop")
-        val requireOperational = true
+        // Strict: only primary types that are dedicated coffee places
+        val strictPrimaryAllowed: Set<String> = setOf(
+            "coffee_shop",
+            "cafe"
+        )
+
+        // Relaxed: broader primary types allowed, but require a coffee subtype if too broad
+        val relaxedPrimaryAllowed: Set<String> = setOf(
+            "coffee_shop",
+            "cafe",
+            "bakery",
+            "restaurant",
+            "breakfast_restaurant",
+            "brunch_restaurant",
+            "tea_house",
+            "dessert_shop",
+            "dessert_restaurant"
+        )
+
+        // Blacklist: primary types that should never be included
+        val primaryBlacklist: Set<String> = setOf(
+            "fast_food_restaurant",
+            "bar",
+            "pub",
+            "wine_bar"
+        )
+
+        // Coffee-related subtype tags for relaxed filtering
+        val coffeeSubtypeTags: Set<String> = setOf(
+            "coffee_shop",
+            "cafe",
+            "bakery",
+            "tea_house",
+            "dessert_shop",
+            "dessert_restaurant"
+        )
+
+        // Default search configuration
+        const val requireOperational: Boolean = true
+        const val defaultRadiusMeters: Int = 2000
+        const val maxResults: Int = 20
     }
 
     /**
-     * Configurable search parameters provided by the caller.
-     * These are merged with [BaseSearchParams] inside the implementation.
+     * Caller-configurable search params.
+     * These are merged with [BaseSearchParams] inside implementation.
      */
     data class CoffeeSearchParams(
         val location: LatLng,
-        val radiusMeters: Int = 2000,
-        val query: String? = null,
-        val openNow: Boolean = false,
-        val maxResults: Int = 20,
+        val radiusMeters: Int = BaseSearchParams.defaultRadiusMeters,
+        val query: String? = "coffee",
+        val onlyOpenNow: Boolean = false,
+        val maxResults: Int = BaseSearchParams.maxResults,
+        val sortByDistance: Boolean = true,
 
-        // Client-side tag filtering (post-fetch)
-        val foodOptions: Set<FoodOption> = emptySet(),
-        val atmosphere: Set<Atmosphere> = emptySet(),
-        val serviceOptions: Set<ServiceOption> = emptySet(),
-        val extras: Set<ExtraFeature> = emptySet(),
-
-        // API fields to request
-        val fields: List<Place.Field> = CoffeePlaceLite.fields
+        // Strictness: if true → only strict coffee places; else relaxed mode
+        val strictCoffeeOnly: Boolean = true
     )
+
+    companion object {
+        /**
+         * Determines if a place is coffee-relevant based on its primary type, all types,
+         * and the strictness mode.
+         *
+         * @param primaryType The primary type of the place (string from Places API)
+         * @param allTypes The full types array of the place (strings)
+         * @param strictMode If true, enforce strict coffee-only filtering
+         * @return true if the place passes the filter, false otherwise
+         */
+        fun isCoffeeRelevant(
+            primaryType: String?,
+            allTypes: List<String>,
+            strictMode: Boolean
+        ): Boolean {
+            if (primaryType == null) return false
+
+            // Always reject blacklisted primaries
+            if (BaseSearchParams.primaryBlacklist.contains(primaryType)) {
+                return false
+            }
+
+            return if (strictMode) {
+                // Strict: only dedicated coffee places
+                BaseSearchParams.strictPrimaryAllowed.contains(primaryType)
+            } else {
+                // Relaxed: allow broader primaries but require a coffee subtype if too broad
+                when {
+                    BaseSearchParams.strictPrimaryAllowed.contains(primaryType) -> true
+                    BaseSearchParams.relaxedPrimaryAllowed.contains(primaryType) -> {
+                        // If primary is broad like "restaurant", check for coffee subtypes
+                        allTypes.any { it in BaseSearchParams.coffeeSubtypeTags }
+                    }
+                    else -> false
+                }
+            }
+        }
+    }
 }
