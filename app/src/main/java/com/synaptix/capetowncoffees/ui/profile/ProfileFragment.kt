@@ -19,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import android.graphics.BitmapFactory
 import android.util.Base64
+import timber.log.Timber
 
 
 @AndroidEntryPoint
@@ -79,13 +80,18 @@ class ProfileFragment : Fragment() {
                             resource.data?.let { user ->
                                 binding.tvUserName.text = "${user.firstName} ${user.lastName}".trim()
                                 // Load Base64 image if available
+                                // check if photoBase64 is not null or empty
+                                if (user.photoBase64.isNullOrEmpty()) {
+                                    Timber.d("PhotoBase64 is null or empty")
+                                }
                                 user.photoBase64?.let { base64 ->
                                     try {
+                                        Timber.d("Loading profile image from Base64")
                                         val imageBytes = Base64.decode(base64, Base64.DEFAULT)
                                         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                                         binding.ivProfilePicture.setImageBitmap(bitmap)
                                     } catch (e: Exception) {
-                                        Log.e("ProfileFragment", "Error loading profile image", e)
+                                        Timber.e(e, "Error loading profile image")
                                         binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
                                     }
                                 } ?: run {

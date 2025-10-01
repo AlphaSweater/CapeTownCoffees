@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.saved
+package com.synaptix.capetowncoffees.ui.savedLists
 
 import android.os.Bundle
 import android.view.LayoutInflater

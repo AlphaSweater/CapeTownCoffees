@@ -1,9 +1,11 @@
 package com.synaptix.capetowncoffees.di
 
+import com.synaptix.capetowncoffees.domain.repository.ISavedListRepository
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.LogoutUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegisterUserUseCase
+import com.synaptix.capetowncoffees.domain.usecase.savedLists.CreateListUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,6 +32,12 @@ object UseCaseModule {
     @Singleton
     fun provideRegisterUserUseCase(IUserRepository: IUserRepository): RegisterUserUseCase {
         return RegisterUserUseCase(IUserRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateUserUseCase(ISavedListRepository: ISavedListRepository): CreateListUseCase {
+        return CreateListUseCase(ISavedListRepository)
     }
     // =================== END AUTH USE CASES ===================
 
