@@ -1,28 +1,44 @@
 package com.synaptix.capetowncoffees.ui.profile
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
+import com.synaptix.capetowncoffees.util.Resource
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
 
 class ProfileFragment : Fragment() {
+
+    private var _binding: com.synaptix.capetowncoffees.databinding.FragmentProfileBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: ProfileViewModel by viewModels()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+        _binding = com.synaptix.capetowncoffees.databinding.FragmentProfileBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val rv = view.findViewById<RecyclerView>(R.id.rvReviews)
+        // Setup RecyclerView
+        val rv = binding.rvReviews
         rv.layoutManager = LinearLayoutManager(requireContext())
 
         val demo = listOf(
@@ -51,13 +67,35 @@ class ProfileFragment : Fragment() {
 
         rv.adapter = ReviewAdapter(demo)
 
+        // Observe user data
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.userState.collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            resource.data?.let { user ->
+                                binding.tvUserName.text = "${user.firstName} ${user.lastName}".trim()
+                            }
+                        }
+                        is Resource.Error -> {
+                            Log.e("ProfileFragment", "Error loading user: ${resource.message}")
+                        }
+                        else -> { /* Loading state can be handled here if needed */ }
+                    }
+                }
+            }
+        }
+
+        // Load user data
+        viewModel.loadUserProfile()
+
         // Settings button navigation
-        view.findViewById<View>(R.id.btnSettings)?.setOnClickListener {
+        binding.btnSettings.setOnClickListener {
             findNavController().navigate(R.id.settingsFragment)
         }
 
         // Edit profile button navigation
-        view.findViewById<View>(R.id.btnEditProfile)?.setOnClickListener {
+        binding.btnEditProfile.setOnClickListener {
             findNavController().navigate(R.id.action_profileFragment_to_editProfileFragment)
         }
     }

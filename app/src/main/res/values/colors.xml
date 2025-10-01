@@ -30,4 +30,8 @@
     <color name="google_button">@color/white</color>
     <color name="google_button_stroke">#DDDDDD</color>
     <color name="google_button_text">#444444</color>
+
+    <!-- Status Colors -->
+    <color name="success_green">#4CAF50</color>
+    <color name="error_red">#F44336</color>
 </resources>

@@ -34,6 +34,7 @@ android {
         compose = true // Will be removed after fixing usages
         viewBinding = true
         buildConfig = true
+        dataBinding = true
     }
 
     buildTypes {

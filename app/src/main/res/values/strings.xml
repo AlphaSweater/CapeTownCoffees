@@ -4,15 +4,26 @@
     <string name="profile_picture">Profile Picture</string>
     <string name="change_photo">Change Photo</string>
     <string name="account_information">Account Information</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="full_name">Full Name</string>
     <string name="current_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
     <string name="save_changes">Save Changes</string>
-    <string name="full_name">Full Name</string>
-    
+    <string name="saving">Saving…</string>
+    <string name="profile_updated">Profile updated successfully</string>
+    <string name="error_updating_profile">Failed to update profile</string>
+    <string name="password_updated">Password updated successfully</string>
+    <string name="error_updating_password">Failed to update password</string>
+    <string name="password_change_success">Password changed successfully</string>
+    <string name="password_change_failed">Failed to change password</string>
+    <string name="password_mismatch">New passwords do not match</string>
+    <string name="current_password_required">Please enter your current password to change it</string>
+
     <!-- Existing resources below -->
     <string name="app_name">Cape Town Coffees</string>
-    
+
     <!-- Sign In Screen -->
     <string name="app_logo">Cape Town Coffees Logo</string>
     <string name="email">Email</string>
@@ -34,7 +45,7 @@
     <string name="scan_qr_code">Scan QR Code</string>
     <string name="search">Search</string>
     <string name="notifications">Notifications</string>
-    
+
     <!-- Common Actions -->
     <string name="action_next">Next</string>
     <string name="action_back">Back</string>
