@@ -81,7 +81,7 @@
             android:layout_marginTop="16dp"
             android:paddingHorizontal="20dp"
             android:paddingVertical="12dp"
-            android:layout_margin="20sp"
+            android:layout_margin="20dp"
             android:text="Next"
             android:textColor="@color/text_alt"
             android:textStyle="bold"
