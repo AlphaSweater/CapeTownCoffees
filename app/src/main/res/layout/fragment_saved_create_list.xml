@@ -55,7 +55,7 @@
                 android:background="@drawable/rounded_square"
                 android:paddingHorizontal="14dp"
                 android:hint="Ex: Coffee Dates"
-                android:textColor="@android:color/black"
+                android:textColor="@color/text_tip"
                 android:textColorHint="@color/text_tip"
                 android:layout_marginTop="8dp"/>
 
