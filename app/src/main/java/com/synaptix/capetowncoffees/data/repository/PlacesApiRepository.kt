@@ -33,6 +33,10 @@ class PlacesApiRepository @Inject constructor(
             }
             val excludedPrimaries = IPlacesApiRepository.BaseSearchParams.primaryBlacklist.toList()
 
+            // Use relevant coffee subtypes from interface for lax mode
+            val coffeeSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes.toList()
+            val excludedSubTypes = IPlacesApiRepository.BaseSearchParams.excludedSubtypes.toList()
+
             val requestBuilder = SearchNearbyRequest.builder(searchArea, liteFields)
                 .setIncludedPrimaryTypes(allowedPrimaries)
                 .setExcludedPrimaryTypes(excludedPrimaries)
@@ -42,11 +46,17 @@ class PlacesApiRepository @Inject constructor(
                 )
                 .setMaxResultCount(params.maxResults.coerceAtMost(20))
 
+            // In lax mode, also include relevant subtypes from interface
+            if (!params.strictCoffeeOnly) {
+                requestBuilder.setIncludedTypes(coffeeSubTypes)
+                if (excludedSubTypes.isNotEmpty()) {
+                    requestBuilder.setExcludedTypes(excludedSubTypes)
+                }
+            }
+
             val request = requestBuilder.build()
             val response = placesClient.searchNearby(request).await()
 
-            // NOTE: Due to API limitations, we may filter out many results in relaxed mode.
-            // For more results, consider implementing paging or increasing the search radius.
             val results = response.places.mapNotNull { place ->
                 val primaryType = place.primaryType
                 val allTypes = place.placeTypes ?: emptyList()

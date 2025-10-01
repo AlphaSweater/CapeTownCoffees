@@ -1,7 +1,6 @@
 package com.synaptix.capetowncoffees.domain.repository
 
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.model.Place
 import com.synaptix.capetowncoffees.domain.model.*
 
 interface IPlacesApiRepository {
@@ -70,14 +69,18 @@ interface IPlacesApiRepository {
             "wine_bar"
         )
 
-        // Coffee-related subtype tags for relaxed filtering
-        val coffeeSubtypeTags: Set<String> = setOf(
+        // Coffee-relevant subtype tags that can appear in the types array
+        val coffeeSubTypes: Set<String> = setOf(
             "coffee_shop",
-            "cafe",
-            "bakery",
-            "tea_house",
-            "dessert_shop",
-            "dessert_restaurant"
+            "cafe"
+        )
+
+        val excludedSubtypes: Set<String> = setOf(
+            "bar",
+            "night_club",
+            "pub",
+            "liquor_store",
+            "casino"
         )
 
         // Default search configuration
@@ -133,7 +136,7 @@ interface IPlacesApiRepository {
                     BaseSearchParams.strictPrimaryAllowed.contains(primaryType) -> true
                     BaseSearchParams.relaxedPrimaryAllowed.contains(primaryType) -> {
                         // If primary is broad like "restaurant", check for coffee subtypes
-                        allTypes.any { it in BaseSearchParams.coffeeSubtypeTags }
+                        allTypes.any { it in BaseSearchParams.coffeeSubTypes }
                     }
                     else -> false
                 }
