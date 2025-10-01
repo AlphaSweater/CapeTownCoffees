@@ -4,13 +4,21 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
 
-/**
- * A clean, compact model for coffee shops.
- * Attributes are grouped into enums/lists so UI can render tags easily.
- * No direct Google dependencies; all types are app-friendly.
- */
-data class CoffeePlace(
-    // 🏠 Core Info
+// CoffeePlaceBase: base interface for all coffee place models
+interface CoffeePlaceBase {
+    fun getId(): String?
+    fun getName(): String?
+    fun getLocation(): LatLng?
+}
+
+// CoffeePlaceCompanion interface for dynamic field mapping
+interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
+    val fields: List<Place.Field>
+    fun fromPlace(place: Place): T
+}
+
+// CoffeePlaceFull: full details model
+ data class CoffeePlaceFull(
     val id: String?,
     val name: String?,
     val address: String?,
@@ -41,14 +49,25 @@ data class CoffeePlace(
     // Other attributes
     val priceLevel: Int? = null // Google price level (0-4)
 
-) {
-    companion object {
-        private fun getBooleanAttribute(attr: Place.BooleanPlaceAttributeValue?): Boolean {
-            return attr == Place.BooleanPlaceAttributeValue.TRUE
-        }
-
-        fun fromPlace(place: Place): CoffeePlace {
-            return CoffeePlace(
+) : CoffeePlaceBase {
+    companion object : CoffeePlaceCompanion<CoffeePlaceFull> {
+        override val fields = listOf(
+            Place.Field.ID,
+            Place.Field.NAME,
+            Place.Field.LAT_LNG,
+            Place.Field.ADDRESS,
+            Place.Field.TYPES,
+            Place.Field.RATING,
+            Place.Field.PHOTO_METADATAS,
+            Place.Field.OPENING_HOURS,
+            Place.Field.WEBSITE_URI,
+            Place.Field.PHONE_NUMBER,
+            Place.Field.PRICE_LEVEL,
+            Place.Field.USER_RATINGS_TOTAL,
+            Place.Field.BUSINESS_STATUS
+        )
+        override fun fromPlace(place: Place): CoffeePlaceFull {
+            return CoffeePlaceFull(
                 id = place.id,
                 name = place.displayName,
                 address = place.formattedAddress,
@@ -62,78 +81,144 @@ data class CoffeePlace(
                 nationalPhoneNumber = place.nationalPhoneNumber,
                 internationalPhoneNumber = place.internationalPhoneNumber,
                 websiteUrl = place.websiteUri?.toString(),
-                foodOptions = buildFoodOptions(place),
-                atmosphere = buildAtmosphere(place),
-                serviceOptions = buildServiceOptions(place),
-                extras = buildExtras(place),
-                // TODO: Fetch and map Google reviews if needed
+                foodOptions = TagBuilder.buildFoodOptions(place),
+                atmosphere = TagBuilder.buildAtmosphere(place),
+                serviceOptions = TagBuilder.buildServiceOptions(place),
+                extras = TagBuilder.buildExtras(place),
                 reviews = null,
                 priceLevel = place.priceLevel
             )
         }
+    }
+    override fun getId() = id
+    override fun getName() = name
+    override fun getLocation() = location
+}
 
-        // --- Enum Builders ---
-        private fun buildFoodOptions(place: Place): List<FoodOption> {
-            val list = mutableListOf<FoodOption>()
-            if (getBooleanAttribute(place.servesBreakfast)) list += FoodOption.BREAKFAST
-            if (getBooleanAttribute(place.servesBrunch)) list += FoodOption.BRUNCH
-            if (getBooleanAttribute(place.servesLunch)) list += FoodOption.LUNCH
-            if (getBooleanAttribute(place.servesDinner)) list += FoodOption.DINNER
-            if (getBooleanAttribute(place.servesDessert)) list += FoodOption.DESSERT
-            if (getBooleanAttribute(place.servesVegetarianFood)) list += FoodOption.VEGETARIAN
-            if (getBooleanAttribute(place.servesBeer)) list += FoodOption.BEER
-            if (getBooleanAttribute(place.servesWine)) list += FoodOption.WINE
-            if (getBooleanAttribute(place.servesCocktails)) list += FoodOption.COCKTAILS
-            return list
+// CoffeePlaceLite: lightweight model for feed/search
+ data class CoffeePlaceLite(
+    val id: String?,
+    val name: String?,
+    val address: String?,
+    val location: LatLng?,
+    val googleMapsUrl: String?,
+    val rating: Double?,
+    val ratingCount: Int?,
+    val images: List<PhotoMetadata>?,
+    val businessStatus: String?,
+    val currentOpeningHours: List<String>?,
+    val nationalPhoneNumber: String?,
+    val internationalPhoneNumber: String? = null,
+    val foodOptions: List<FoodOption>,
+    val atmosphere: List<Atmosphere>,
+    val serviceOptions: List<ServiceOption>,
+    val extras: List<ExtraFeature>,
+    val priceLevel: Int? = null
+) : CoffeePlaceBase {
+    companion object : CoffeePlaceCompanion<CoffeePlaceLite> {
+        override val fields = listOf(
+            Place.Field.ID,
+            Place.Field.NAME,
+            Place.Field.LAT_LNG,
+            Place.Field.ADDRESS,
+            Place.Field.RATING,
+            Place.Field.PHOTO_METADATAS,
+            Place.Field.OPENING_HOURS,
+            Place.Field.PHONE_NUMBER,
+            Place.Field.PRICE_LEVEL,
+            Place.Field.USER_RATINGS_TOTAL,
+            Place.Field.BUSINESS_STATUS
+        )
+        override fun fromPlace(place: Place): CoffeePlaceLite {
+            return CoffeePlaceLite(
+                id = place.id,
+                name = place.displayName,
+                address = place.formattedAddress,
+                location = place.location,
+                googleMapsUrl = place.googleMapsUri?.toString(),
+                rating = place.rating,
+                ratingCount = place.userRatingCount,
+                images = place.photoMetadatas,
+                businessStatus = place.businessStatus?.name,
+                currentOpeningHours = place.currentOpeningHours?.weekdayText,
+                nationalPhoneNumber = place.nationalPhoneNumber,
+                internationalPhoneNumber = place.internationalPhoneNumber,
+                foodOptions = TagBuilder.buildFoodOptions(place),
+                atmosphere = TagBuilder.buildAtmosphere(place),
+                serviceOptions = TagBuilder.buildServiceOptions(place),
+                extras = TagBuilder.buildExtras(place),
+                priceLevel = place.priceLevel
+            )
         }
+    }
+    override fun getId() = id
+    override fun getName() = name
+    override fun getLocation() = location
+}
 
-        private fun buildAtmosphere(place: Place): List<Atmosphere> {
-            val list = mutableListOf<Atmosphere>()
-            if (getBooleanAttribute(place.outdoorSeating)) list += Atmosphere.OUTDOOR_SEATING
-            if (getBooleanAttribute(place.allowsDogs)) list += Atmosphere.PET_FRIENDLY
-            if (getBooleanAttribute(place.goodForChildren)) list += Atmosphere.KID_FRIENDLY
-            if (getBooleanAttribute(place.goodForGroups)) list += Atmosphere.GROUP_FRIENDLY
-            if (getBooleanAttribute(place.liveMusic)) list += Atmosphere.LIVE_MUSIC
-            if (getBooleanAttribute(place.goodForWatchingSports)) list += Atmosphere.SPORTS_FRIENDLY
-            return list
-        }
+// Suggestion model
+data class CoffeePlaceSuggestion(
+    val id: String,
+    val description: String
+)
 
-        private fun buildServiceOptions(place: Place): List<ServiceOption> {
-            val list = mutableListOf<ServiceOption>()
-            if (getBooleanAttribute(place.dineIn)) list += ServiceOption.DINE_IN
-            if (getBooleanAttribute(place.takeout)) list += ServiceOption.TAKEOUT
-            if (getBooleanAttribute(place.delivery)) list += ServiceOption.DELIVERY
-            if (getBooleanAttribute(place.curbsidePickup)) list += ServiceOption.CURBSIDE_PICKUP
-            return list
-        }
-
-        private fun buildExtras(place: Place): List<ExtraFeature> {
-            val list = mutableListOf<ExtraFeature>()
-            if (place.parkingOptions != null) list += ExtraFeature.PARKING
-            if (place.accessibilityOptions != null) list += ExtraFeature.WHEELCHAIR_ACCESS
-            if (getBooleanAttribute(place.restroom)) list += ExtraFeature.RESTROOM
-            if (getBooleanAttribute(place.menuForChildren)) list += ExtraFeature.KIDS_MENU
-            return list
-        }
+// TagBuilder: helper for building tag lists from Place
+object TagBuilder {
+    fun buildFoodOptions(place: Place): List<FoodOption> {
+        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
+        val list = mutableListOf<FoodOption>()
+        if (getBool(place.servesBreakfast)) list += FoodOption.BREAKFAST
+        if (getBool(place.servesBrunch)) list += FoodOption.BRUNCH
+        if (getBool(place.servesLunch)) list += FoodOption.LUNCH
+        if (getBool(place.servesDinner)) list += FoodOption.DINNER
+        if (getBool(place.servesDessert)) list += FoodOption.DESSERT
+        if (getBool(place.servesVegetarianFood)) list += FoodOption.VEGETARIAN
+        if (getBool(place.servesBeer)) list += FoodOption.BEER
+        if (getBool(place.servesWine)) list += FoodOption.WINE
+        if (getBool(place.servesCocktails)) list += FoodOption.COCKTAILS
+        return list
+    }
+    fun buildAtmosphere(place: Place): List<Atmosphere> {
+        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
+        val list = mutableListOf<Atmosphere>()
+        if (getBool(place.outdoorSeating)) list += Atmosphere.OUTDOOR_SEATING
+        if (getBool(place.allowsDogs)) list += Atmosphere.PET_FRIENDLY
+        if (getBool(place.goodForChildren)) list += Atmosphere.KID_FRIENDLY
+        if (getBool(place.goodForGroups)) list += Atmosphere.GROUP_FRIENDLY
+        if (getBool(place.liveMusic)) list += Atmosphere.LIVE_MUSIC
+        if (getBool(place.goodForWatchingSports)) list += Atmosphere.SPORTS_FRIENDLY
+        return list
+    }
+    fun buildServiceOptions(place: Place): List<ServiceOption> {
+        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
+        val list = mutableListOf<ServiceOption>()
+        if (getBool(place.dineIn)) list += ServiceOption.DINE_IN
+        if (getBool(place.takeout)) list += ServiceOption.TAKEOUT
+        if (getBool(place.delivery)) list += ServiceOption.DELIVERY
+        if (getBool(place.curbsidePickup)) list += ServiceOption.CURBSIDE_PICKUP
+        return list
+    }
+    fun buildExtras(place: Place): List<ExtraFeature> {
+        fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
+        val list = mutableListOf<ExtraFeature>()
+        if (place.parkingOptions != null) list += ExtraFeature.PARKING
+        if (place.accessibilityOptions != null) list += ExtraFeature.WHEELCHAIR_ACCESS
+        if (getBool(place.restroom)) list += ExtraFeature.RESTROOM
+        if (getBool(place.menuForChildren)) list += ExtraFeature.KIDS_MENU
+        return list
     }
 }
 
-/**
- * Enums to group attributes into clean categories.
- * Great for displaying tags in the UI (chips/badges).
- */
+// Enums for tags
 enum class FoodOption {
     BREAKFAST, BRUNCH, LUNCH, DINNER, DESSERT, VEGETARIAN, BEER, WINE, COCKTAILS
 }
-
 enum class Atmosphere {
     OUTDOOR_SEATING, PET_FRIENDLY, KID_FRIENDLY, GROUP_FRIENDLY, LIVE_MUSIC, SPORTS_FRIENDLY
 }
-
 enum class ServiceOption {
     DINE_IN, TAKEOUT, DELIVERY, CURBSIDE_PICKUP
 }
-
 enum class ExtraFeature {
     PARKING, WHEELCHAIR_ACCESS, RESTROOM, KIDS_MENU
 }
