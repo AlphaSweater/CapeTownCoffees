@@ -9,15 +9,14 @@ sealed class CreateListResult {
 }
 
 class CreateListUseCase @Inject constructor(
-    private val ISavedListRepository: ISavedListRepository
-    ){
+    private val repo: ISavedListRepository
+) {
     suspend operator fun invoke(
         name: String,
         description: String?,
-        isPublic: Boolean,
-        placeId: String
+        isPublic: Boolean
     ): CreateListResult = try {
-        val id = ISavedListRepository.createList(name, description, isPublic, placeId)
+        val id = repo.createList(name, description, isPublic)
         CreateListResult.Success(id)
     } catch (e: Exception) {
         CreateListResult.Error(e.localizedMessage ?: "Failed to create list")

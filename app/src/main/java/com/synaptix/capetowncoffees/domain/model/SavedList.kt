@@ -5,5 +5,5 @@ data class SavedList(
     val name: String,
     val description: String?,
     val isPublic: Boolean,
-    val placeId: String
+    val placeIds: List<String> = emptyList()
 )
