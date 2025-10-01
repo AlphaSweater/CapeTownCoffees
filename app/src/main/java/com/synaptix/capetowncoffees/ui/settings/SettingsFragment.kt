@@ -65,6 +65,11 @@ class SettingsFragment : Fragment() {
         view.findViewById<View>(R.id.layoutDeleteAccount)?.setOnClickListener {
             showDeleteAccountConfirmation()
         }
+
+        // Set up clear cache button
+        view.findViewById<View>(R.id.layoutClearCache)?.setOnClickListener {
+            showClearCacheConfirmation()
+        }
     }
 
     private fun showLogoutConfirmation() {
@@ -101,6 +106,49 @@ class SettingsFragment : Fragment() {
 
     private fun showError(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showClearCacheConfirmation() {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Clear Cache")
+            .setMessage("Are you sure you want to clear all cached data? This will not delete your account or personal data.")
+            .setPositiveButton("Clear Cache") { _, _ ->
+                clearCache()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun clearCache() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Clear app cache
+                val cacheDir = requireContext().cacheDir
+                deleteRecursive(cacheDir)
+                
+                // Clear external cache if available
+                val externalCacheDir = requireContext().externalCacheDir
+                if (externalCacheDir != null) {
+                    deleteRecursive(externalCacheDir)
+                }
+                
+                Toast.makeText(requireContext(), "Cache cleared successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                showError("Failed to clear cache: ${e.message}")
+            }
+        }
+    }
+    
+    private fun deleteRecursive(fileOrDirectory: java.io.File) {
+        if (fileOrDirectory.isDirectory) {
+            fileOrDirectory.listFiles()?.forEach { child ->
+                deleteRecursive(child)
+            }
+        }
+        // Don't delete the directory itself, just its contents
+        if (fileOrDirectory != requireContext().cacheDir && fileOrDirectory != requireContext().externalCacheDir) {
+            fileOrDirectory.delete()
+        }
     }
 
     private fun showDeleteAccountConfirmation() {
