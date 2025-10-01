@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -57,11 +58,13 @@ class MainActivity : AppCompatActivity() {
         if (hasLocationPermission()) {
             permissionDialogShown = false
             permissionRequestInProgress = false
+            Timber.i("Location permission already granted. Proceeding as normal.")
             // Continue as normal
             return
         }
         // Always prompt for permission if not granted
         permissionRequestInProgress = true
+        Timber.i("Prompting user for location permission.")
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
@@ -87,8 +90,10 @@ class MainActivity : AppCompatActivity() {
         permissionRequestInProgress = false
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
+                Timber.i("User granted location permission.")
                 recreate()
             } else {
+                Timber.i("User denied location permission.")
                 // Only show guide if 'Don't ask again' is set for both permissions
                 val canPromptFine = ActivityCompat.shouldShowRequestPermissionRationale(
                     this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -98,6 +103,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 if (!canPromptFine && !canPromptCoarse) {
                     permissionDialogShown = true
+                    Timber.i("Showing guide dialog to user for location permission in settings.")
                     showPermissionSettingsDialog()
                 }
                 // Otherwise, do nothing: user can be prompted again next time
@@ -110,12 +116,14 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Location Permission Required")
             .setMessage("This app needs location access to function. Please enable location permission in settings.")
             .setPositiveButton("Open Settings") { _, _ ->
+                Timber.i("User chose to open app settings from guide dialog.")
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 intent.data = Uri.fromParts("package", packageName, null)
                 startActivity(intent)
                 permissionDialogShown = false // Reset so dialog can show again if needed
             }
             .setNegativeButton("Close App") { _, _ ->
+                Timber.i("User chose to close the app from guide dialog.")
                 finish()
             }
             .setCancelable(false)
