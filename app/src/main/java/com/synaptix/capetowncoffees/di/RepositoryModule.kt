@@ -1,7 +1,6 @@
 package com.synaptix.capetowncoffees.di
 
 import com.synaptix.capetowncoffees.data.repository.SavedListRepositoryImpl
-import com.synaptix.capetowncoffees.data.repository.IUserRepositoryImpl
 import com.synaptix.capetowncoffees.domain.repository.ISavedListRepository
 import com.synaptix.capetowncoffees.data.repository.UserRepository
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository

@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.saved.savelist
+package com.synaptix.capetowncoffees.ui.savedLists.createList
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,7 +17,7 @@ class CreateListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_create_list, container, false)
+        return inflater.inflate(R.layout.fragment_saved_create_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
