@@ -56,7 +56,7 @@
 
             app:boxBackgroundMode="outline"
             app:boxBackgroundColor="@color/coffee_cream"
-            app:boxStrokeColor="@color/coffee_dark"
+            app:boxStrokeColor="@color/button_category"
             app:boxStrokeWidth="2dp"
             app:boxStrokeWidthFocused="2dp"
             app:boxCornerRadiusTopStart="8dp"
@@ -64,7 +64,8 @@
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
             app:startIconDrawable="@drawable/ic_email"
-            app:startIconTint="@color/coffee_dark"
+            app:startIconTint="@color/button_category"
+            app:hintTextColor="@color/button_category"
             android:hint="@string/email">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -87,7 +88,7 @@
             android:layout_marginTop="12dp"
             app:boxBackgroundMode="outline"
             app:boxBackgroundColor="@color/coffee_cream"
-            app:boxStrokeColor="@color/coffee_dark"
+            app:boxStrokeColor="@color/button_category"
             app:boxStrokeWidth="2dp"
             app:boxStrokeWidthFocused="2dp"
             app:boxCornerRadiusTopStart="8dp"
@@ -95,20 +96,21 @@
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
             app:startIconDrawable="@drawable/ic_lock"
-            app:startIconTint="@color/coffee_dark"
+            app:startIconTint="@color/button_category"
             app:endIconMode="password_toggle"
-            app:endIconTint="@color/coffee_dark"
+            app:endIconTint="@color/button_category"
+            app:hintTextColor="@color/button_category"
             android:hint="@string/password">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/passwordEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingVertical="14dp"
-                android:paddingStart="16dp"
+                android:background="@null"
                 android:inputType="textPassword"
                 android:maxLines="1"
-                android:background="@null"/>
+                android:paddingVertical="14dp"
+                android:paddingStart="16dp" />
         </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -124,6 +126,8 @@
             android:textColor="@color/text_secondary"/>
 
         <!-- Sign In Button -->
+
+        <!-- Divider with "or" text -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonlogin"
             style="@style/Widget.MaterialComponents.Button"
@@ -131,14 +135,13 @@
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:layout_marginTop="10dp"
+            android:backgroundTint="@color/button_category"
             android:text="@string/sign_in"
             android:textAllCaps="false"
-            android:textColor="?attr/colorOnPrimary"
+            android:textColor="@color/text_alt"
             android:textSize="15sp"
-            android:backgroundTint="?attr/colorPrimary"
-            app:cornerRadius="28dp"/>
+            app:cornerRadius="28dp" />
 
-        <!-- Divider with "or" text -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
