@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     private var permissionDialogShown = false
     private var permissionRequestInProgress = false
+    private var sentToSettingsOnce = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Ensure that after the splash, we use the main app theme on pre-Android 12
@@ -91,22 +92,22 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
                 Timber.i("User granted location permission.")
+                permissionDialogShown = false
+                sentToSettingsOnce = false
                 recreate()
             } else {
                 Timber.i("User denied location permission.")
-                // Only show guide if 'Don't ask again' is set for both permissions
+                permissionDialogShown = true
                 val canPromptFine = ActivityCompat.shouldShowRequestPermissionRationale(
                     this, Manifest.permission.ACCESS_FINE_LOCATION
                 )
                 val canPromptCoarse = ActivityCompat.shouldShowRequestPermissionRationale(
                     this, Manifest.permission.ACCESS_COARSE_LOCATION
                 )
-                if (!canPromptFine && !canPromptCoarse) {
-                    permissionDialogShown = true
+                if ((!canPromptFine && !canPromptCoarse) || sentToSettingsOnce) {
                     Timber.i("Showing guide dialog to user for location permission in settings.")
                     showPermissionSettingsDialog()
                 }
-                // Otherwise, do nothing: user can be prompted again next time
             }
         }
     }
@@ -120,7 +121,8 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                 intent.data = Uri.fromParts("package", packageName, null)
                 startActivity(intent)
-                permissionDialogShown = false // Reset so dialog can show again if needed
+                permissionDialogShown = false
+                sentToSettingsOnce = true // Track that user was sent to settings
             }
             .setNegativeButton("Close App") { _, _ ->
                 Timber.i("User chose to close the app from guide dialog.")
