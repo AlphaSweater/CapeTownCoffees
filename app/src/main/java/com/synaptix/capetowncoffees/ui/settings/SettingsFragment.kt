@@ -60,6 +60,11 @@ class SettingsFragment : Fragment() {
         view.findViewById<View>(R.id.layoutLogout)?.setOnClickListener {
             showLogoutConfirmation()
         }
+
+        // Set up delete account button
+        view.findViewById<View>(R.id.layoutDeleteAccount)?.setOnClickListener {
+            showDeleteAccountConfirmation()
+        }
     }
 
     private fun showLogoutConfirmation() {
@@ -96,5 +101,36 @@ class SettingsFragment : Fragment() {
 
     private fun showError(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showDeleteAccountConfirmation() {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Delete Account")
+            .setMessage("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.")
+            .setPositiveButton("Delete") { _, _ ->
+                deleteAccount()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun deleteAccount() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = authManager.deleteAccount()
+                if (result.isSuccess) {
+                    // Navigate to sign in screen after successful deletion
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_graph, true)
+                        .build()
+                    findNavController().navigate(R.id.signInFragment, null, navOptions)
+                    Toast.makeText(requireContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    showError("Failed to delete account. Please try again.")
+                }
+            } catch (e: Exception) {
+                showError("An error occurred: ${e.message}")
+            }
+        }
     }
 }

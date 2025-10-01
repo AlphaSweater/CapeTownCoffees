@@ -122,6 +122,7 @@
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/text_secondary"/>
 
     <LinearLayout
+        android:id="@+id/layoutDeleteAccount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
