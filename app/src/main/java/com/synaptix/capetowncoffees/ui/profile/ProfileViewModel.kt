@@ -62,6 +62,7 @@ class ProfileViewModel @Inject constructor(
                             email = userDto.email,
                             firstName = firstName,
                             lastName = lastName,
+                            photoBase64= userDto.photoBase64,
                             createdAt = userDto.createdAt,
                             updatedAt = userDto.updatedAt,
                             lastLoginAt = userDto.lastLoginAt

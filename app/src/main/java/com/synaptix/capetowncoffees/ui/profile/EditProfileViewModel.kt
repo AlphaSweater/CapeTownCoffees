@@ -1,5 +1,6 @@
 package com.synaptix.capetowncoffees.ui.profile
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.EmailAuthProvider
@@ -20,11 +21,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import android.util.Base64
+import com.synaptix.capetowncoffees.data.mapper.toDTO
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
     private val userRepository: IUserRepository
 ) : ViewModel() {
+
+    data class UiState(
+        val firstName: String,
+        val lastName: String,
+        val email: String,
+        val photoBase64: String? = null
+    )
 
     private val _uiState = MutableStateFlow<Resource<UiState>>(loadingResource())
     val uiState: StateFlow<Resource<UiState>> = _uiState.asStateFlow()
@@ -34,11 +44,7 @@ class EditProfileViewModel @Inject constructor(
 
     private var currentUser: User? = null
 
-    data class UiState(
-        val firstName: String,
-        val lastName: String,
-        val email: String
-    )
+
 
     init {
         loadUserProfile()
@@ -65,6 +71,7 @@ class EditProfileViewModel @Inject constructor(
                             email = userDto.email,
                             firstName = userDto.firstName,
                             lastName = userDto.lastName,
+                            photoBase64 = userDto.photoBase64,
                             createdAt = userDto.createdAt,
                             updatedAt = userDto.updatedAt,
                             lastLoginAt = userDto.lastLoginAt
@@ -73,7 +80,8 @@ class EditProfileViewModel @Inject constructor(
                             UiState(
                                 firstName = userDto.firstName ?: "",
                                 lastName = userDto.lastName ?: "",
-                                email = userDto.email
+                                email = userDto.email,
+                                photoBase64 = userDto.photoBase64
                             )
                         )
                     }
@@ -158,6 +166,7 @@ class EditProfileViewModel @Inject constructor(
                     email = email?.ifBlank { null } ?: updatedUser.email,
                     firstName = updatedUser.firstName,
                     lastName = updatedUser.lastName,
+                    photoBase64 = updatedUser.photoBase64,
                     createdAt = updatedUser.createdAt,
                     updatedAt = updatedUser.updatedAt,
                     lastLoginAt = updatedUser.lastLoginAt
@@ -170,12 +179,11 @@ class EditProfileViewModel @Inject constructor(
                     val finalEmail = email?.ifBlank { null } ?: updatedUser.email
                     currentUser = updatedUser.copy(email = finalEmail)
 
-                    _uiState.value = successOf(
-                        UiState(
-                            firstName = currentUser?.firstName ?: "",
-                            lastName = currentUser?.lastName ?: "",
-                            email = currentUser?.email ?: ""
-                        )
+                    data class UiState(
+                        val firstName: String,
+                        val lastName: String,
+                        val email: String,
+                        val photoBase64: String? = null
                     )
 
                     _updateState.value = successOf("Profile updated successfully")
@@ -190,11 +198,62 @@ class EditProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateProfilePicture(imageUri: Uri) {
+    fun updateProfilePicture(uri: Uri, context: Context) {
         viewModelScope.launch {
-            // In a real app, you would upload the image to a server and update the user's profile picture URL
-            // This is a placeholder for the actual implementation
-            Log.d("EditProfileViewModel", "Profile picture update would happen here: $imageUri")
+            try {
+                val userId = userRepository.getCurrentUserId()
+                if (userId == null) {
+                    _updateState.value = errorOf("User not authenticated")
+                    return@launch
+                }
+
+                _updateState.value = loadingResource()
+
+                // Use the passed context
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bytes = inputStream?.readBytes()
+                val base64Image = Base64.encodeToString(bytes, Base64.DEFAULT)
+                inputStream?.close()
+
+                // Rest of your code remains the same
+                val existing = currentUser
+                val newUpdatedAt = System.currentTimeMillis()
+                val updatedUser = existing?.copy(
+                    photoBase64 = base64Image,
+                    updatedAt = newUpdatedAt
+                ) ?: User(
+                    id = userId,
+                    email = FirebaseAuth.getInstance().currentUser?.email ?: "",
+                    firstName = null,
+                    lastName = null,
+                    photoBase64 = base64Image,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = newUpdatedAt,
+                    lastLoginAt = System.currentTimeMillis()
+                )
+
+                // Save to Firestore
+                val userDto = updatedUser.toDTO()
+                val result = userRepository.updateUserProfile(userId, userDto)
+
+                result.onSuccess {
+                    currentUser = updatedUser
+                    _uiState.value = successOf(
+                        UiState(
+                            firstName = updatedUser.firstName ?: "",
+                            lastName = updatedUser.lastName ?: "",
+                            email = updatedUser.email,
+                            photoBase64 = updatedUser.photoBase64
+                        )
+                    )
+                    _updateState.value = successOf("Profile photo updated")
+                }.onFailure { e ->
+                    _updateState.value = errorOf("Failed to update profile: ${e.message}")
+                }
+            } catch (e: Exception) {
+                Log.e("EditProfileViewModel", "Error updating profile picture", e)
+                _updateState.value = errorOf("Failed to process image: ${e.message}")
+            }
         }
     }
 

@@ -17,6 +17,9 @@ import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import android.graphics.BitmapFactory
+import android.util.Base64
+
 
 @AndroidEntryPoint
 
@@ -75,6 +78,19 @@ class ProfileFragment : Fragment() {
                         is Resource.Success -> {
                             resource.data?.let { user ->
                                 binding.tvUserName.text = "${user.firstName} ${user.lastName}".trim()
+                                // Load Base64 image if available
+                                user.photoBase64?.let { base64 ->
+                                    try {
+                                        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
+                                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                        binding.ivProfilePicture.setImageBitmap(bitmap)
+                                    } catch (e: Exception) {
+                                        Log.e("ProfileFragment", "Error loading profile image", e)
+                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                    }
+                                } ?: run {
+                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                }
                             }
                         }
                         is Resource.Error -> {

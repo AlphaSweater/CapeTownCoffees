@@ -1,5 +1,6 @@
 package com.synaptix.capetowncoffees.ui.profile
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,7 +17,9 @@ import com.synaptix.capetowncoffees.databinding.FragmentEditProfileBinding
 import com.synaptix.capetowncoffees.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import android.view.Gravity
+import androidx.activity.result.contract.ActivityResultContracts
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 
 @AndroidEntryPoint
 class EditProfileFragment : Fragment() {
@@ -27,6 +30,24 @@ class EditProfileFragment : Fragment() {
     private val viewModel: EditProfileViewModel by viewModels()
 
     private var hasAttemptedSave: Boolean = false
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            try {
+                // Show the selected image immediately
+                val inputStream = requireContext().contentResolver.openInputStream(it)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                binding.ivProfilePicture.setImageBitmap(bitmap)
+                inputStream?.close()
+
+                // Pass the URI and context to the ViewModel
+                viewModel.updateProfilePicture(it, requireContext())
+            } catch (e: Exception) {
+                Log.e("EditProfileFragment", "Error loading image", e)
+                Snackbar.make(binding.root, "Failed to load image", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,7 +69,7 @@ class EditProfileFragment : Fragment() {
         }
 
         binding.btnChangePhoto.setOnClickListener {
-            showMessage("Change photo functionality will be implemented soon")
+            pickImageLauncher.launch("image/*")
         }
 
         binding.btnSaveChanges.setOnClickListener {
@@ -78,6 +99,16 @@ class EditProfileFragment : Fragment() {
                                 // Update UI with user data
                                 binding.etFullName.setText("${user.firstName} ${user.lastName}".trim())
                                 binding.etEmail.setText(user.email)
+                                // Load profile image if available
+                                val url = user.photoBase64
+                                if (!url.isNullOrBlank()) {
+                                    Glide.with(this@EditProfileFragment)
+                                        .load(url)
+                                        .placeholder(com.synaptix.capetowncoffees.R.drawable.ic_profile_placeholder)
+                                        .error(com.synaptix.capetowncoffees.R.drawable.ic_profile_placeholder)
+                                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                                        .into(binding.ivProfilePicture)
+                                }
                             }
                         }
                         is Resource.Error -> {

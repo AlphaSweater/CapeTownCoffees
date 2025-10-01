@@ -9,6 +9,7 @@ data class UserDTO(
     val email: String = "",
     val firstName: String? = null,
     val lastName: String? = null,
+    val photoBase64: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val lastLoginAt: Long = System.currentTimeMillis()
