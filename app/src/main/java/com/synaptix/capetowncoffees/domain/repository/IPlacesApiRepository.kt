@@ -104,43 +104,4 @@ interface IPlacesApiRepository {
         // Strictness: if true → only strict coffee places; else relaxed mode
         val strictCoffeeOnly: Boolean = true
     )
-
-    companion object {
-        /**
-         * Determines if a place is coffee-relevant based on its primary type, all types,
-         * and the strictness mode.
-         *
-         * @param primaryType The primary type of the place (string from Places API)
-         * @param allTypes The full types array of the place (strings)
-         * @param strictMode If true, enforce strict coffee-only filtering
-         * @return true if the place passes the filter, false otherwise
-         */
-        fun isCoffeeRelevant(
-            primaryType: String?,
-            allTypes: List<String>,
-            strictMode: Boolean
-        ): Boolean {
-            if (primaryType == null) return false
-
-            // Always reject blacklisted primaries
-            if (BaseSearchParams.primaryBlacklist.contains(primaryType)) {
-                return false
-            }
-
-            return if (strictMode) {
-                // Strict: only dedicated coffee places
-                BaseSearchParams.strictPrimaryAllowed.contains(primaryType)
-            } else {
-                // Relaxed: allow broader primaries but require a coffee subtype if too broad
-                when {
-                    BaseSearchParams.strictPrimaryAllowed.contains(primaryType) -> true
-                    BaseSearchParams.relaxedPrimaryAllowed.contains(primaryType) -> {
-                        // If primary is broad like "restaurant", check for coffee subtypes
-                        allTypes.any { it in BaseSearchParams.coffeeSubTypes }
-                    }
-                    else -> false
-                }
-            }
-        }
-    }
 }
