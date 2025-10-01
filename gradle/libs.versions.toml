@@ -23,6 +23,7 @@ foundationAndroid = "1.9.2"
 material3Android = "1.4.0"
 coreSplashscreen = "1.0.1"
 recyclerview = "1.4.0"
+roomCompilerProcessingTesting = "2.8.1"
 
 [libraries]
 # Core Android
@@ -67,6 +68,7 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

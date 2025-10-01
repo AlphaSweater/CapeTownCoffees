@@ -34,6 +34,7 @@ android {
         compose = true // Will be removed after fixing usages
         viewBinding = true
         buildConfig = true
+        dataBinding = true
     }
 
     buildTypes {
@@ -89,6 +90,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    // Storage for profile photo uploads
+    implementation("com.google.firebase:firebase-storage")
 
     implementation(libs.androidx.ui.graphics.android)
     implementation(libs.androidx.foundation.android)
@@ -96,6 +99,10 @@ dependencies {
 
     // --- Optional helpers ---
     implementation("de.hdodenhof:circleimageview:3.1.0") // Circle Image View
+
+    // --- Image loading ---
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 
     // --- Testing & Logging ---
     implementation(libs.timber)

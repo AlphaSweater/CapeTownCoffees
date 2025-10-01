@@ -9,13 +9,13 @@ import com.synaptix.capetowncoffees.domain.usecase.auth.RegistrationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 sealed class RegisterUiState {
     object Idle : RegisterUiState()
     object Loading : RegisterUiState()
     object Success : RegisterUiState()
     data class Error(val message: String) : RegisterUiState()
     data class ValidationError(
+        val nameError: String? = null,
         val emailError: String? = null,
         val passwordError: String? = null,
         val confirmPasswordError: String? = null
@@ -58,13 +58,23 @@ class RegisterViewModel @Inject constructor(
         }
     }
 
-    fun validateInputs(email: String, password: String, confirmPassword: String): Boolean {
+    fun validateName(name: String): String? {
+        return when {
+            name.isBlank() -> "Name is required"
+            name.length < 2 -> "Name must be at least 2 characters"
+            else -> null
+        }
+    }
+
+    fun validateInputs(name: String, email: String, password: String, confirmPassword: String): Boolean {
+        val nameError = validateName(name)
         val emailError = validateEmail(email)
         val passwordError = validatePassword(password)
         val confirmPasswordError = validatePasswordConfirmation(password, confirmPassword)
 
-        if (emailError != null || passwordError != null || confirmPasswordError != null) {
+        if (nameError != null || emailError != null || passwordError != null || confirmPasswordError != null) {
             _registerState.value = RegisterUiState.ValidationError(
+                nameError,
                 emailError,
                 passwordError,
                 confirmPasswordError
@@ -75,17 +85,22 @@ class RegisterViewModel @Inject constructor(
     }
 
     // Function that handles user sign-up
-    // Takes email and password, hashes the password securely
+    // Takes name, email and password, hashes the password securely
     // and creates a new UserEntity object to register the user
-    fun registerUser(email: String, password: String, confirmPassword: String) {
-        if (!validateInputs(email, password, confirmPassword)) {
+    fun registerUser(name: String, email: String, password: String, confirmPassword: String) {
+        if (!validateInputs(name, email, password, confirmPassword)) {
             return
         }
 
         viewModelScope.launch {
             try {
                 _registerState.value = RegisterUiState.Loading
-                val result = registerUserUseCase.invoke(email, password)
+                // Split the full name into first and last name
+                val names = name.trim().split("\\s+".toRegex())
+                val firstName = names.firstOrNull() ?: ""
+                val lastName = names.drop(1).joinToString(" ").takeIf { it.isNotBlank() } ?: ""
+                
+                val result = registerUserUseCase.invoke(email, password, firstName, lastName)
                 _registerState.value = when (result) {
                     is RegistrationResult.Success -> RegisterUiState.Success
                     is RegistrationResult.EmailExists -> RegisterUiState.Error("Email already in use")

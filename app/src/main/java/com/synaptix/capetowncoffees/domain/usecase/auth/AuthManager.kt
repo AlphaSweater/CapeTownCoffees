@@ -25,4 +25,12 @@ class AuthManager @Inject constructor(
     fun observeAuthState(): Flow<Boolean> {
         return IUserRepository.observeAuthState()
     }
+
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            IUserRepository.deleteUserAccount()
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
