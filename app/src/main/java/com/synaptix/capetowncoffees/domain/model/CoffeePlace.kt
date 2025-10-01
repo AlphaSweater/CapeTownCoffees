@@ -1,24 +1,35 @@
+// =============================
+// CoffeePlace Domain Models
+// =============================
 package com.synaptix.capetowncoffees.domain.model
 
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
 
-// CoffeePlaceBase: base interface for all coffee place models
+// =============================
+// Interfaces
+// =============================
+
+// Base interface for all coffee place models.
 interface CoffeePlaceBase {
     fun getId(): String?
     fun getName(): String?
     fun getLocation(): LatLng?
 }
 
-// CoffeePlaceCompanion interface for dynamic field mapping
+// Interface for dynamic field mapping from Google Place API.
 interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
     val fields: List<Place.Field>
     fun fromPlace(place: Place): T
 }
 
-// CoffeePlaceFull: full details model
- data class CoffeePlaceFull(
+// =============================
+// Data Models
+// =============================
+
+// Full details model for a coffee place.
+data class CoffeePlaceFull(
     val id: String?,
     val name: String?,
     val address: String?,
@@ -32,7 +43,7 @@ interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
     val businessStatus: String?,
     val currentOpeningHours: List<String>?,
 
-    // Contact Info
+    // 📞 Contact Info
     val nationalPhoneNumber: String?,
     val internationalPhoneNumber: String? = null,
     val websiteUrl: String?,
@@ -46,10 +57,11 @@ interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
     // ⭐ Reviews
     val reviews: List<Review>?, // In-app and Google reviews combined
 
-    // Other attributes
+    // 💰 Other attributes
     val priceLevel: Int? = null // Google price level (0-4)
 
 ) : CoffeePlaceBase {
+    // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceFull> {
         override val fields = listOf(
             Place.Field.ID,
@@ -95,8 +107,8 @@ interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
     override fun getLocation() = location
 }
 
-// CoffeePlaceLite: lightweight model for feed/search
- data class CoffeePlaceLite(
+// Lightweight model for feed/search results.
+data class CoffeePlaceLite(
     val id: String?,
     val name: String?,
     val address: String?,
@@ -115,6 +127,7 @@ interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
     val extras: List<ExtraFeature>,
     val priceLevel: Int? = null
 ) : CoffeePlaceBase {
+    // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {
         override val fields = listOf(
             Place.Field.ID,
@@ -156,13 +169,17 @@ interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
     override fun getLocation() = location
 }
 
-// Suggestion model
+// Model for search/autocomplete suggestions.
 data class CoffeePlaceSuggestion(
     val id: String,
     val description: String
 )
 
-// TagBuilder: helper for building tag lists from Place
+// =============================
+// TagBuilder Helper
+// =============================
+
+// Helper object for building tag lists from Place attributes.
 object TagBuilder {
     fun buildFoodOptions(place: Place): List<FoodOption> {
         fun getBool(attr: Place.BooleanPlaceAttributeValue?) = attr == Place.BooleanPlaceAttributeValue.TRUE
@@ -209,16 +226,26 @@ object TagBuilder {
     }
 }
 
-// Enums for tags
+// =============================
+// Enums for Tagging
+// =============================
+
+// Food options available at a coffee place.
 enum class FoodOption {
     BREAKFAST, BRUNCH, LUNCH, DINNER, DESSERT, VEGETARIAN, BEER, WINE, COCKTAILS
 }
+
+// Atmosphere attributes for a coffee place.
 enum class Atmosphere {
     OUTDOOR_SEATING, PET_FRIENDLY, KID_FRIENDLY, GROUP_FRIENDLY, LIVE_MUSIC, SPORTS_FRIENDLY
 }
+
+// Service options available at a coffee place.
 enum class ServiceOption {
     DINE_IN, TAKEOUT, DELIVERY, CURBSIDE_PICKUP
 }
+
+// Extra features available at a coffee place.
 enum class ExtraFeature {
     PARKING, WHEELCHAIR_ACCESS, RESTROOM, KIDS_MENU
 }
