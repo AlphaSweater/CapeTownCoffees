@@ -28,8 +28,7 @@ interface IPlacesApiRepository {
      * Get autocomplete suggestions (for search box).
      */
     suspend fun getSuggestions(
-        query: String,
-        location: LatLng? = null
+        query: String
     ): Result<List<CoffeePlaceSuggestion>>
 
 
@@ -94,7 +93,6 @@ interface IPlacesApiRepository {
      * These are merged with [BaseSearchParams] inside implementation.
      */
     data class CoffeeSearchParams(
-        val location: LatLng,
         val radiusMeters: Int = BaseSearchParams.defaultRadiusMeters,
         val query: String? = "coffee",
         val onlyOpenNow: Boolean = false,
