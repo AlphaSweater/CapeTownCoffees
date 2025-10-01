@@ -19,7 +19,7 @@ class PlacesApiRepository @Inject constructor(
 ) : IPlacesApiRepository {
 
     // -----------------------------
-    // 1. Search nearby coffee places
+    // Search nearby coffee places
     // -----------------------------
     override suspend fun searchNearbyCoffeePlaces(
         params: CoffeeSearchParams
@@ -27,34 +27,32 @@ class PlacesApiRepository @Inject constructor(
         return try {
             val request = buildNearbyRequest(params)
             val response = placesClient.searchNearby(request).await()
-
             val results = response.places.orEmpty()
-                .mapNotNull { place ->
-                    CoffeePlaceLite.fromPlace(place)
-                }
-
+                .mapNotNull { CoffeePlaceLite.fromPlace(it) }
             Result.success(results)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to search nearby coffee places")
+            Timber.e(e, "Failed to search nearby coffee places: params=$params")
             Result.failure(e)
         }
     }
 
+    /**
+     * Build a SearchNearbyRequest for coffee places.
+     */
     private fun buildNearbyRequest(params: CoffeeSearchParams): SearchNearbyRequest {
         val userLatLng = params.location
         val searchArea = CircularBounds.newInstance(userLatLng, params.radiusMeters.toDouble())
-
         return SearchNearbyRequest.builder(searchArea, liteFields)
             .apply {
                 val includedPrimaries = if (params.strictCoffeeOnly)
-                    IPlacesApiRepository.BaseSearchParams.strictPrimaryAllowed.toList()
+                    IPlacesApiRepository.BaseSearchParams.strictPrimaryAllowed
                 else
-                    IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed.toList()
+                    IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed
 
-                val excludedPrimaries = IPlacesApiRepository.BaseSearchParams.primaryBlacklist.toList()
+                val excludedPrimaries = IPlacesApiRepository.BaseSearchParams.primaryBlacklist
 
-                setIncludedPrimaryTypes(includedPrimaries)
-                setExcludedPrimaryTypes(excludedPrimaries)
+                setIncludedPrimaryTypes(includedPrimaries.toList())
+                setExcludedPrimaryTypes(excludedPrimaries.toList())
                 setRankPreference(
                     if (params.sortByDistance) SearchNearbyRequest.RankPreference.DISTANCE
                     else SearchNearbyRequest.RankPreference.POPULARITY
@@ -63,24 +61,22 @@ class PlacesApiRepository @Inject constructor(
 
                 // Include coffee subtypes in lax mode
                 if (!params.strictCoffeeOnly) {
-                    val coffeeSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes.toList()
-                    val excludedSubTypes = IPlacesApiRepository.BaseSearchParams.excludedSubtypes.toList()
-
-                    setIncludedTypes(coffeeSubTypes)
-                    if (excludedSubTypes.isNotEmpty()) setExcludedTypes(excludedSubTypes)
+                    val coffeeSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes
+                    val excludedSubTypes = IPlacesApiRepository.BaseSearchParams.excludedSubtypes
+                    setIncludedTypes(coffeeSubTypes.toList())
+                    if (excludedSubTypes.isNotEmpty()) setExcludedTypes(excludedSubTypes.toList())
                 }
             }.build()
     }
 
     // -----------------------------
-    // 2. Get full coffee place details
+    // Get full coffee place details
     // -----------------------------
     override suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull> {
         return try {
             val request = FetchPlaceRequest.builder(placeId, fullFields).build()
             val response = placesClient.fetchPlace(request).await()
             val details = CoffeePlaceFull.fromPlace(response.place)
-
             Result.success(details)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch coffee place details for placeId=$placeId")
@@ -89,21 +85,14 @@ class PlacesApiRepository @Inject constructor(
     }
 
     // -----------------------------
-    // 3. Get autocomplete suggestions
+    // Get autocomplete suggestions
     // -----------------------------
     override suspend fun getSuggestions(query: String, location: LatLng?): Result<List<CoffeePlaceSuggestion>> {
         return try {
             val request = buildAutocompleteRequest(query, location)
             val response = placesClient.findAutocompletePredictions(request).await()
-
             val suggestions = response.autocompletePredictions
-                .filter { prediction ->
-                    val primaryType = prediction.types.firstOrNull()
-                    val allTypes = prediction.types.orEmpty()
-                    val allowedSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes.toList()
-
-                    primaryType in IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed || allTypes.any { it in allowedSubTypes }
-                }
+                .filter(::isCoffeeRelatedPrediction)
                 .take(5)
                 .map { prediction ->
                     CoffeePlaceSuggestion(
@@ -111,14 +100,27 @@ class PlacesApiRepository @Inject constructor(
                         name = prediction.getPrimaryText(null).toString()
                     )
                 }
-
             Result.success(suggestions)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch autocomplete suggestions for query='$query'")
+            Timber.e(e, "Failed to fetch autocomplete suggestions for query='$query', location=$location")
             Result.failure(e)
         }
     }
 
+    /**
+     * Helper to determine if a prediction is coffee-related.
+     */
+    private fun isCoffeeRelatedPrediction(prediction: AutocompletePrediction): Boolean {
+        val primaryType = prediction.types.firstOrNull()
+        val allTypes = prediction.types.orEmpty()
+        val allowedSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes
+        return primaryType in IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed ||
+                allTypes.any { it in allowedSubTypes }
+    }
+
+    /**
+     * Build an autocomplete request for coffee places.
+     */
     private fun buildAutocompleteRequest(query: String, location: LatLng?): FindAutocompletePredictionsRequest {
         val builder = FindAutocompletePredictionsRequest.builder()
             .setQuery(query)
