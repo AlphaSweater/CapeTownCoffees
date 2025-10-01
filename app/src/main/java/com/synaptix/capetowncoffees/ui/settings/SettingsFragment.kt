@@ -1,17 +1,28 @@
 package com.synaptix.capetowncoffees.ui.settings
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Switch
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.NavOptions
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.ThemeManager
-import android.widget.Switch
-import android.content.res.Configuration
+import com.synaptix.capetowncoffees.domain.usecase.auth.AuthManager
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SettingsFragment : Fragment() {
+
+    @Inject
+    lateinit var authManager: AuthManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,5 +55,46 @@ class SettingsFragment : Fragment() {
                 ThemeManager.setTheme(requireContext(), mode)
             }
         }
+
+        // Set up logout button
+        view.findViewById<View>(R.id.layoutLogout)?.setOnClickListener {
+            showLogoutConfirmation()
+        }
+    }
+
+    private fun showLogoutConfirmation() {
+        // You can use a DialogFragment or a simple dialog here
+        // For simplicity, we'll use a basic dialog
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Logout") { _, _ ->
+                performLogout()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performLogout() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = authManager.logout()
+                if (result is com.synaptix.capetowncoffees.domain.usecase.auth.LogoutResult.Success) {
+                    // Navigate back to sign in screen and clear the back stack
+                    val navOptions = NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_graph, true)
+                        .build()
+                    findNavController().navigate(R.id.signInFragment, null, navOptions)
+                } else {
+                    showError("Failed to logout. Please try again.")
+                }
+            } catch (e: Exception) {
+                showError("An error occurred: ${e.message}")
+            }
+        }
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 }

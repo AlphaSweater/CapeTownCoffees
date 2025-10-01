@@ -18,8 +18,8 @@ import com.synaptix.capetowncoffees.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.activity.result.contract.ActivityResultContracts
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
+import android.util.Base64
+import com.synaptix.capetowncoffees.R
 
 @AndroidEntryPoint
 class EditProfileFragment : Fragment() {
@@ -85,35 +85,37 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        // In onViewCreated, update the UI state observer
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Observe profile data
                 viewModel.uiState.collect { resource ->
                     when (resource) {
-                        is Resource.Loading -> {
-                            showLoading(true)
-                        }
                         is Resource.Success -> {
-                            showLoading(false)
-                            resource.data?.let { user ->
-                                // Update UI with user data
-                                binding.etFullName.setText("${user.firstName} ${user.lastName}".trim())
-                                binding.etEmail.setText(user.email)
+                            resource.data?.let { uiState ->
+                                // Update name and email
+                                binding.etFullName.setText("${uiState.firstName} ${uiState.lastName}".trim())
+                                binding.etEmail.setText(uiState.email)
+
                                 // Load profile image if available
-                                val url = user.photoBase64
-                                if (!url.isNullOrBlank()) {
-                                    Glide.with(this@EditProfileFragment)
-                                        .load(url)
-                                        .placeholder(com.synaptix.capetowncoffees.R.drawable.ic_profile_placeholder)
-                                        .error(com.synaptix.capetowncoffees.R.drawable.ic_profile_placeholder)
-                                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                                        .into(binding.ivProfilePicture)
+                                uiState.photoBase64?.let { base64 ->
+                                    try {
+                                        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
+                                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                        binding.ivProfilePicture.setImageBitmap(bitmap)
+                                    } catch (e: Exception) {
+                                        Log.e("EditProfileFragment", "Error loading profile image", e)
+                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                    }
+                                } ?: run {
+                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
                                 }
                             }
                         }
                         is Resource.Error -> {
-                            showLoading(false)
-                            showError(resource.message ?: "Failed to load profile")
+                            // Handle error
+                        }
+                        is Resource.Loading -> {
+                            // Show loading state if needed
                         }
                     }
                 }

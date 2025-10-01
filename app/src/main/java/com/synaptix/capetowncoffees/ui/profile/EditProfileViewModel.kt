@@ -243,7 +243,7 @@ class EditProfileViewModel @Inject constructor(
                             firstName = updatedUser.firstName ?: "",
                             lastName = updatedUser.lastName ?: "",
                             email = updatedUser.email,
-                            photoBase64 = updatedUser.photoBase64
+                            photoBase64 = updatedUser.photoBase64  // Make sure this is included
                         )
                     )
                     _updateState.value = successOf("Profile photo updated")
