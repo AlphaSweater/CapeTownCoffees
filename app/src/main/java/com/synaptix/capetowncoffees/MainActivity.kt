@@ -98,16 +98,8 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Timber.i("User denied location permission.")
                 permissionDialogShown = true
-                val canPromptFine = ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, Manifest.permission.ACCESS_FINE_LOCATION
-                )
-                val canPromptCoarse = ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-                if ((!canPromptFine && !canPromptCoarse) || sentToSettingsOnce) {
-                    Timber.i("Showing guide dialog to user for location permission in settings.")
-                    showPermissionSettingsDialog()
-                }
+                // Always show guide dialog when denied
+                showPermissionSettingsDialog()
             }
         }
     }
