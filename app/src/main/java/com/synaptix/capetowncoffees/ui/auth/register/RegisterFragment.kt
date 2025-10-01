@@ -29,7 +29,6 @@ class RegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         // Set up click listener for the Sign In text
         binding.textLoginSwap.setOnClickListener {
             findNavController().navigateUp()
@@ -37,10 +36,11 @@ class RegisterFragment : Fragment() {
 
         // Set up click listener for the Sign Up button
         binding.buttonSignUp.setOnClickListener {
+            val name = binding.nameEditText.text.toString()
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
             val confirmPassword = binding.confirmPasswordEditText.text.toString()
-            viewModel.registerUser(email, password, confirmPassword)
+            viewModel.registerUser(name, email, password, confirmPassword)
         }
 
         // Set up click listener for Google sign up button
@@ -70,13 +70,14 @@ class RegisterFragment : Fragment() {
                 }
                 is RegisterUiState.ValidationError -> {
                     binding.buttonSignUp.isEnabled = true
+                    binding.nameInputLayout.error = state.nameError
                     binding.emailInputLayout.error = state.emailError
                     binding.passwordInputLayout.error = state.passwordError
                     binding.confirmPasswordInputLayout.error = state.confirmPasswordError
                 }
                 is RegisterUiState.Idle -> {
                     binding.buttonSignUp.isEnabled = true
-                    // binding.errorTextView.visibility = View.GONE
+                    binding.nameInputLayout.error = null
                     binding.emailInputLayout.error = null
                     binding.passwordInputLayout.error = null
                     binding.confirmPasswordInputLayout.error = null
