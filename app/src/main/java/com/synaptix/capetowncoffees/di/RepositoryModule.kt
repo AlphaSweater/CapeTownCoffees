@@ -1,6 +1,8 @@
 package com.synaptix.capetowncoffees.di
 
+import com.synaptix.capetowncoffees.data.repository.SavedListRepositoryImpl
 import com.synaptix.capetowncoffees.data.repository.IUserRepositoryImpl
+import com.synaptix.capetowncoffees.domain.repository.ISavedListRepository
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import dagger.Binds
 import dagger.Module
@@ -18,4 +20,9 @@ abstract class RepositoryModule {
         impl: IUserRepositoryImpl
     ): IUserRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindSavedListRepository(
+        impl: SavedListRepositoryImpl
+    ): ISavedListRepository
 }
