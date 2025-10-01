@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.saved
+package com.synaptix.capetowncoffees.ui.saved.savelist
 
 import android.graphics.Color
 import android.graphics.Typeface
