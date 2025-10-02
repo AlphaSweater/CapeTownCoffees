@@ -34,8 +34,7 @@
             android:orientation="vertical"
             android:paddingEnd="16dp"
             android:id="@+id/tabList"
-            android:clickable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:clickable="true">
 
             <TextView
                 android:id="@+id/tvTabList"
@@ -60,8 +59,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="16dp"
-            android:clickable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:clickable="true">
 
             <TextView
                 android:id="@+id/tvTabDownloads"
@@ -171,6 +169,22 @@
                 android:src="@drawable/ic_download"
                 app:tint="@color/text_primary" />
         </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+
+        <!-- Saved Lists Recycler -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerSavedLists"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:nestedScrollingEnabled="true"
+            android:clipToPadding="false"
+            android:paddingBottom="80dp"/>
 
     </LinearLayout>
 

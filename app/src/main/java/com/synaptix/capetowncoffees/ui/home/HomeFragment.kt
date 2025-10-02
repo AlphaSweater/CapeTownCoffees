@@ -40,21 +40,21 @@ class HomeFragment : Fragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     @Inject
     lateinit var placesClient: com.google.android.libraries.places.api.net.PlacesClient
-    
+
     private val categories = listOf(
         Category(1, "All", R.drawable.ic_medal),
         Category(3, "Pet Friendly", R.drawable.baseline_pets_24),
         Category(4, "Nearby", R.drawable.ic_location),
         Category(5, "Dates", R.drawable.ic_heart)
     )
-    
+
     private val categoryAdapter by lazy {
         CategoryAdapter { category ->
             // Handle category selection
             viewModel.filterByCategory(category)
         }
     }
-    
+
     private val nearMeAdapter by lazy {
         NearMeAdapter(
             emptyList(),
@@ -64,7 +64,7 @@ class HomeFragment : Fragment() {
             }
         )
     }
-    
+
     private val featuredAdapter by lazy {
         FeaturedAdapter(emptyList(), placesClient) { featuredItem ->
             // Handle featured item click
@@ -80,7 +80,7 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeNewBinding.inflate(inflater, container, false)
         return binding.root
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
@@ -89,7 +89,7 @@ class HomeFragment : Fragment() {
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         setupUI()
         setupObservers()
         requestLocation()
@@ -103,14 +103,14 @@ class HomeFragment : Fragment() {
             setHasFixedSize(true)
         }
         categoryAdapter.updateCategories(categories)
-        
+
         // Setup near me RecyclerView
         binding.rvNearMe.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
             adapter = nearMeAdapter
             setHasFixedSize(true)
         }
-        
+
         // Setup featured RecyclerView
         binding.rvFeatured.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
@@ -124,7 +124,7 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
         }
     }
-    
+
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -144,7 +144,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
-    
+
     @SuppressLint("MissingPermission")
     private fun requestLocation() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -162,12 +162,12 @@ class HomeFragment : Fragment() {
                         viewLifecycleOwner.lifecycleScope.launch {
                             try {
                                 val newLocation = LocationUtil.getCurrentLocation(requireContext())
-                                newLocation?.let { 
+                                newLocation?.let {
                                     val newLatLng = com.google.android.gms.maps.model.LatLng(
                                         it.latitude,
                                         it.longitude
                                     )
-                                    viewModel.setCurrentLocation(newLatLng) 
+                                    viewModel.setCurrentLocation(newLatLng)
                                 }
                             } catch (e: Exception) {
                                 Timber.e(e, "Error getting current location")
@@ -185,23 +185,23 @@ class HomeFragment : Fragment() {
             }
         }
     }
-    
+
     private fun updateUI(state: HomeViewModel.HomeUiState.Success) {
         // Update near me list
         nearMeAdapter.updateItems(state.places)
-        
+
         // Update featured items
         featuredAdapter.updateItems(state.featuredPlaces)
     }
-    
+
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
-    
+
     private fun showError(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
-    
+
     private fun navigateToCafeDetails(coffeePlace: CoffeePlaceLite) {
         val action = HomeFragmentDirections.actionHomeFragmentToCafeDetailFragment(
             cafeName = coffeePlace.name ?: "Cafe",

@@ -117,7 +117,35 @@
         android:id="@+id/savedFragment"
         android:name="com.synaptix.capetowncoffees.ui.savedLists.SavedListsFragment"
         android:label="Saved"
-        tools:layout="@layout/fragment_saved_lists" />
+        tools:layout="@layout/fragment_saved_lists">
+        
+        <action
+            android:id="@+id/action_savedListsFragment_to_createListFragment"
+            app:destination="@id/createListFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_savedListsFragment_to_listDetailsFragment"
+            app:destination="@id/listDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+            
+    </fragment>
+
+    <fragment
+        android:id="@+id/listDetailsFragment"
+        android:name="com.synaptix.capetowncoffees.ui.savedLists.ListDetailsFragment"
+        android:label="List Details"
+        tools:layout="@layout/fragment_list_details">
+        <argument
+            android:name="listId"
+            app:argType="string" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -182,5 +210,12 @@
         android:name="com.synaptix.capetowncoffees.ui.settings.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/privacyPolicyFragment"
+        android:name="com.synaptix.capetowncoffees.ui.privacy.PrivacyPolicyFragment"
+        android:label="Privacy Policy"
+        tools:layout="@layout/fragment_settings_privacy_policy"/>
+
 
 </navigation>

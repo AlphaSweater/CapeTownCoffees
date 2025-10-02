@@ -55,4 +55,37 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System default</string>
+
+    <!-- privacy policy -->
+    <string name="privacy_policy_title">Privacy Policy</string>
+
+    <string name="privacy_section_overview">Overview</string>
+    <string name="privacy_overview_body">
+    We respect your privacy. This policy explains what data Cape Town Coffees collects, how we use it, and the choices you have. By using the app, you agree to the practices described here.
+</string>
+
+    <string name="privacy_section_data_we_collect">Data We Use</string>
+    <string name="privacy_collect_intro">
+    We Use only the data we need to run and improve the app. This may include:
+</string>
+
+    <string name="privacy_section_how_we_use_data">How We Use Your Data</string>
+
+    <string name="privacy_section_sharing">Sharing</string>
+    <string name="privacy_sharing_body">
+    We do not sell your personal data. We may share limited information with service providers (e.g., analytics, crash reporting, maps/places) strictly to operate features on our behalf, under confidentiality obligations, or when required by law.
+</string>
+
+    <string name="privacy_section_permissions">Permissions</string>
+    <string name="privacy_permissions_body">
+    Certain features require permissions (e.g., Location to find nearby coffee shops). You can grant or revoke them at any time in Android Settings. If you revoke a permission, related features may not work.
+</string>
+
+    <string name="privacy_section_your_choices">Your Choices &amp; Controls</string>
+
+    <string name="privacy_section_contact">Contact Us</string>
+    <string name="privacy_contact_body">
+    Questions about this policy or your data? Email us at support@capetowncoffees.example.
+</string>
+
 </resources>

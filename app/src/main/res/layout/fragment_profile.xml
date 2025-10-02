@@ -211,7 +211,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="0.25"
-                                android:background="#00000000" />
+                                android:background="@color/coffee_accent_light" />
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
