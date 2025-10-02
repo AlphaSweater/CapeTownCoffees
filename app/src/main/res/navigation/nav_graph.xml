@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/signInFragment">
@@ -73,22 +72,16 @@
             android:id="@+id/action_homeFragment_to_searchFragment"
             app:destination="@id/searchFragment"
             app:enterAnim="@anim/slide_in_right"
-            app:popEnterAnim="@anim/slide_in_left" />
-
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
-        android:id="@+id/searchFragment"
-        android:name="com.synaptix.capetowncoffees.ui.search.SearchFragment"
-        android:label="@string/search"
-        tools:layout="@layout/fragment_search">
-        
-        <action
-            android:id="@+id/action_searchFragment_to_homeFragment"
-            app:destination="@id/homeFragment"
-            app:popUpTo="@id/homeFragment"
-            app:popUpToInclusive="false" />
-            
+    android:id="@+id/searchFragment"
+    android:name="com.synaptix.capetowncoffees.ui.home.search.SearchFragment"
+    android:label="Search"
+    tools:layout="@layout/fragment_home_search">
     </fragment>
 
     <fragment
@@ -118,7 +111,7 @@
         android:name="com.synaptix.capetowncoffees.ui.savedLists.SavedListsFragment"
         android:label="Saved"
         tools:layout="@layout/fragment_saved_lists">
-        
+
         <action
             android:id="@+id/action_savedListsFragment_to_createListFragment"
             app:destination="@id/createListFragment"
@@ -134,7 +127,7 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
-            
+
     </fragment>
 
     <fragment
