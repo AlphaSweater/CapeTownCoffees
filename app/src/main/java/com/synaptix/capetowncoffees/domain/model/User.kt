@@ -13,12 +13,13 @@ data class User(
 ) {
     companion object {
         fun newUser(
+            id: String,
             email: String,
             firstName: String? = null,
             lastName: String? = null,
         ): User {
             return User(
-                id = "",
+                id = id,
                 email = email,
                 firstName = firstName,
                 lastName = lastName,

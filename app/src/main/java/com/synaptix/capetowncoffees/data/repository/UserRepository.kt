@@ -17,6 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.synaptix.capetowncoffees.domain.model.User
+import com.synaptix.capetowncoffees.util.TimeUtils
 
 @Singleton
 class UserRepository @Inject constructor(
@@ -107,7 +108,8 @@ class UserRepository @Inject constructor(
 
     // Update user profile with provided fields
     override suspend fun updateUserProfile(userId: String, user: User): Result<Unit> {
-        return update(userId, user.toDTO())
+        val updatedUser = user.copy(updatedAt = TimeUtils.nowSeconds())
+        return update(userId, updatedUser.toDTO())
     }
 
     // Delete current user's account

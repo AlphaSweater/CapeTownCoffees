@@ -1,8 +1,7 @@
-package com.synaptix.capetowncoffees.ui.profile
+package com.synaptix.capetowncoffees.ui.profile.editProfile
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,8 +40,8 @@ class EditProfileFragment : Fragment() {
                 binding.ivProfilePicture.setImageBitmap(bitmap)
                 inputStream?.close()
 
-                // Pass the URI and context to the ViewModel
-                viewModel.updateProfilePicture(it, requireContext())
+                // Pass the URI to the ViewModel (no context needed)
+                viewModel.setProfilePictureUri(it)
             } catch (e: Exception) {
                 Timber.e(e, "Error loading image")
                 Snackbar.make(binding.root, "Failed to load image", Snackbar.LENGTH_SHORT).show()
@@ -139,6 +138,7 @@ class EditProfileFragment : Fragment() {
                                 showSuccess("Profile updated successfully")
                                 findNavController().navigateUp()
                                 hasAttemptedSave = false
+                                viewModel.resetUpdateState() // Reset after success
                             } else {
                                 binding.btnSaveChanges.isEnabled = true
                             }
@@ -146,8 +146,9 @@ class EditProfileFragment : Fragment() {
                         is Resource.Error -> {
                             binding.btnSaveChanges.isEnabled = true
                             if (hasAttemptedSave) {
-                                showError(resource.message ?: "Failed to update profile")
+                                showError(resource.message)
                                 hasAttemptedSave = false
+                                viewModel.resetUpdateState() // Reset after error
                             }
                         }
                     }
@@ -192,13 +193,14 @@ class EditProfileFragment : Fragment() {
         val firstName = nameParts.firstOrNull() ?: ""
         val lastName = nameParts.drop(1).joinToString(" ")
 
-        // Call ViewModel to update profile
+        // Call ViewModel to update profile, pass context
         viewModel.updateProfile(
             firstName = firstName,
             lastName = lastName,
             email = email,
-            currentPassword = if (currentPassword.isNotEmpty()) currentPassword else null,
-            newPassword = if (newPassword.isNotEmpty()) newPassword else null
+            currentPassword = currentPassword.ifEmpty { null },
+            newPassword = newPassword.ifEmpty { null },
+            context = requireContext()
         )
     }
     private fun showLoading(isLoading: Boolean) {
