@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private var permissionDialogShown = false
     private var permissionRequestInProgress = false
     private var sentToSettingsOnce = false
+    private var permissionRequestedOnce = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Ensure that after the splash, we use the main app theme on pre-Android 12
@@ -56,15 +57,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkLocationPermissionOnResume() {
-        if (hasLocationPermission()) {
+        val hasPerm = hasLocationPermission()
+        Timber.i("Checking location permission: hasLocationPermission() = $hasPerm")
+        if (hasPerm) {
             permissionDialogShown = false
             permissionRequestInProgress = false
             Timber.i("Location permission already granted. Proceeding as normal.")
             // Continue as normal
             return
         }
+        val shouldShowFine = ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val shouldShowCoarse = ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        Timber.i("shouldShowRequestPermissionRationale: fine=$shouldShowFine, coarse=$shouldShowCoarse")
+        if (!shouldShowFine && !shouldShowCoarse && permissionRequestedOnce) {
+            // User has denied with "Don't ask again" or permanently denied
+            Timber.i("Permission denied permanently or 'Don't ask again' selected. Showing guide dialog.")
+            permissionDialogShown = true
+            showPermissionSettingsDialog()
+            return
+        }
         // Always prompt for permission if not granted
         permissionRequestInProgress = true
+        permissionRequestedOnce = true
         Timber.i("Prompting user for location permission.")
         ActivityCompat.requestPermissions(
             this,
@@ -79,6 +93,7 @@ class MainActivity : AppCompatActivity() {
     private fun hasLocationPermission(): Boolean {
         val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
         val coarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        Timber.i("hasLocationPermission() check: fine=$fine, coarse=$coarse")
         return fine == PackageManager.PERMISSION_GRANTED || coarse == PackageManager.PERMISSION_GRANTED
     }
 
@@ -94,6 +109,7 @@ class MainActivity : AppCompatActivity() {
                 Timber.i("User granted location permission.")
                 permissionDialogShown = false
                 sentToSettingsOnce = false
+                permissionRequestedOnce = false
                 recreate()
             } else {
                 Timber.i("User denied location permission.")
