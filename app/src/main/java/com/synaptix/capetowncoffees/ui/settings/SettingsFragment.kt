@@ -70,6 +70,11 @@ class SettingsFragment : Fragment() {
         view.findViewById<View>(R.id.layoutClearCache)?.setOnClickListener {
             showClearCacheConfirmation()
         }
+
+        //set up privacy policy button
+        view.findViewById<View>(R.id.layoutPrivacySettings)?.setOnClickListener {
+            findNavController().navigate(R.id.privacyPolicyFragment)
+        }
     }
 
     private fun showLogoutConfirmation() {
