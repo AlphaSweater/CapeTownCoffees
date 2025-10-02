@@ -52,12 +52,12 @@
                 android:id="@+id/etListName"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/rounded_square"
-                android:paddingHorizontal="14dp"
                 android:hint="Ex: Coffee Dates"
-                android:textColor="@color/text_tip"
-                android:textColorHint="@color/text_tip"
-                android:layout_marginTop="8dp"/>
+                android:paddingHorizontal="14dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tip" />
 
             <TextView
                 android:layout_width="wrap_content"

@@ -51,25 +51,13 @@
                     android:layout_marginTop="40dp"
                     android:layout_marginEnd="16dp">
 
-                    <com.google.android.material.card.MaterialCardView
+                    <ImageView
                         android:id="@+id/btnBack"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardCornerRadius="24dp"
-                        app:cardElevation="1dp"
-                        app:cardUseCompatPadding="true"
-                        app:cardBackgroundColor="@color/surface">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_arrow_back"
-                            app:tint="@color/text_primary" />
-
-                    </com.google.android.material.card.MaterialCardView>
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_arrow_back"
+                        android:contentDescription="@string/action_back"
+                        app:tint="@color/text_primary" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -169,17 +157,30 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:hint="@string/full_name"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="@color/coffee_cream"
+                            app:boxStrokeColor="@color/button_category"
+                            app:boxStrokeWidth="2dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:boxCornerRadiusTopStart="8dp"
+                            app:boxCornerRadiusTopEnd="8dp"
+                            app:boxCornerRadiusBottomStart="8dp"
+                            app:boxCornerRadiusBottomEnd="8dp"
+                            app:startIconDrawable="@drawable/ic_person"
+                            app:startIconTint="@color/button_category"
+                            app:hintTextColor="@color/button_category">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etFullName"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:background="@null"
                                 android:inputType="textPersonName"
                                 android:imeOptions="actionNext"
+                                android:paddingVertical="14dp"
+                                android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary" />
-
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Email -->
@@ -188,16 +189,30 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
                             android:hint="@string/email"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="@color/coffee_cream"
+                            app:boxStrokeColor="@color/button_category"
+                            app:boxStrokeWidth="2dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:boxCornerRadiusTopStart="8dp"
+                            app:boxCornerRadiusTopEnd="8dp"
+                            app:boxCornerRadiusBottomStart="8dp"
+                            app:boxCornerRadiusBottomEnd="8dp"
+                            app:startIconDrawable="@drawable/ic_email"
+                            app:startIconTint="@color/button_category"
+                            app:hintTextColor="@color/button_category">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etEmail"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:background="@null"
                                 android:inputType="textEmailAddress"
+                                android:imeOptions="actionNext"
+                                android:paddingVertical="14dp"
+                                android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary" />
-
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Current Password -->
@@ -206,19 +221,32 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
                             android:hint="@string/current_password"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="@color/coffee_cream"
+                            app:boxStrokeColor="@color/button_category"
+                            app:boxStrokeWidth="2dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:boxCornerRadiusTopStart="8dp"
+                            app:boxCornerRadiusTopEnd="8dp"
+                            app:boxCornerRadiusBottomStart="8dp"
+                            app:boxCornerRadiusBottomEnd="8dp"
+                            app:startIconDrawable="@drawable/ic_lock"
+                            app:startIconTint="@color/button_category"
                             app:endIconMode="password_toggle"
-                            app:endIconTint="@color/text_secondary">
+                            app:endIconTint="@color/button_category"
+                            app:hintTextColor="@color/button_category">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etCurrentPassword"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:background="@null"
                                 android:inputType="textPassword"
                                 android:imeOptions="actionNext"
+                                android:paddingVertical="14dp"
+                                android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary" />
-
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- New Password -->
@@ -227,19 +255,32 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
                             android:hint="@string/new_password"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="@color/coffee_cream"
+                            app:boxStrokeColor="@color/button_category"
+                            app:boxStrokeWidth="2dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:boxCornerRadiusTopStart="8dp"
+                            app:boxCornerRadiusTopEnd="8dp"
+                            app:boxCornerRadiusBottomStart="8dp"
+                            app:boxCornerRadiusBottomEnd="8dp"
+                            app:startIconDrawable="@drawable/ic_lock"
+                            app:startIconTint="@color/button_category"
                             app:endIconMode="password_toggle"
-                            app:endIconTint="@color/text_secondary">
+                            app:endIconTint="@color/button_category"
+                            app:hintTextColor="@color/button_category">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etNewPassword"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:background="@null"
                                 android:inputType="textPassword"
                                 android:imeOptions="actionNext"
+                                android:paddingVertical="14dp"
+                                android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary" />
-
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Confirm New Password -->
@@ -248,19 +289,32 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
                             android:hint="@string/confirm_new_password"
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="@color/coffee_cream"
+                            app:boxStrokeColor="@color/button_category"
+                            app:boxStrokeWidth="2dp"
+                            app:boxStrokeWidthFocused="2dp"
+                            app:boxCornerRadiusTopStart="8dp"
+                            app:boxCornerRadiusTopEnd="8dp"
+                            app:boxCornerRadiusBottomStart="8dp"
+                            app:boxCornerRadiusBottomEnd="8dp"
+                            app:startIconDrawable="@drawable/ic_lock"
+                            app:startIconTint="@color/button_category"
                             app:endIconMode="password_toggle"
-                            app:endIconTint="@color/text_secondary">
+                            app:endIconTint="@color/button_category"
+                            app:hintTextColor="@color/button_category">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etConfirmNewPassword"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:background="@null"
                                 android:inputType="textPassword"
                                 android:imeOptions="actionDone"
+                                android:paddingVertical="14dp"
+                                android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary" />
-
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Save Button -->
