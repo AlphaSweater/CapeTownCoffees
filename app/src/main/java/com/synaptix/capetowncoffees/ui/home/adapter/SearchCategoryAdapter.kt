@@ -9,18 +9,19 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.synaptix.capetowncoffees.R
 
+// --- THIS IS THE FIX: Use a Set to store multiple selected indices ---
 data class FilterCategory(
     val title: String,
     val options: List<String>,
     var isExpanded: Boolean = false,
-    var selectedOptionIndex: Int = -1 // Track selected option for THIS category
+    val selectedOptionIndices: MutableSet<Int> = mutableSetOf() // Track multiple selections
 )
+// --- END OF FIX ---
 
 class SearchCategoryAdapter(
     private val categories: List<FilterCategory>,
@@ -32,7 +33,6 @@ class SearchCategoryAdapter(
         val categoryTitle: TextView = itemView.findViewById(R.id.tvCategoryTitle)
         val arrowIcon: ImageView = itemView.findViewById(R.id.ivArrow)
         val pillsScrollView: HorizontalScrollView = itemView.findViewById(R.id.pillsScrollView)
-        // Reference the new LinearLayout
         val optionsContainer: LinearLayout = itemView.findViewById(R.id.optionsContainer)
     }
 
@@ -51,34 +51,31 @@ class SearchCategoryAdapter(
         holder.optionsContainer.removeAllViews()
         val inflater = LayoutInflater.from(holder.itemView.context)
 
-        // --- THIS IS THE FIX: Replicate the selection logic from CategoryAdapter ---
         category.options.forEachIndexed { index, optionText ->
             val button = inflater.inflate(R.layout.item_category, holder.optionsContainer, false) as MaterialButton
 
             button.apply {
                 text = optionText
-                icon = null // No icon for these filters
-                // Set initial style based on selection state
-                setStyle(this, index == category.selectedOptionIndex)
+                icon = null
+                // --- THIS IS THE FIX: Check if the index is in the set ---
+                setStyle(this, category.selectedOptionIndices.contains(index))
+                // --- END OF FIX ---
             }
 
             button.setOnClickListener {
-                // If the same button is clicked again, deselect it. Otherwise, select the new one.
-                val newSelection = if (category.selectedOptionIndex == index) -1 else index
-
-                // Update the data model
-                category.selectedOptionIndex = newSelection
-
-                // Update the style for all buttons in this group
-                holder.optionsContainer.children.forEachIndexed { childIndex, childView ->
-                    if (childView is MaterialButton) {
-                        setStyle(childView, childIndex == newSelection)
-                    }
+                // --- THIS IS THE FIX: Add or remove the index from the set ---
+                if (category.selectedOptionIndices.contains(index)) {
+                    category.selectedOptionIndices.remove(index) // Deselect
+                } else {
+                    category.selectedOptionIndices.add(index) // Select
                 }
+                // --- END OF FIX ---
+
+                // Re-apply the style to the clicked button
+                setStyle(it as MaterialButton, category.selectedOptionIndices.contains(index))
             }
             holder.optionsContainer.addView(button)
         }
-        // --- END OF FIX ---
 
         holder.headerRow.setOnClickListener {
             category.isExpanded = !category.isExpanded
@@ -87,16 +84,12 @@ class SearchCategoryAdapter(
         }
     }
 
-    /**
-     * Helper function to apply styling for selected/unselected states,
-     * mimicking the logic in your HomeFragment's CategoryAdapter.
-     */
     private fun setStyle(button: MaterialButton, isSelected: Boolean) {
         val context = button.context
         if (isSelected) {
             // Selected state: Solid fill
             button.backgroundTintList = ContextCompat.getColorStateList(context, R.color.button_category)
-            button.setTextColor(ContextCompat.getColor(context, R.color.white)) // Assuming white text on solid bg
+            button.setTextColor(ContextCompat.getColor(context, R.color.white))
             button.iconTint = ContextCompat.getColorStateList(context, R.color.white)
         } else {
             // Unselected state: Stroked outline
