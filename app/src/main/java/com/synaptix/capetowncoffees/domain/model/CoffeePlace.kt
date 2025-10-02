@@ -6,6 +6,7 @@ package com.synaptix.capetowncoffees.domain.model
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
+import kotlin.collections.List
 
 // =============================
 // Interfaces
@@ -16,7 +17,7 @@ interface CoffeePlaceBase
 
 // Interface for dynamic field mapping from Google Place API.
 interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
-    val fields: List<Place.Field>
+    val fields: kotlin.collections.List<Place.Field>
     fun fromPlace(place: Place): T
 }
 
@@ -33,15 +34,15 @@ data class CoffeePlaceFull(
     val googleMapsUrl: String?,
     val rating: Double?,
     val ratingCount: Int?,
-    val images: List<PhotoMetadata>?, // Handles Google images
+    val images: kotlin.collections.List<PhotoMetadata>?, // Handles Google images
 
     // 🏪 Types
     val primaryType: String?,          // new SDK: exactly one primary type
-    val types: List<String>?,          // extra types list
+    val types: kotlin.collections.List<String>?,          // extra types list
 
     // ⏰ Hours
     val businessStatus: String?,
-    val currentOpeningHours: List<String>?,
+    val currentOpeningHours: kotlin.collections.List<String>?,
 
     // 📞 Contact Info
     val nationalPhoneNumber: String?,
@@ -49,10 +50,10 @@ data class CoffeePlaceFull(
     val websiteUrl: String?,
 
     // 🍽️ Grouped Attributes
-    val tags: List<Tag>, // Unified tags for UI
+    val tags: kotlin.collections.List<Tag>, // Unified tags for UI
 
     // ⭐ Reviews
-    val reviews: List<Review>?, // In-app and Google reviews combined
+    val reviews: kotlin.collections.List<Review>?, // In-app and Google reviews combined
 
     // 💰 Other attributes
     val priceLevel: Int? = null // Google price level (0-4)
@@ -108,14 +109,14 @@ data class CoffeePlaceLite(
     val address: String?,
     val location: LatLng?,
     val primaryType: String?,
-    val types: List<String>?,
+    val types: kotlin.collections.List<String>?,
     val rating: Double?,
     val ratingCount: Int?,
-    val images: List<PhotoMetadata>?,
-    val currentOpeningHours: List<String>?,
+    val images: kotlin.collections.List<PhotoMetadata>?,
+    val currentOpeningHours: kotlin.collections.List<String>?,
     val businessStatus: String?,
     val priceLevel: Int? = null,
-    val tags: List<Tag> // Unified tags for UI
+    val tags: kotlin.collections.List<Tag> // Unified tags for UI
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {

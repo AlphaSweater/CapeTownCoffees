@@ -1,6 +1,7 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
+import com.synaptix.capetowncoffees.util.TimeUtils
 
 // User Data Transfer Object (DTO) for Firestore
 data class UserDTO(
@@ -10,7 +11,7 @@ data class UserDTO(
     val firstName: String? = null,
     val lastName: String? = null,
     val photoBase64: String? = null,
-    val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis(),
-    val lastLoginAt: Long = System.currentTimeMillis()
+    val createdAt: Long = TimeUtils.nowSeconds(),
+    val updatedAt: Long = TimeUtils.nowSeconds(),
+    val lastLoginAt: Long = TimeUtils.nowSeconds()
 )

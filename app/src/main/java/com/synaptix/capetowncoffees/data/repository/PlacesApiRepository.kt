@@ -1,7 +1,5 @@
 package com.synaptix.capetowncoffees.data.repository
 
-import android.Manifest
-import androidx.annotation.RequiresPermission
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.CircularBounds
