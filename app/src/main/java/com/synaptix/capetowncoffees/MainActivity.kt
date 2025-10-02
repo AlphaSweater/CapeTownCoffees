@@ -12,6 +12,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -25,11 +27,15 @@ class MainActivity : AppCompatActivity() {
     private var sentToSettingsOnce = false
     private var permissionRequestedOnce = false
 
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Ensure that after the splash, we use the main app theme on pre-Android 12
         setTheme(R.style.Theme_CapeTownCoffees)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -50,6 +56,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Reset permissionRequestedOnce if permission was revoked in settings
+        if (!hasLocationPermission()) {
+            permissionRequestedOnce = false
+        }
         // Only check permissions if no dialog/request is active
         if (!permissionDialogShown && !permissionRequestInProgress) {
             checkLocationPermissionOnResume()
@@ -59,27 +69,45 @@ class MainActivity : AppCompatActivity() {
     private fun checkLocationPermissionOnResume() {
         val hasPerm = hasLocationPermission()
         Timber.i("Checking location permission: hasLocationPermission() = $hasPerm")
-        if (hasPerm) {
-            permissionDialogShown = false
-            permissionRequestInProgress = false
-            Timber.i("Location permission already granted. Proceeding as normal.")
-            // Continue as normal
-            return
-        }
         val shouldShowFine = ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)
         val shouldShowCoarse = ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)
         Timber.i("shouldShowRequestPermissionRationale: fine=$shouldShowFine, coarse=$shouldShowCoarse")
-        if (!shouldShowFine && !shouldShowCoarse && permissionRequestedOnce) {
-            // User has denied with "Don't ask again" or permanently denied
-            Timber.i("Permission denied permanently or 'Don't ask again' selected. Showing guide dialog.")
-            permissionDialogShown = true
-            showPermissionSettingsDialog()
+
+        if (hasPerm) {
+            permissionDialogShown = false
+            permissionRequestInProgress = false
+            permissionRequestedOnce = false
+            Timber.i("Location permission already granted. Requesting location.")
+            requestLocationAccess()
             return
         }
-        // Always prompt for permission if not granted
+
+        if (!shouldShowFine && !shouldShowCoarse) {
+            if (permissionRequestedOnce) {
+                Timber.i("Permission denied permanently or 'Don't ask again' selected. Showing guide dialog.")
+                permissionDialogShown = true
+                showPermissionSettingsDialog()
+                return
+            } else {
+                Timber.i("First launch or permission never requested. Requesting permission.")
+                permissionRequestInProgress = true
+                permissionRequestedOnce = true
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ),
+                    LOCATION_PERMISSION_REQUEST_CODE
+                )
+                return
+            }
+        }
+
+        // Permission denied, can show rationale
+        Timber.i("Permission denied, showing rationale and requesting permission.")
         permissionRequestInProgress = true
         permissionRequestedOnce = true
-        Timber.i("Prompting user for location permission.")
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
@@ -88,6 +116,21 @@ class MainActivity : AppCompatActivity() {
             ),
             LOCATION_PERMISSION_REQUEST_CODE
         )
+    }
+
+    private fun requestLocationAccess() {
+        // Always use lastLocation to trigger permission dialog if needed
+        try {
+            fusedLocationClient.lastLocation.addOnCompleteListener { task ->
+                if (task.isSuccessful && task.result != null) {
+                    Timber.i("Location access successful.")
+                } else {
+                    Timber.i("Location access attempted, but no location available.")
+                }
+            }
+        } catch (e: SecurityException) {
+            Timber.e(e, "SecurityException when requesting location.")
+        }
     }
 
     private fun hasLocationPermission(): Boolean {
@@ -110,11 +153,10 @@ class MainActivity : AppCompatActivity() {
                 permissionDialogShown = false
                 sentToSettingsOnce = false
                 permissionRequestedOnce = false
-                recreate()
+                requestLocationAccess()
             } else {
                 Timber.i("User denied location permission.")
                 permissionDialogShown = true
-                // Always show guide dialog when denied
                 showPermissionSettingsDialog()
             }
         }
