@@ -1,5 +1,7 @@
 package com.synaptix.capetowncoffees.ui.home
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,14 +9,25 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.button.MaterialButton
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
+import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
+import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository.CoffeeSearchParams
+import com.synaptix.capetowncoffees.util.LocationUtil
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
+@AndroidEntryPoint
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeNewBinding? = null
@@ -37,6 +50,9 @@ class HomeFragment : Fragment() {
         FeaturedItem("Cape Town Roasters", "0.5", 4.6)
     )
 
+    @Inject
+    lateinit var placesApiRepository: IPlacesApiRepository
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -46,11 +62,14 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerViews()
         setupClickListeners()
+
+        // Fetch nearby coffee places
+        fetchNearbyCoffeePlaces()
     }
 
     private fun setupRecyclerViews() {
@@ -127,6 +146,39 @@ class HomeFragment : Fragment() {
         }
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun fetchNearbyCoffeePlaces() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val userLatLng = LocationUtil.getCurrentLocation(requireContext())
+                if (userLatLng == null) {
+                    Timber.e("User location unavailable")
+                    showMessage("Could not get your location. Please enable location services and try again.")
+                    return@launch
+                }
+                val params = CoffeeSearchParams(
+                    radiusMeters = 2000,
+                    onlyOpenNow = false
+                )
+                val result = placesApiRepository.searchNearbyCoffeePlaces(params, userLatLng)
+                if (result.isSuccess) {
+                    val places = result.getOrNull()
+                    Timber.d("Nearby coffee places:")
+                    if (places.isNullOrEmpty()) {
+                        showMessage("No nearby coffee places found.")
+                    } else {
+                        places.forEach { Timber.d("Place: ${it.name}, ${it.address}") }
+                    }
+                } else {
+                    Timber.e(result.exceptionOrNull(), "Failed to fetch nearby coffee places")
+                    showMessage("Could not get nearby coffee places. Please try again.")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error fetching location")
+                showMessage("Could not get your location. Please enable location services and try again.")
+            }
+        }
+    }
 
     private fun showMessage(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
