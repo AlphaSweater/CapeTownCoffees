@@ -32,7 +32,7 @@ class UserListRepository @Inject constructor(
                 .collection("saved_lists")
         }
 
-    override suspend fun getLists(): kotlin.collections.List<UserList> {
+    override suspend fun getLists(): List<UserList> {
         Timber.d("Fetching saved lists from Firestore (DTO)")
         return try {
             val snapshot = collection.get().await()
@@ -44,19 +44,11 @@ class UserListRepository @Inject constructor(
     }
 
     override suspend fun createList(
-        name: String,
-        description: String?,
-        isPublic: Boolean
+        newUserList: UserList
     ): String {
         return try {
             val id = collection.document().id
-            val dto = UserList(
-                id = id,
-                name = name.trim(),
-                description = description?.trim()?.takeIf { it.isNotBlank() },
-                isPublic = isPublic,
-                placeIds = emptyList()
-            ).toDTO()
+            val dto = newUserList.toDTO()
             Timber.d("Creating new list DTO: $dto")
             collection.document(id).set(dto).await()
             Timber.d("Successfully created list with ID: $id")

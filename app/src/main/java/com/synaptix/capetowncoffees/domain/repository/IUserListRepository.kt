@@ -1,20 +1,20 @@
 package com.synaptix.capetowncoffees.domain.repository
 
-import com.synaptix.capetowncoffees.domain.model.UserList as DomainList
+import com.synaptix.capetowncoffees.domain.model.UserList
 import kotlinx.coroutines.flow.Flow
 
 interface IUserListRepository {
-    suspend fun createList(name: String, description: String?, isPublic: Boolean): String
+    suspend fun createList(newUserList: UserList): String
 
     // Observe all saved lists for the current user in real-time
-    fun observeLists(): Flow<kotlin.collections.List<DomainList>>
+    fun observeLists(): Flow<List<UserList>>
 
     // Observe a single list by ID
-    fun observeList(id: String): Flow<DomainList?>
+    fun observeList(id: String): Flow<UserList?>
 
     // Delete a list by ID
     suspend fun deleteList(id: String)
 
     // Fetch all saved lists once
-    suspend fun getLists(): kotlin.collections.List<DomainList>
+    suspend fun getLists(): List<UserList>
 }
