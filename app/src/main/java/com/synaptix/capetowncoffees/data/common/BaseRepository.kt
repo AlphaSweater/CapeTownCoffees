@@ -94,6 +94,33 @@ abstract class BaseRepository<T : Any>(
         }
     }
 
+    // Fetch the first document where a field equals a value
+    protected suspend fun getByField(fieldName: String, value: Any): Result<T?> {
+        return try {
+            val query = collection.whereEqualTo(fieldName, value).limit(1)
+            val snapshot = query.get().await()
+            val item = snapshot.documents.firstOrNull()?.toObject(getType())
+            Result.success(item)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Fetch all documents where a field equals a value, with optional limit
+    protected suspend fun getAllByField(fieldName: String, value: Any, limit: Int? = null): Result<List<T>> {
+        return try {
+            var query = collection.whereEqualTo(fieldName, value)
+            if (limit != null) {
+                query = query.limit(limit.toLong())
+            }
+            val snapshot = query.get().await()
+            val items = snapshot.documents.mapNotNull { it.toObject(getType()) }
+            Result.success(items)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Real-time listener for a single document
     protected fun observeDocument(documentId: String): Flow<T?> = callbackFlow {
         val listener = collection.document(documentId)

@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.domain.usecase.auth
 
-import com.synaptix.capetowncoffees.data.model.UserDTO
+import com.synaptix.capetowncoffees.domain.model.User
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import javax.inject.Inject
 import timber.log.Timber
@@ -36,11 +36,9 @@ class RegisterUserUseCase @Inject constructor(
                     return RegistrationResult.Error(exception.message ?: "Failed to check email")
                 }
 
-            val userData = UserDTO(
-                email = email,
-                firstName = firstName,
-                lastName = lastName
-            )
+            // Create user data object for registration (excluding password)
+            val userData = User.newUser(email, firstName, lastName)
+
             Timber.d("Registering user: %s", userData)
             IUserRepository.registerUser(email, password, userData)
                 .onSuccess {

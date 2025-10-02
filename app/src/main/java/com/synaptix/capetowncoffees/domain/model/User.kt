@@ -10,4 +10,23 @@ data class User(
     val createdAt: Long,
     val updatedAt: Long,
     val lastLoginAt: Long
-)
+) {
+    companion object {
+        fun newUser(
+            email: String,
+            firstName: String? = null,
+            lastName: String? = null,
+        ): User {
+            return User(
+                id = "",
+                email = email,
+                firstName = firstName,
+                lastName = lastName,
+                photoBase64 = null,
+                createdAt = 0L,
+                updatedAt = 0L,
+                lastLoginAt = 0L
+            )
+        }
+    }
+}

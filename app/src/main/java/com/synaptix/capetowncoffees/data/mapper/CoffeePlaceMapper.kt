@@ -24,7 +24,7 @@ object CoffeePlaceMapper {
         internationalPhoneNumber = place.internationalPhoneNumber,
         websiteUrl = place.websiteUri?.toString(),
         tags = TagExtractor.extract(place),
-        reviews = place.reviews?.take(10)?.map { ReviewMapper.fromGoogleReview(it) },
+        reviews = place.reviews?.take(10)?.map { ReviewMapper.fromGoogleReview(it, place.id!!) },
         priceLevel = place.priceLevel
     )
 

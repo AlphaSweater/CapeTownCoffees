@@ -5,20 +5,27 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserDTO
+import com.synaptix.capetowncoffees.data.mapper.toDTO
+import com.synaptix.capetowncoffees.data.mapper.toDomain
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.synaptix.capetowncoffees.domain.model.User
 
 @Singleton
 class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     firestoreInstance: FirebaseFirestore
-) : BaseRepository<UserDTO>(firestoreInstance, childCollection = "users"), IUserRepository {
+) : BaseRepository<UserDTO>(
+    firestore = firestoreInstance,
+    childCollection = "users"
+), IUserRepository {
 
     override fun getType(): Class<UserDTO> = UserDTO::class.java
 
@@ -32,21 +39,21 @@ class UserRepository @Inject constructor(
     override suspend fun registerUser(
         email: String,
         password: String,
-        userData: UserDTO
-    ): Result<UserDTO> {
+        userData: User
+    ): Result<User> {
         return try {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Failed to create user")
 
-            val newUser = userData.copy(
+            val newUserDTO = userData.copy(
                 id = firebaseUser.uid,
                 email = email,
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
-            )
+            ).toDTO()
 
-            create(newUser, firebaseUser.uid)
-            Result.success(newUser)
+            create(newUserDTO, firebaseUser.uid)
+            Result.success(newUserDTO.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -74,24 +81,33 @@ class UserRepository @Inject constructor(
     }
 
     // Get user profile
-    override suspend fun getUserProfile(userId: String): Result<UserDTO?> {
-        return getById(userId)
+    override suspend fun getUserProfile(userId: String): Result<User?> {
+        return try {
+            val dtoResult = getById(userId)
+            if (dtoResult.isSuccess) {
+                Result.success(dtoResult.getOrNull()?.toDomain())
+            } else {
+                Result.failure(dtoResult.exceptionOrNull() ?: Exception("Unknown error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     // Get current user profile
-    override suspend fun getCurrentUserProfile(): Result<UserDTO?> {
+    override suspend fun getCurrentUserProfile(): Result<User?> {
         val userId = getCurrentUserId() ?: return Result.failure(Exception("No user logged in"))
         return getUserProfile(userId)
     }
 
     // Observe user profile changes in real-time
-    override fun observeUserProfile(userId: String): Flow<UserDTO?> {
-        return observeDocument(userId)
+    override fun observeUserProfile(userId: String): Flow<User?> {
+        return observeDocument(userId).map { it?.toDomain() }
     }
 
     // Update user profile with provided fields
-    override suspend fun updateUserProfile(userId: String, user: UserDTO): Result<Unit> {
-        return update(userId, user)
+    override suspend fun updateUserProfile(userId: String, user: User): Result<Unit> {
+        return update(userId, user.toDTO())
     }
 
     // Delete current user's account

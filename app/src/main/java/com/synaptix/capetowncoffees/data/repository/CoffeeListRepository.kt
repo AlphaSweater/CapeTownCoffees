@@ -1,96 +1,52 @@
 package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.model.UserListDTO
 import com.synaptix.capetowncoffees.data.model.toDomain
 import com.synaptix.capetowncoffees.data.model.toDTO
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class CoffeeListRepository @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
-) : ICoffeeListRepository {
+    firestore: FirebaseFirestore
+) : BaseRepository<UserListDTO>(
+    firestore = firestore,
+    parentCollection = "users",
+    parentDocumentId = auth.currentUser?.uid,
+    childCollection = "saved_lists"
+), ICoffeeListRepository {
 
-    //creates list for currently signed in user as a subcollection of their user document
-    val collection: CollectionReference
-        get() {
-            val userId = auth.currentUser?.uid ?: throw IllegalStateException("No User signed in")
-            return firestore
-                .collection("users")
-                .document(userId)
-                .collection("saved_lists")
-        }
+    override fun getType(): Class<UserListDTO> = UserListDTO::class.java
 
     override suspend fun getLists(): List<CoffeeList> {
-        Timber.d("Fetching saved lists from Firestore (DTO)")
-        return try {
-            val snapshot = collection.get().await()
-            snapshot.documents.mapNotNull { it.toObject(UserListDTO::class.java)?.toDomain() }
-        } catch (e: Exception) {
-            Timber.e("Error fetching saved lists: $e")
-            emptyList()
-        }
+        return getAll().getOrElse { emptyList() }
+            .map { it.toDomain() }
     }
 
-    override suspend fun createList(
-        newCoffeeList: CoffeeList
-    ): String {
-        return try {
-            val id = collection.document().id
-            val dto = newCoffeeList.toDTO()
-            Timber.d("Creating new list DTO: $dto")
-            collection.document(id).set(dto).await()
-            Timber.d("Successfully created list with ID: $id")
-            id
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to create list: ${e.message}")
-            throw e
-        }
+    override suspend fun createList(newCoffeeList: CoffeeList): String {
+        val dto = newCoffeeList.toDTO()
+        return create(dto).getOrThrow()
     }
 
     override suspend fun deleteList(id: String) {
-        Timber.d("Deleting saved list id=$id")
-        collection.document(id).delete().await()
+        delete(id).getOrThrow()
     }
 
-    override fun observeLists(): Flow<List<CoffeeList>> = callbackFlow {
-        Timber.d("Setting up saved lists observation (DTO)")
-        val listener = collection.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            val items = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(UserListDTO::class.java)?.toDomain()
-            } ?: emptyList()
-            trySend(items)
-            Timber.d("Received ${items.size} saved lists from Firestore")
+    override fun observeLists(): Flow<List<CoffeeList>> =
+        observeCollection().let { flow ->
+            flow.map { list -> list.map { it.toDomain() } }
         }
-        awaitClose { listener.remove() }
-    }
 
-    override fun observeList(id: String): Flow<CoffeeList?> = callbackFlow {
-        Timber.d("Observing saved list id=$id (DTO)")
-        val listener = collection.document(id).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            val item = snapshot?.toObject(UserListDTO::class.java)?.toDomain()
-            Timber.d("Observed list: $item")
-            trySend(item)
+    override fun observeList(id: String): Flow<CoffeeList?> =
+        observeDocument(id).let { flow ->
+            flow.map { it?.toDomain() }
         }
-        awaitClose { listener.remove() }
-    }
 }
