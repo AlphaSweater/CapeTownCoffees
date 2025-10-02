@@ -14,7 +14,7 @@ class SavedListsViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Real-time stream of lists
-    val lists: LiveData<kotlin.collections.List<UserList>> = repo.observeLists().asLiveData()
+    val lists: LiveData<List<UserList>> = repo.observeLists().asLiveData()
 
     // Optional: expose loading/error later if needed
 }

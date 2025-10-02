@@ -64,7 +64,7 @@ class UserListRepository @Inject constructor(
         collection.document(id).delete().await()
     }
 
-    override fun observeLists(): Flow<kotlin.collections.List<UserList>> = callbackFlow {
+    override fun observeLists(): Flow<List<UserList>> = callbackFlow {
         Timber.d("Setting up saved lists observation (DTO)")
         val listener = collection.addSnapshotListener { snapshot, error ->
             if (error != null) {

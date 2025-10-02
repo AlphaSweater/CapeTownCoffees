@@ -10,7 +10,7 @@ data class ListDTO(
     val name: String? = null,
     val description: String? = null,
     @field:JvmField
-    val isPublic: Boolean? = null,
+    val isPublic: Boolean = false,
     val placeIds: List<String>? = null,
     val createdAt: Long = TimeUtils.nowSeconds(),
     val updatedAt: Long = TimeUtils.nowSeconds(),
@@ -32,7 +32,7 @@ fun ListDTO.toDomain(): DomainList = DomainList(
     id = id,
     name = name ?: "",
     description = description,
-    isPublic = isPublic ?: false,
+    isPublic = isPublic,
     placeIds = placeIds ?: emptyList()
 )
 
