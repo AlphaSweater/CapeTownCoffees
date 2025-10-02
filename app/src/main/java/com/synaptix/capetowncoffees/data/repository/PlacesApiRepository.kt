@@ -38,7 +38,14 @@ class PlacesApiRepository @Inject constructor(
             val request = buildNearbyRequest(params, userLatLng)
             val response = placesClient.searchNearby(request).await()
             val results = response.places.orEmpty()
-                .mapNotNull { CoffeePlaceLite.fromPlace(it) }
+                .map { place ->
+                    val lite = CoffeePlaceLite.fromPlace(place)
+                    if (lite == null) {
+                        Timber.w("Could not convert place to CoffeePlaceLite: $place")
+                    }
+                    lite
+                }
+                .filterNotNull()
             Result.success(results)
         } catch (e: Exception) {
             Timber.e(e, "Failed to search nearby coffee places")
