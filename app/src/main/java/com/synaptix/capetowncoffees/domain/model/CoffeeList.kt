@@ -2,7 +2,7 @@ package com.synaptix.capetowncoffees.domain.model
 
 import kotlin.collections.List
 
-data class UserList(
+data class CoffeeList(
     val id: String = "",
     val name: String = "",
     val description: String? = null,

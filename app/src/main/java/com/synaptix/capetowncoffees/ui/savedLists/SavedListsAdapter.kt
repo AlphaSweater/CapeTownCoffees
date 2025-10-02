@@ -9,11 +9,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
-import com.synaptix.capetowncoffees.domain.model.UserList
+import com.synaptix.capetowncoffees.domain.model.CoffeeList
 
 class SavedListsAdapter(
-    private val onItemClick: (UserList) -> Unit = {}
-) : ListAdapter<UserList, SavedListsAdapter.ViewHolder>(DiffCallback()) {
+    private val onItemClick: (CoffeeList) -> Unit = {}
+) : ListAdapter<CoffeeList, SavedListsAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -25,19 +25,19 @@ class SavedListsAdapter(
         holder.bind(getItem(position))
     }
 
-    fun submit(items: kotlin.collections.List<UserList>) {
+    fun submit(items: kotlin.collections.List<CoffeeList>) {
         submitList(items)
     }
 
     class ViewHolder(
         itemView: View,
-        private val onItemClick: (UserList) -> Unit
+        private val onItemClick: (CoffeeList) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
         private val name: TextView = itemView.findViewById(R.id.tvName)
         private val subtitle: TextView = itemView.findViewById(R.id.tvSubtitle)
         private val icon: ImageView = itemView.findViewById(R.id.ivIcon)
 
-        fun bind(item: UserList) {
+        fun bind(item: CoffeeList) {
             name.text = item.name
             val placeCount = item.placeIds.size
             subtitle.text = if (placeCount == 1) "1 place" else "$placeCount places"
@@ -52,12 +52,12 @@ class SavedListsAdapter(
         }
     }
 
-    private class DiffCallback : DiffUtil.ItemCallback<UserList>() {
-        override fun areItemsTheSame(oldItem: UserList, newItem: UserList): Boolean {
+    private class DiffCallback : DiffUtil.ItemCallback<CoffeeList>() {
+        override fun areItemsTheSame(oldItem: CoffeeList, newItem: CoffeeList): Boolean {
             return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: UserList, newItem: UserList): Boolean {
+        override fun areContentsTheSame(oldItem: CoffeeList, newItem: CoffeeList): Boolean {
             return oldItem == newItem
         }
     }

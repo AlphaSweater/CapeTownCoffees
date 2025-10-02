@@ -95,12 +95,9 @@ class RegisterViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _registerState.value = RegisterUiState.Loading
-                // Split the full name into first and last name
-                val names = name.trim().split("\\s+".toRegex())
-                val firstName = names.firstOrNull() ?: ""
-                val lastName = names.drop(1).joinToString(" ").takeIf { it.isNotBlank() } ?: ""
+                val fullName = name.trim()
                 
-                val result = registerUserUseCase.invoke(email, password, firstName, lastName)
+                val result = registerUserUseCase.invoke(email, password, fullName)
                 _registerState.value = when (result) {
                     is RegistrationResult.Success -> RegisterUiState.Success
                     is RegistrationResult.EmailExists -> RegisterUiState.Error("Email already in use")
