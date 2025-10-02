@@ -85,7 +85,7 @@ object TimeUtils {
                 when {
                     kotlin.math.abs(period.years) >= 1 -> "${kotlin.math.abs(period.years)} year${if (kotlin.math.abs(period.years) == 1) "" else "s"}"
                     kotlin.math.abs(period.months) >= 1 -> "${kotlin.math.abs(period.months)} month${if (kotlin.math.abs(period.months) == 1) "" else "s"}"
-                    else -> "${kotlin.math.abs(period.days)} day${if (period.days == 1) "" else "s"}"
+                    else -> "${kotlin.math.abs(period.days)} day${if (kotlin.math.abs(period.days) == 1) "" else "s"}"
                 }
             }
         }
