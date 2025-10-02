@@ -15,18 +15,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.button.MaterialButton
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository.CoffeeSearchParams
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -55,18 +53,16 @@ class HomeFragment : Fragment() {
     @Inject
     lateinit var placesApiRepository: IPlacesApiRepository
 
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeNewBinding.inflate(inflater, container, false)
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
         return binding.root
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerViews()
@@ -154,15 +150,13 @@ class HomeFragment : Fragment() {
     private fun fetchNearbyCoffeePlaces() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val location = fusedLocationProviderClient.lastLocation.await()
-                if (location == null) {
+                val userLatLng = LocationUtil.getCurrentLocation(requireContext())
+                if (userLatLng == null) {
                     Timber.e("User location unavailable")
                     showMessage("Could not get your location. Please enable location services and try again.")
                     return@launch
                 }
-                val userLatLng = LatLng(location.latitude, location.longitude)
                 val params = CoffeeSearchParams(
-                    query = "coffee",
                     radiusMeters = 2000,
                     onlyOpenNow = false
                 )
