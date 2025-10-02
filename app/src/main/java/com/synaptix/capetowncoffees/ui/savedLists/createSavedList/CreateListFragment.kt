@@ -10,8 +10,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.synaptix.capetowncoffees.databinding.FragmentSavedCreateListBinding
-import com.synaptix.capetowncoffees.ui.saved.savelist.CreateListUiState
-import com.synaptix.capetowncoffees.ui.saved.savelist.CreateListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
