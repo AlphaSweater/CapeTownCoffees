@@ -25,9 +25,7 @@ class SearchFragment : Fragment() {
     private var isMasterFilterExpanded = false
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeSearchBinding.inflate(inflater, container, false)
         return binding.root
@@ -54,7 +52,15 @@ class SearchFragment : Fragment() {
             FilterCategory("Features", listOf("Serves Alcohol", "Accepts Reservations", "Dog Friendly"))
         )
 
-        categoryAdapter = SearchCategoryAdapter(filterCategories)
+        // --- THIS IS THE FIX: Pass the callback to the adapter's constructor ---
+        categoryAdapter = SearchCategoryAdapter(filterCategories) {
+            // This code runs every time a sub-category is expanded/collapsed.
+            // Re-run the slideDown animation to adjust the parent's height.
+            if (isMasterFilterExpanded) {
+                binding.filtersContainer.slideDown(forceAnimate = true)
+            }
+        }
+        // --- END OF FIX ---
 
         binding.recyclerCategories.apply {
             layoutManager = LinearLayoutManager(context)
@@ -72,12 +78,19 @@ class SearchFragment : Fragment() {
         }
     }
 
-    private fun View.slideDown() {
+    // --- THIS IS THE FIX: Add a 'forceAnimate' parameter to slideDown ---
+    private fun View.slideDown(forceAnimate: Boolean = false) {
         val view = this
+        // If not forcing, and it's already visible, do nothing.
+        if (!forceAnimate && view.visibility == View.VISIBLE) return
+
         view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         val targetHeight = view.measuredHeight
 
-        val animator = ValueAnimator.ofInt(0, targetHeight).apply {
+        // Animate from current height to target height
+        val startHeight = if (forceAnimate) view.height else 0
+
+        val animator = ValueAnimator.ofInt(startHeight, targetHeight).apply {
             addUpdateListener {
                 view.updateLayoutParams<ViewGroup.LayoutParams> {
                     height = it.animatedValue as Int
@@ -86,14 +99,19 @@ class SearchFragment : Fragment() {
             duration = 300
         }
 
-        view.updateLayoutParams<ViewGroup.LayoutParams> { height = 0 }
+        if (!forceAnimate) {
+            view.updateLayoutParams<ViewGroup.LayoutParams> { height = 0 }
+        }
         view.visibility = View.VISIBLE
         animator.start()
     }
+    // --- END OF FIX ---
 
+    // slideUp function remains the same
     private fun View.slideUp() {
         val view = this
         val startHeight = view.height
+        if (startHeight == 0) return // Already collapsed
 
         val animator = ValueAnimator.ofInt(startHeight, 0).apply {
             addUpdateListener {
@@ -104,7 +122,7 @@ class SearchFragment : Fragment() {
                     view.visibility = View.GONE
                 }
             }
-            duration = 300 // Animation duration in milliseconds
+            duration = 300
         }
         animator.start()
     }

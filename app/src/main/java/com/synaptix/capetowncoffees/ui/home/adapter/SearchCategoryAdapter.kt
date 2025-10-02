@@ -8,29 +8,32 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
+import com.google.android.material.button.MaterialButton
 import com.synaptix.capetowncoffees.R
 
 data class FilterCategory(
     val title: String,
     val options: List<String>,
-    var isExpanded: Boolean = false
+    var isExpanded: Boolean = false,
+    var selectedOptionIndex: Int = -1 // Track selected option for THIS category
 )
 
-class SearchCategoryAdapter(private val categories: List<FilterCategory>) :
-    RecyclerView.Adapter<SearchCategoryAdapter.CategoryViewHolder>() {
+class SearchCategoryAdapter(
+    private val categories: List<FilterCategory>,
+    private val onSizeChanged: () -> Unit
+) : RecyclerView.Adapter<SearchCategoryAdapter.CategoryViewHolder>() {
 
-    // --- ViewHolder updated to find the new views ---
     inner class CategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val headerRow: LinearLayout = itemView.findViewById(R.id.headerRow)
         val categoryTitle: TextView = itemView.findViewById(R.id.tvCategoryTitle)
         val arrowIcon: ImageView = itemView.findViewById(R.id.ivArrow)
-        // Find the new views
         val pillsScrollView: HorizontalScrollView = itemView.findViewById(R.id.pillsScrollView)
-        val chipGroup: ChipGroup = itemView.findViewById(R.id.chipGroup)
+        // Reference the new LinearLayout
+        val optionsContainer: LinearLayout = itemView.findViewById(R.id.optionsContainer)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
@@ -43,33 +46,73 @@ class SearchCategoryAdapter(private val categories: List<FilterCategory>) :
         val category = categories[position]
         holder.categoryTitle.text = category.title
 
-        // Call the animation helper function, now targeting the ScrollView
         updateCategoryView(holder, category)
 
-        // --- THIS IS THE FIX: Create Chips instead of CheckBoxes ---
-        holder.chipGroup.removeAllViews() // Clear previous pills
-        category.options.forEach { optionText ->
-            val chip = Chip(holder.itemView.context).apply {
+        holder.optionsContainer.removeAllViews()
+        val inflater = LayoutInflater.from(holder.itemView.context)
+
+        // --- THIS IS THE FIX: Replicate the selection logic from CategoryAdapter ---
+        category.options.forEachIndexed { index, optionText ->
+            val button = inflater.inflate(R.layout.item_category, holder.optionsContainer, false) as MaterialButton
+
+            button.apply {
                 text = optionText
-                isCheckable = true
-                // You can add styling here, e.g., setChipBackgroundColorResource, etc.
+                icon = null // No icon for these filters
+                // Set initial style based on selection state
+                setStyle(this, index == category.selectedOptionIndex)
             }
-            holder.chipGroup.addView(chip)
+
+            button.setOnClickListener {
+                // If the same button is clicked again, deselect it. Otherwise, select the new one.
+                val newSelection = if (category.selectedOptionIndex == index) -1 else index
+
+                // Update the data model
+                category.selectedOptionIndex = newSelection
+
+                // Update the style for all buttons in this group
+                holder.optionsContainer.children.forEachIndexed { childIndex, childView ->
+                    if (childView is MaterialButton) {
+                        setStyle(childView, childIndex == newSelection)
+                    }
+                }
+            }
+            holder.optionsContainer.addView(button)
         }
         // --- END OF FIX ---
 
         holder.headerRow.setOnClickListener {
             category.isExpanded = !category.isExpanded
             notifyItemChanged(position)
+            onSizeChanged()
         }
     }
 
+    /**
+     * Helper function to apply styling for selected/unselected states,
+     * mimicking the logic in your HomeFragment's CategoryAdapter.
+     */
+    private fun setStyle(button: MaterialButton, isSelected: Boolean) {
+        val context = button.context
+        if (isSelected) {
+            // Selected state: Solid fill
+            button.backgroundTintList = ContextCompat.getColorStateList(context, R.color.button_category)
+            button.setTextColor(ContextCompat.getColor(context, R.color.white)) // Assuming white text on solid bg
+            button.iconTint = ContextCompat.getColorStateList(context, R.color.white)
+        } else {
+            // Unselected state: Stroked outline
+            button.backgroundTintList = ContextCompat.getColorStateList(context, R.color.background)
+            button.strokeColor = ContextCompat.getColorStateList(context, R.color.button_category)
+            button.setTextColor(ContextCompat.getColor(context, R.color.button_category))
+            button.iconTint = ContextCompat.getColorStateList(context, R.color.button_category)
+        }
+    }
+
+    // updateCategoryView and animation helpers remain the same
     private fun updateCategoryView(holder: CategoryViewHolder, category: FilterCategory) {
         holder.arrowIcon.setImageResource(
             if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
         )
 
-        // Animate the HorizontalScrollView instead of the old container
         if (category.isExpanded) {
             holder.pillsScrollView.slideDown()
         } else {
@@ -81,28 +124,21 @@ class SearchCategoryAdapter(private val categories: List<FilterCategory>) :
         }
     }
 
-    // Animation helpers remain the same but will now operate on the pillsScrollView
     private fun View.slideDown() {
         val view = this
         if (view.visibility == View.VISIBLE && view.height > 0) return
-
         view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         val targetHeight = view.measuredHeight
-
         if (targetHeight == 0) {
             view.visibility = View.VISIBLE
             return
         }
-
         val animator = ValueAnimator.ofInt(0, targetHeight).apply {
             addUpdateListener {
-                view.updateLayoutParams<ViewGroup.LayoutParams> {
-                    height = it.animatedValue as Int
-                }
+                view.updateLayoutParams<ViewGroup.LayoutParams> { height = it.animatedValue as Int }
             }
             duration = 300
         }
-
         view.updateLayoutParams<ViewGroup.LayoutParams> { height = 0 }
         view.visibility = View.VISIBLE
         animator.start()
@@ -112,12 +148,9 @@ class SearchCategoryAdapter(private val categories: List<FilterCategory>) :
         val view = this
         val startHeight = view.height
         if (startHeight == 0) return
-
         val animator = ValueAnimator.ofInt(startHeight, 0).apply {
             addUpdateListener {
-                view.updateLayoutParams<ViewGroup.LayoutParams> {
-                    height = it.animatedValue as Int
-                }
+                view.updateLayoutParams<ViewGroup.LayoutParams> { height = it.animatedValue as Int }
                 if (it.animatedValue as Int == 0) {
                     view.visibility = View.GONE
                 }
