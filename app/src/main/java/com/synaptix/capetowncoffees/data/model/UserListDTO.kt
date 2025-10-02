@@ -6,11 +6,11 @@ import com.synaptix.capetowncoffees.domain.model.UserList as DomainList
 
 data class ListDTO(
     @DocumentId
-    val id: String? = null,
+    val id: String = "",  // Firestore document ID
     val name: String? = null,
     val description: String? = null,
     val isPublic: Boolean? = null,
-    val placeIds: kotlin.collections.List<String>? = null,
+    val placeIds: List<String>? = null,
     val createdAt: Long = TimeUtils.nowSeconds(),
     val updatedAt: Long = TimeUtils.nowSeconds(),
 ) {
@@ -28,7 +28,7 @@ data class ListDTO(
 }
 
 fun ListDTO.toDomain(): DomainList = DomainList(
-    id = id ?: "",
+    id = id,
     name = name ?: "",
     description = description,
     isPublic = isPublic ?: false,
