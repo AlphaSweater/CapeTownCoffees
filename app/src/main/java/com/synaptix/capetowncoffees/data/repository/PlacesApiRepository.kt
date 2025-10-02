@@ -2,9 +2,7 @@ package com.synaptix.capetowncoffees.data.repository
 
 import android.Manifest
 import androidx.annotation.RequiresPermission
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.CircularBounds
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
@@ -25,31 +23,25 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite.Companion.field
 
 @Singleton
 class PlacesApiRepository @Inject constructor(
-    private val placesClient: PlacesClient,
-    private val fusedLocationProviderClient: FusedLocationProviderClient
+    private val placesClient: PlacesClient
 ) : IPlacesApiRepository {
 
     // -----------------------------
     // Search nearby coffee places
     // -----------------------------
     // Search nearby coffee places using the user's current location.
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override suspend fun searchNearbyCoffeePlaces(
-        params: CoffeeSearchParams
+        params: CoffeeSearchParams,
+        userLatLng: LatLng
     ): Result<List<CoffeePlaceLite>> {
         return try {
-            val userLatLng = getUserLatLng()
-            if (userLatLng == null) {
-                Timber.e("User location unavailable")
-                return Result.failure(Exception("User location unavailable"))
-            }
             val request = buildNearbyRequest(params, userLatLng)
             val response = placesClient.searchNearby(request).await()
             val results = response.places.orEmpty()
                 .mapNotNull { CoffeePlaceLite.fromPlace(it) }
             Result.success(results)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to search nearby coffee places: params=$params")
+            Timber.e(e, "Failed to search nearby coffee places")
             Result.failure(e)
         }
     }
@@ -105,10 +97,8 @@ class PlacesApiRepository @Inject constructor(
     // Autocomplete suggestions
     // -----------------------------
     // Get autocomplete suggestions using the user's current location.
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    override suspend fun getSuggestions(query: String): Result<List<CoffeePlaceSuggestion>> {
+    override suspend fun getSuggestions(query: String, userLatLng: LatLng): Result<List<CoffeePlaceSuggestion>> {
         return try {
-            val userLatLng = getUserLatLng()
             val request = buildAutocompleteRequest(query, userLatLng)
             val response = placesClient.findAutocompletePredictions(request).await()
             val suggestions = response.autocompletePredictions
@@ -150,21 +140,5 @@ class PlacesApiRepository @Inject constructor(
         location?.let { builder.setOrigin(it) }
 
         return builder.build()
-    }
-
-    /**
-     * Helper to get the user's last known location as LatLng (blocking).
-     * Requires location permission.
-     */
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    private fun getUserLatLng(): LatLng? {
-        return try {
-            val locationTask = fusedLocationProviderClient.lastLocation
-            val location = Tasks.await(locationTask)
-            location?.let { LatLng(it.latitude, it.longitude) }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to get user LatLng")
-            null
-        }
     }
 }

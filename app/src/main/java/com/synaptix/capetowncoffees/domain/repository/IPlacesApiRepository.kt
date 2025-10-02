@@ -14,7 +14,8 @@ interface IPlacesApiRepository {
      * Uses new Places SDK FindNearbyPlaces API.
      */
     suspend fun searchNearbyCoffeePlaces(
-        params: CoffeeSearchParams
+        params: CoffeeSearchParams,
+        userLatLng: LatLng
     ): Result<List<CoffeePlaceLite>>
 
     /**
@@ -28,7 +29,8 @@ interface IPlacesApiRepository {
      * Get autocomplete suggestions (for search box).
      */
     suspend fun getSuggestions(
-        query: String
+        query: String,
+        userLatLng: LatLng
     ): Result<List<CoffeePlaceSuggestion>>
 
 
