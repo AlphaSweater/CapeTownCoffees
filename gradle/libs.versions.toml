@@ -26,6 +26,8 @@ material3Android = "1.4.0"
 coreSplashscreen = "1.0.1"
 recyclerview = "1.4.0"
 roomCompilerProcessingTesting = "2.8.1"
+legacySupportV4 = "1.0.0"
+fragmentKtx = "1.5.6"
 
 [libraries]
 # Core Android
@@ -73,6 +75,8 @@ places = { module = "com.google.android.libraries.places:places", version.ref = 
 places-ktx = { module = "com.google.maps.android:places-ktx", version.ref = "placesKtx" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }
+androidx-legacy-support-v4 = { group = "androidx.legacy", name = "legacy-support-v4", version.ref = "legacySupportV4" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -163,4 +163,11 @@
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
 
+    <fragment
+        android:id="@+id/privacyPolicyFragment"
+        android:name="com.synaptix.capetowncoffees.ui.privacy.PrivacyPolicyFragment"
+        android:label="Privacy Policy"
+        tools:layout="@layout/fragment_settings_privacy_policy"/>
+
+
 </navigation>

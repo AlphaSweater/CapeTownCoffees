@@ -58,17 +58,15 @@
 
     <!-- privacy policy -->
     <string name="privacy_policy_title">Privacy Policy</string>
-    <string name="privacy_last_updated">Last updated •</string>
-    <string name="privacy_last_updated_format">Last updated • %1$s  ·  App v%2$s</string>
 
     <string name="privacy_section_overview">Overview</string>
     <string name="privacy_overview_body">
     We respect your privacy. This policy explains what data Cape Town Coffees collects, how we use it, and the choices you have. By using the app, you agree to the practices described here.
 </string>
 
-    <string name="privacy_section_data_we_collect">Data We Collect</string>
+    <string name="privacy_section_data_we_collect">Data We Use</string>
     <string name="privacy_collect_intro">
-    We collect only the data we need to run and improve the app. This may include:
+    We Use only the data we need to run and improve the app. This may include:
 </string>
 
     <string name="privacy_section_how_we_use_data">How We Use Your Data</string>
