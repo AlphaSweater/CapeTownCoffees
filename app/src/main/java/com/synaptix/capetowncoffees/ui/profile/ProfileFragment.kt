@@ -77,8 +77,8 @@ class ProfileFragment : Fragment() {
                 viewModel.userState.collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
-                            resource.data?.let { user ->
-                                binding.tvUserName.text = "${user.firstName} ${user.lastName}".trim()
+                            resource.data.let { user ->
+                                binding.tvUserName.text = user.fullName.trim()
                                 // Load Base64 image if available
                                 // check if photoBase64 is not null or empty
                                 if (user.photoBase64.isNullOrEmpty()) {
@@ -100,7 +100,7 @@ class ProfileFragment : Fragment() {
                             }
                         }
                         is Resource.Error -> {
-                            Log.e("ProfileFragment", "Error loading user: ${resource.message}")
+                            Timber.e("Error loading user: ${resource.message}")
                         }
                         else -> { /* Loading state can be handled here if needed */ }
                     }

@@ -9,9 +9,19 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 abstract class BaseRepository<T : Any>(
-    protected val firestore: FirebaseFirestore
+    protected val firestore: FirebaseFirestore,
+    private val parentCollection: String? = null,
+    private val parentDocumentId: String? = null,
+    private val childCollection: String
 ) {
-    protected abstract val collection: CollectionReference
+    protected val collection: CollectionReference
+        get() = if (parentCollection != null && parentDocumentId != null) {
+            firestore.collection(parentCollection)
+                .document(parentDocumentId)
+                .collection(childCollection)
+        } else {
+            firestore.collection(childCollection)
+        }
 
     protected suspend fun create(item: T, id: String? = null): Result<String> {
         return try {
@@ -78,6 +88,33 @@ abstract class BaseRepository<T : Any>(
                 }
                 items.addAll(snapshots.mapNotNull { it.toObject(getType()) })
             }
+            Result.success(items)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Fetch the first document where a field equals a value
+    protected suspend fun getByField(fieldName: String, value: Any): Result<T?> {
+        return try {
+            val query = collection.whereEqualTo(fieldName, value).limit(1)
+            val snapshot = query.get().await()
+            val item = snapshot.documents.firstOrNull()?.toObject(getType())
+            Result.success(item)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Fetch all documents where a field equals a value, with optional limit
+    protected suspend fun getAllByField(fieldName: String, value: Any, limit: Int? = null): Result<List<T>> {
+        return try {
+            var query = collection.whereEqualTo(fieldName, value)
+            if (limit != null) {
+                query = query.limit(limit.toLong())
+            }
+            val snapshot = query.get().await()
+            val items = snapshot.documents.mapNotNull { it.toObject(getType()) }
             Result.success(items)
         } catch (e: Exception) {
             Result.failure(e)

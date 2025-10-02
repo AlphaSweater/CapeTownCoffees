@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.usecase.user.GetUserProfileUseCase
 import com.synaptix.capetowncoffees.BR
 import com.synaptix.capetowncoffees.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.util.Log
+import timber.log.Timber
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userRepository: IUserRepository
+    private val getUserProfileUseCase: GetUserProfileUseCase
 ) : ViewModel() {
 
     private val _userState = MutableStateFlow<Resource<User>>(Resource.Loading)
@@ -39,36 +40,13 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _userState.value = Resource.Loading
             try {
-                val userId = userRepository.getCurrentUserId()
-                if (userId == null) {
-                    _userState.value = Resource.Error("User not authenticated")
-                    return@launch
-                }
-
-                val result = userRepository.getUserProfile(userId)
-                result.onSuccess { userDto ->
-                    if (userDto == null) {
-                        _userState.value = Resource.Error("User profile not found")
-                    } else {
-                        val firstName = userDto.firstName ?: ""
-                        val lastName = userDto.lastName ?: ""
-                        val fullName = "$firstName $lastName".trim()
-                        android.util.Log.d("ProfileViewModel", "First name: $firstName, Last name: $lastName, Full name: $fullName")
-                        _userName.postValue(if (fullName.isNotEmpty()) fullName else "User")
-                        android.util.Log.d("ProfileViewModel", "User name set to: ${_userName.value}")
-                        
-                        val user = User(
-                            id = userDto.id,
-                            email = userDto.email,
-                            firstName = firstName,
-                            lastName = lastName,
-                            photoBase64= userDto.photoBase64,
-                            createdAt = userDto.createdAt,
-                            updatedAt = userDto.updatedAt,
-                            lastLoginAt = userDto.lastLoginAt
-                        )
-                        _userState.value = Resource.Success(user)
-                    }
+                val result = getUserProfileUseCase()
+                result.onSuccess { user ->
+                    val fullName = user.fullName.trim()
+                    Timber.d("Full name: $fullName")
+                    _userName.postValue(fullName.ifEmpty { "User" })
+                    Timber.d("User name set to: ${_userName.value}")
+                    _userState.value = Resource.Success(user)
                 }.onFailure { e ->
                     _userState.value = Resource.Error(e.message ?: "Failed to load profile")
                 }
