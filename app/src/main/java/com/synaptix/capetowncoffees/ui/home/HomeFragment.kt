@@ -15,10 +15,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.button.MaterialButton
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository.CoffeeSearchParams
 import com.synaptix.capetowncoffees.util.LocationUtil
@@ -40,15 +42,8 @@ class HomeFragment : Fragment() {
         Category("Favorite", R.drawable.ic_heart)
     )
 
-    private val nearMeCafes = listOf(
-        Cafe("Cape Town Roasters", 4.5, 0.5, "$$$"),
-        Cafe("Beans & Leaves", 4.7, 1.2, "$$"),
-        Cafe("The Daily Grind", 4.3, 0.8, "$$")
-    )
-
-    private val featuredItems = listOf(
-        FeaturedItem("Cape Town Roasters", "0.5", 4.6)
-    )
+    private val nearMeCafes = mutableListOf<Cafe>()
+    private val featuredItems = mutableListOf<FeaturedItem>()
 
     @Inject
     lateinit var placesApiRepository: IPlacesApiRepository
@@ -156,32 +151,85 @@ class HomeFragment : Fragment() {
                     showMessage("Could not get your location. Please enable location services and try again.")
                     return@launch
                 }
+                
+                showLoading(true)
+                
                 val params = CoffeeSearchParams(
                     radiusMeters = 2000,
-                    onlyOpenNow = false
+                    onlyOpenNow = true
                 )
-                val result = placesApiRepository.searchNearbyCoffeePlaces(params, userLatLng)
-                if (result.isSuccess) {
-                    val places = result.getOrNull()
-                    Timber.d("Nearby coffee places:")
-                    if (places.isNullOrEmpty()) {
-                        showMessage("No nearby coffee places found.")
-                    } else {
-                        places.forEach { Timber.d("Place: ${it.name}, ${it.address}") }
+                
+                when (val result = placesApiRepository.searchNearbyCoffeePlaces(params, userLatLng)) {
+                    is Result.Success -> {
+                        val places = result.getOrNull()
+                        if (places.isNullOrEmpty()) {
+                            showMessage("No nearby coffee places found.")
+                        } else {
+                            // Clear existing data
+                            nearMeCafes.clear()
+                            featuredItems.clear()
+                            
+                            // Process each place
+                            places.forEach { place ->
+                                val cafe = place.toCafe(userLatLng)
+                                nearMeCafes.add(cafe)
+                                
+                                // Add to featured if rating is high enough
+                                if (cafe.rating >= 4.5) {
+                                    featuredItems.add(
+                                        FeaturedItem(
+                                            id = cafe.id,
+                                            title = cafe.name,
+                                            distance = String.format("%.1f km", cafe.distance),
+                                            rating = cafe.rating,
+                                            photoUrl = cafe.photoUrl,
+                                            address = cafe.address
+                                        )
+                                    )
+                                }
+                            }
+                            
+                            // Sort by distance
+                            nearMeCafes.sortBy { it.distance }
+                            
+                            // Update UI
+                            binding.apply {
+                                rvNearMe.adapter?.notifyDataSetChanged()
+                                rvFeatured.adapter?.notifyDataSetChanged()
+                                
+                                // Show/hide sections based on data
+                                if (nearMeCafes.isNotEmpty()) {
+                                    tvNearbyCafesTitle.visibility = View.VISIBLE
+                                    rvNearMe.visibility = View.VISIBLE
+                                }
+                                
+                                if (featuredItems.isNotEmpty()) {
+                                    tvFeaturedTitle.visibility = View.VISIBLE
+                                    rvFeatured.visibility = View.VISIBLE
+                                }
+                            }
+                        }
                     }
-                } else {
-                    Timber.e(result.exceptionOrNull(), "Failed to fetch nearby coffee places")
-                    showMessage("Could not get nearby coffee places. Please try again.")
+                    is Result.Error -> {
+                        Timber.e(result.exceptionOrNull(), "Failed to fetch nearby coffee places")
+                        showMessage("Could not get nearby coffee places. Please try again.")
+                    }
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Error fetching location")
-                showMessage("Could not get your location. Please enable location services and try again.")
+                Timber.e(e, "Error fetching coffee places")
+                showMessage("Error fetching coffee places: ${e.message}")
+            } finally {
+                showLoading(false)
             }
         }
     }
 
     private fun showMessage(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     override fun onDestroyView() {
@@ -192,8 +240,70 @@ class HomeFragment : Fragment() {
 
 // Data classes
 data class Category(val name: String, val iconRes: Int)
-data class Cafe(val name: String, val rating: Double, val distance: Double, val priceRange: String)
-data class FeaturedItem(val title: String, val distance: String, val rating: Double)
+data class Cafe(
+    val id: String? = null,
+    val name: String,
+    val rating: Double = 0.0,
+    val distance: Double = 0.0,
+    val priceRange: String = "$$",
+    val address: String? = null,
+    val photoUrl: String? = null,
+    val ratingCount: Int = 0,
+    val businessStatus: String? = null,
+    val isOpen: Boolean = false
+)
+
+// Extension function to convert CoffeePlaceLite to Cafe
+private fun CoffeePlaceLite.toCafe(userLocation: LatLng? = null): Cafe {
+    // Calculate distance if user location is available
+    val distanceMeters = if (userLocation != null && this.location != null) {
+        val results = FloatArray(1)
+        Location.distanceBetween(
+            userLocation.latitude,
+            userLocation.longitude,
+            this.location.latitude,
+            this.location.longitude,
+            results
+        )
+        results[0].toDouble()
+    } else {
+        0.0
+    }
+    
+    // Get the first photo URL if available
+    val photoUrl = this.images?.firstOrNull()?.let { photo ->
+        // You'll need to implement a method to get the photo URL from PhotoMetadata
+        // This is a placeholder - you'll need to use the Places API client to fetch the actual photo
+        null
+    }
+    
+    return Cafe(
+        id = this.id,
+        name = this.name ?: "Unknown Cafe",
+        rating = this.rating ?: 0.0,
+        distance = distanceMeters / 1000.0, // Convert to kilometers
+        priceRange = when (this.priceLevel) {
+            1 -> "$"
+            2 -> "$$"
+            3 -> "$$$"
+            4 -> "$$$$"
+            else -> "$"
+        },
+        address = this.address,
+        photoUrl = photoUrl,
+        ratingCount = this.ratingCount ?: 0,
+        businessStatus = this.businessStatus,
+        isOpen = this.currentOpeningHours?.isNotEmpty() == true
+    )
+}
+data class FeaturedItem(
+    val id: String? = null,
+    val title: String,
+    val distance: String,
+    val rating: Double,
+    val photoUrl: String? = null,
+    val address: String? = null
+)
 
 // Adapters
 class CategoryAdapter(private val categories: List<Category>) :
@@ -229,77 +339,104 @@ class CategoryAdapter(private val categories: List<Category>) :
 class NearMeAdapter(private val cafes: List<Cafe>) :
     RecyclerView.Adapter<NearMeAdapter.ViewHolder>() {
 
-    private var onItemClick: ((Cafe) -> Unit)? = null
+    private var onItemClickListener: ((Cafe) -> Unit)? = null
 
     fun setOnItemClickListener(listener: (Cafe) -> Unit) {
-        onItemClick = listener
-    }
-
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val name: TextView = view.findViewById(R.id.tvCafeName)
-        val distance: TextView = view.findViewById(R.id.tvCafeDistance)
-        val rating: TextView = view.findViewById(R.id.tvCafeRating)
-        val image: ImageView = view.findViewById(R.id.ivCafeImage)
-        val rootView: View = view
+        onItemClickListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent.context)
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_near_me, parent, false)
-        return ViewHolder(v)
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = cafes[position]
-        holder.name.text = item.name
-        holder.distance.text = "${item.distance} km away"
-        holder.rating.text = item.rating.toString()
-        // ImageView already has a placeholder in layout
-        holder.image.setImageResource(R.drawable.cafe_placeholder)
+        val cafe = cafes[position]
+        
+        // Set basic info
+        holder.tvCafeName.text = cafe.name
+        holder.tvCafeRating.text = String.format("%.1f", cafe.rating)
+        holder.tvCafeDistance.text = "${String.format("%.1f", cafe.distance)} km"
+        holder.tvCafePrice.text = cafe.priceRange
+        
+        // Set address if available
+        cafe.address?.let { address ->
+            holder.tvCafeAddress.text = address
+            holder.tvCafeAddress.visibility = View.VISIBLE
+        } ?: run {
+            holder.tvCafeAddress.visibility = View.GONE
+        }
+        
+        // Load image if URL is available
+        cafe.photoUrl?.let { imageUrl ->
+            Glide.with(holder.itemView.context)
+                .load(imageUrl)
+                .centerCrop()
+                .placeholder(R.drawable.cafe_placeholder)
+                .into(holder.ivCafeImage)
+        } ?: holder.ivCafeImage.setImageResource(R.drawable.cafe_placeholder)
 
-        holder.rootView.setOnClickListener {
-            onItemClick?.invoke(item)
+        holder.itemView.setOnClickListener {
+            onItemClickListener?.invoke(cafe)
         }
     }
 
     override fun getItemCount() = cafes.size
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvCafeName: TextView = view.findViewById(R.id.tvCafeName)
+        val tvCafeRating: TextView = view.findViewById(R.id.tvCafeRating)
+        val tvCafeDistance: TextView = view.findViewById(R.id.tvCafeDistance)
+        val tvCafePrice: TextView = view.findViewById(R.id.tvCafePrice)
+        val tvCafeAddress: TextView = view.findViewById(R.id.tvCafeAddress)
+        val ivCafeImage: ImageView = view.findViewById(R.id.ivCafeImage)
+    }
 }
 
 class FeaturedAdapter(private val items: List<FeaturedItem>) :
     RecyclerView.Adapter<FeaturedAdapter.ViewHolder>() {
 
-    private var onItemClick: ((FeaturedItem) -> Unit)? = null
+    private var onItemClickListener: ((FeaturedItem) -> Unit)? = null
 
     fun setOnItemClickListener(listener: (FeaturedItem) -> Unit) {
-        onItemClick = listener
-    }
-
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val title: TextView = view.findViewById(R.id.tvCafeName)
-        val distance: TextView = view.findViewById(R.id.tvCafeDistance)
-        val rating: TextView = view.findViewById(R.id.tvCafeRating)
-        val image: ImageView = view.findViewById(R.id.ivFeaturedImage)
-        val rootView: View = view
+        onItemClickListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val v = LayoutInflater.from(parent.context)
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_featured, parent, false)
-        return ViewHolder(v)
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.title.text = item.title
-        holder.distance.text = "${item.distance} km away"
-        holder.rating.text = item.rating.toString()
-        // ImageView already has a placeholder in layout
-        holder.image.setImageResource(R.drawable.cafe_placeholder)
+        
+        // Set basic info
+        holder.tvTitle.text = item.title
+        holder.tvDistance.text = "${item.distance} km away"
+        holder.tvRating.text = String.format("%.1f", item.rating)
+        
+        // Load image if URL is available
+        item.photoUrl?.let { imageUrl ->
+            Glide.with(holder.itemView.context)
+                .load(imageUrl)
+                .centerCrop()
+                .placeholder(R.drawable.cafe_placeholder)
+                .into(holder.ivImage)
+        } ?: holder.ivImage.setImageResource(R.drawable.cafe_placeholder)
 
-        holder.rootView.setOnClickListener {
-            onItemClick?.invoke(item)
+        holder.itemView.setOnClickListener {
+            onItemClickListener?.invoke(item)
         }
     }
 
     override fun getItemCount() = items.size
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvTitle: TextView = view.findViewById(R.id.tvFeaturedTitle)
+        val tvDistance: TextView = view.findViewById(R.id.tvFeaturedDistance)
+        val tvRating: TextView = view.findViewById(R.id.tvFeaturedRating)
+        val ivImage: ImageView = view.findViewById(R.id.ivFeaturedImage)
+    }
 }
