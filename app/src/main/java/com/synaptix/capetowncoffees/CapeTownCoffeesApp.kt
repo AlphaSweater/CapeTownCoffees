@@ -1,7 +1,7 @@
 package com.synaptix.capetowncoffees
 
 import android.app.Application
-import androidx.appcompat.app.AppCompatDelegate
+import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
@@ -12,7 +12,7 @@ class CapeTownCoffeesApp : Application() {
 
         // Initialize Timber for logging
         if (BuildConfig.DEBUG) {
-            // Debug logging
+            // Plant the custom tree
             Timber.plant(Timber.DebugTree())
         }
 
@@ -20,3 +20,4 @@ class CapeTownCoffeesApp : Application() {
         ThemeManager.applySavedTheme(this)
     }
 }
+

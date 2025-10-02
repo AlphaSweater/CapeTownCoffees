@@ -17,13 +17,19 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val placesApiKey: String = project.findProperty("PLACES_API_KEY") as? String ?: "ERROR_NO_API_KEY_SET"
+if (placesApiKey == "ERROR_NO_API_KEY_SET") {
+    println("WARNING: PLACES_API_KEY is not set! Please check your gradle.properties or environment variables.")
+}
+
 android {
     namespace = "com.synaptix.capetowncoffees"
     compileSdk = 36
 
     defaultConfig {
         applicationId = "com.synaptix.capetowncoffees"
-        minSdk = 24
+        // minSdk increased from 24 to 26 to support features/libraries that require Android 8.0 (API 26) or higher.
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -38,12 +44,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "PLACES_API_KEY", "\"$placesApiKey\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "PLACES_API_KEY", "\"$placesApiKey\"")
         }
     }
 
@@ -52,6 +62,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
+        @Suppress("DEPRECATION")
         jvmTarget = "11"
     }
 }
@@ -68,12 +79,24 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
 
+    // --- Places API (SDK and Web) ---
+    implementation(libs.places)
+    implementation(libs.places.ktx)
+
+    // Play Services - location & maps
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
     // --- Material Design ---
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3.android)
     implementation("com.google.android.material:material:1.8.0")
 
-    // --- Jetpack Lifecycle & ViewModel ---
+    // --- Kotlin Coroutines ---
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // --- Lifecycle & ViewModel ---
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -82,14 +105,11 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // --- Kotlin Coroutines ---
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.coroutines.android)
-
     // --- Firebase ---
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+
     // Storage for profile photo uploads
     implementation("com.google.firebase:firebase-storage")
 
