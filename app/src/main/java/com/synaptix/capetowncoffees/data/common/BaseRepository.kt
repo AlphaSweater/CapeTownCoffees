@@ -9,9 +9,19 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 abstract class BaseRepository<T : Any>(
-    protected val firestore: FirebaseFirestore
+    protected val firestore: FirebaseFirestore,
+    private val parentCollection: String? = null,
+    private val parentDocumentId: String? = null,
+    private val childCollection: String
 ) {
-    protected abstract val collection: CollectionReference
+    protected val collection: CollectionReference
+        get() = if (parentCollection != null && parentDocumentId != null) {
+            firestore.collection(parentCollection)
+                .document(parentDocumentId)
+                .collection(childCollection)
+        } else {
+            firestore.collection(childCollection)
+        }
 
     protected suspend fun create(item: T, id: String? = null): Result<String> {
         return try {

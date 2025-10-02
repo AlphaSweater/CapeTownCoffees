@@ -2,7 +2,7 @@ package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
 import com.synaptix.capetowncoffees.util.TimeUtils
-import com.synaptix.capetowncoffees.domain.model.UserList as DomainList
+import com.synaptix.capetowncoffees.domain.model.CoffeeList as DomainList
 
 data class UserListDTO(
     @DocumentId

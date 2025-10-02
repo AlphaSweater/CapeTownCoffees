@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.synaptix.capetowncoffees.domain.model.UserList
+import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import com.synaptix.capetowncoffees.domain.usecase.savedLists.CreateListResult
 import com.synaptix.capetowncoffees.domain.usecase.savedLists.CreateListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,7 +41,7 @@ class CreateListViewModel @Inject constructor(
             return
         }
 
-        val newUserList = UserList(
+        val newCoffeeList = CoffeeList(
             name = name,
             description = description,
             isPublic = isPublic
@@ -49,7 +49,7 @@ class CreateListViewModel @Inject constructor(
 
         viewModelScope.launch {
             _state.value = CreateListUiState.Loading
-            when (val res = createList(newUserList)) {
+            when (val res = createList(newCoffeeList)) {
                 is CreateListResult.Success -> _state.value = CreateListUiState.Success(res.id)
                 is CreateListResult.Error -> _state.value = CreateListUiState.Error(res.message)
             }

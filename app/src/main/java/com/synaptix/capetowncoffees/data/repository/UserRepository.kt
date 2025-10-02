@@ -18,9 +18,8 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException
 class UserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     firestoreInstance: FirebaseFirestore
-) : BaseRepository<UserDTO>(firestoreInstance), IUserRepository {
+) : BaseRepository<UserDTO>(firestoreInstance, childCollection = "users"), IUserRepository {
 
-    override val collection = firestoreInstance.collection("users")
     override fun getType(): Class<UserDTO> = UserDTO::class.java
 
     // Get current Firebase authenticated user

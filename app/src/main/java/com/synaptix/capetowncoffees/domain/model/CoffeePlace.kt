@@ -6,7 +6,7 @@ package com.synaptix.capetowncoffees.domain.model
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
-import kotlin.collections.List
+import com.synaptix.capetowncoffees.data.mapper.CoffeePlaceMapper
 
 // =============================
 // Interfaces
@@ -17,7 +17,7 @@ interface CoffeePlaceBase
 
 // Interface for dynamic field mapping from Google Place API.
 interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
-    val fields: kotlin.collections.List<Place.Field>
+    val fields: List<Place.Field>
     fun fromPlace(place: Place): T
 }
 
@@ -34,15 +34,15 @@ data class CoffeePlaceFull(
     val googleMapsUrl: String?,
     val rating: Double?,
     val ratingCount: Int?,
-    val images: kotlin.collections.List<PhotoMetadata>?, // Handles Google images
+    val images: List<PhotoMetadata>?, // Handles Google images
 
     // 🏪 Types
     val primaryType: String?,          // new SDK: exactly one primary type
-    val types: kotlin.collections.List<String>?,          // extra types list
+    val types: List<String>?,          // extra types list
 
     // ⏰ Hours
     val businessStatus: String?,
-    val currentOpeningHours: kotlin.collections.List<String>?,
+    val currentOpeningHours: List<String>?,
 
     // 📞 Contact Info
     val nationalPhoneNumber: String?,
@@ -50,10 +50,10 @@ data class CoffeePlaceFull(
     val websiteUrl: String?,
 
     // 🍽️ Grouped Attributes
-    val tags: kotlin.collections.List<Tag>, // Unified tags for UI
+    val tags: List<Tag>, // Unified tags for UI
 
     // ⭐ Reviews
-    val reviews: kotlin.collections.List<Review>?, // In-app and Google reviews combined
+    val reviews: List<Review>?, // In-app and Google reviews combined
 
     // 💰 Other attributes
     val priceLevel: Int? = null // Google price level (0-4)
@@ -68,6 +68,7 @@ data class CoffeePlaceFull(
             Place.Field.LOCATION,
             Place.Field.PRIMARY_TYPE,
             Place.Field.TYPES,
+            Place.Field.REVIEWS,
             Place.Field.RATING,
             Place.Field.USER_RATING_COUNT,
             Place.Field.PHOTO_METADATAS,
@@ -79,26 +80,7 @@ data class CoffeePlaceFull(
             Place.Field.PRICE_LEVEL,
             Place.Field.GOOGLE_MAPS_URI
         )
-        override fun fromPlace(place: Place) = CoffeePlaceFull(
-            id = place.id,
-            name = place.displayName,
-            address = place.formattedAddress,
-            location = place.location,
-            googleMapsUrl = place.googleMapsUri?.toString(),
-            rating = place.rating,
-            ratingCount = place.userRatingCount,
-            images = place.photoMetadatas,
-            primaryType = place.primaryType,
-            types = place.placeTypes?.map { it.toString() },
-            businessStatus = place.businessStatus?.name,
-            currentOpeningHours = place.currentOpeningHours?.weekdayText,
-            nationalPhoneNumber = place.nationalPhoneNumber,
-            internationalPhoneNumber = place.internationalPhoneNumber,
-            websiteUrl = place.websiteUri?.toString(),
-            tags = TagExtractor.extract(place),
-            reviews = null,
-            priceLevel = place.priceLevel
-        )
+        override fun fromPlace(place: Place) = CoffeePlaceMapper.toFull(place)
     }
 }
 
@@ -109,14 +91,14 @@ data class CoffeePlaceLite(
     val address: String?,
     val location: LatLng?,
     val primaryType: String?,
-    val types: kotlin.collections.List<String>?,
+    val types: List<String>?,
     val rating: Double?,
     val ratingCount: Int?,
-    val images: kotlin.collections.List<PhotoMetadata>?,
-    val currentOpeningHours: kotlin.collections.List<String>?,
+    val images: List<PhotoMetadata>?,
+    val currentOpeningHours: List<String>?,
     val businessStatus: String?,
     val priceLevel: Int? = null,
-    val tags: kotlin.collections.List<Tag> // Unified tags for UI
+    val tags: List<Tag> // Unified tags for UI
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {
@@ -134,21 +116,7 @@ data class CoffeePlaceLite(
             Place.Field.BUSINESS_STATUS,
             Place.Field.PRICE_LEVEL
         )
-        override fun fromPlace(place: Place) = CoffeePlaceLite(
-            id = place.id,
-            name = place.displayName,
-            address = place.formattedAddress,
-            location = place.location,
-            primaryType = place.primaryType,
-            types = place.placeTypes?.map { it.toString() },
-            rating = place.rating,
-            ratingCount = place.userRatingCount,
-            images = place.photoMetadatas,
-            currentOpeningHours = place.currentOpeningHours?.weekdayText,
-            businessStatus = place.businessStatus?.name,
-            priceLevel = place.priceLevel,
-            tags = TagExtractor.extract(place)
-        )
+        override fun fromPlace(place: Place) = CoffeePlaceMapper.toLite(place)
     }
 }
 
@@ -163,16 +131,13 @@ data class CoffeePlaceSuggestion(
             Place.Field.ID,
             Place.Field.DISPLAY_NAME
         )
-        override fun fromPlace(place: Place) = CoffeePlaceSuggestion(
-            id = place.id,
-            name = place.displayName
-        )
+        override fun fromPlace(place: Place) = CoffeePlaceMapper.toSuggestion(place)
     }
 }
 
-// =============================
+// =============================================================================================
 // Tag Model & Extractor
-// =============================
+// =============================================================================================
 
 /**
  * Unified tags used for displaying "chips" in UI.

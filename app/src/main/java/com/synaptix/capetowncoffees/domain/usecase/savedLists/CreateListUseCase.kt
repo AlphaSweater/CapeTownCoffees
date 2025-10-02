@@ -1,7 +1,7 @@
 package com.synaptix.capetowncoffees.domain.usecase.savedLists
 
-import com.synaptix.capetowncoffees.domain.model.UserList
-import com.synaptix.capetowncoffees.domain.repository.IUserListRepository
+import com.synaptix.capetowncoffees.domain.model.CoffeeList
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
 import javax.inject.Inject
 
 sealed class CreateListResult {
@@ -10,12 +10,12 @@ sealed class CreateListResult {
 }
 
 class CreateListUseCase @Inject constructor(
-    private val repo: IUserListRepository
+    private val repo: ICoffeeListRepository
 ) {
     suspend operator fun invoke(
-        newUserList: UserList
+        newCoffeeList: CoffeeList
     ): CreateListResult = try {
-        val id = repo.createList(newUserList)
+        val id = repo.createList(newCoffeeList)
         CreateListResult.Success(id)
     } catch (e: Exception) {
         CreateListResult.Error(e.localizedMessage ?: "Failed to create list")

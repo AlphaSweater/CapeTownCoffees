@@ -6,8 +6,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.model.UserListDTO
 import com.synaptix.capetowncoffees.data.model.toDomain
 import com.synaptix.capetowncoffees.data.model.toDTO
-import com.synaptix.capetowncoffees.domain.model.UserList
-import com.synaptix.capetowncoffees.domain.repository.IUserListRepository
+import com.synaptix.capetowncoffees.domain.model.CoffeeList
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -17,10 +17,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UserListRepository @Inject constructor(
+class CoffeeListRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore
-) : IUserListRepository {
+) : ICoffeeListRepository {
 
     //creates list for currently signed in user as a subcollection of their user document
     val collection: CollectionReference
@@ -32,7 +32,7 @@ class UserListRepository @Inject constructor(
                 .collection("saved_lists")
         }
 
-    override suspend fun getLists(): List<UserList> {
+    override suspend fun getLists(): List<CoffeeList> {
         Timber.d("Fetching saved lists from Firestore (DTO)")
         return try {
             val snapshot = collection.get().await()
@@ -44,11 +44,11 @@ class UserListRepository @Inject constructor(
     }
 
     override suspend fun createList(
-        newUserList: UserList
+        newCoffeeList: CoffeeList
     ): String {
         return try {
             val id = collection.document().id
-            val dto = newUserList.toDTO()
+            val dto = newCoffeeList.toDTO()
             Timber.d("Creating new list DTO: $dto")
             collection.document(id).set(dto).await()
             Timber.d("Successfully created list with ID: $id")
@@ -64,7 +64,7 @@ class UserListRepository @Inject constructor(
         collection.document(id).delete().await()
     }
 
-    override fun observeLists(): Flow<List<UserList>> = callbackFlow {
+    override fun observeLists(): Flow<List<CoffeeList>> = callbackFlow {
         Timber.d("Setting up saved lists observation (DTO)")
         val listener = collection.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -80,7 +80,7 @@ class UserListRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    override fun observeList(id: String): Flow<UserList?> = callbackFlow {
+    override fun observeList(id: String): Flow<CoffeeList?> = callbackFlow {
         Timber.d("Observing saved list id=$id (DTO)")
         val listener = collection.document(id).addSnapshotListener { snapshot, error ->
             if (error != null) {
