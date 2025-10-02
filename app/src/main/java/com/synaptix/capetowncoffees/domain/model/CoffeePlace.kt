@@ -251,5 +251,7 @@ object TagExtractor {
 
     // String formatting helper
     private fun String.capitalizeWords(): String =
-        split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+        split(" ").joinToString(" ") { word ->
+            if (word.isNotEmpty()) word.replaceFirstChar { c -> c.uppercase() } else word
+        }
 }
