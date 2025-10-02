@@ -1,8 +1,8 @@
 package com.synaptix.capetowncoffees.di
 
 import com.synaptix.capetowncoffees.data.repository.PlacesApiRepository
-import com.synaptix.capetowncoffees.data.repository.SavedListRepositoryImpl
-import com.synaptix.capetowncoffees.domain.repository.ISavedListRepository
+import com.synaptix.capetowncoffees.data.repository.ListRepository
+import com.synaptix.capetowncoffees.domain.repository.IListRepository
 import com.synaptix.capetowncoffees.data.repository.UserRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository
@@ -25,8 +25,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSavedListRepository(
-        impl: SavedListRepositoryImpl
-    ): ISavedListRepository
+        impl: ListRepository
+    ): IListRepository
 
     @Binds
     @Singleton

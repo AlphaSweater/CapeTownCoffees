@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.di
 
-import com.synaptix.capetowncoffees.domain.repository.ISavedListRepository
+import com.synaptix.capetowncoffees.domain.repository.IListRepository
 import com.synaptix.capetowncoffees.domain.repository.IUserRepository
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.LogoutUserUseCase
@@ -36,8 +36,8 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideCreateUserUseCase(ISavedListRepository: ISavedListRepository): CreateListUseCase {
-        return CreateListUseCase(ISavedListRepository)
+    fun provideCreateUserUseCase(IListRepository: IListRepository): CreateListUseCase {
+        return CreateListUseCase(IListRepository)
     }
     // =================== END AUTH USE CASES ===================
 
