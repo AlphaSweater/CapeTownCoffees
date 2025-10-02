@@ -4,7 +4,7 @@ import com.google.firebase.firestore.DocumentId
 import com.synaptix.capetowncoffees.util.TimeUtils
 import com.synaptix.capetowncoffees.domain.model.UserList as DomainList
 
-data class ListDTO(
+data class UserListDTO(
     @DocumentId
     val id: String = "",  // Firestore document ID
     val name: String? = null,
@@ -16,7 +16,7 @@ data class ListDTO(
     val updatedAt: Long = TimeUtils.nowSeconds(),
 ) {
     companion object {
-        fun fromDomain(list: DomainList): ListDTO = ListDTO(
+        fun fromDomain(list: DomainList): UserListDTO = UserListDTO(
             id = list.id,
             name = list.name,
             description = list.description,
@@ -28,7 +28,7 @@ data class ListDTO(
     }
 }
 
-fun ListDTO.toDomain(): DomainList = DomainList(
+fun UserListDTO.toDomain(): DomainList = DomainList(
     id = id,
     name = name ?: "",
     description = description,
@@ -36,4 +36,4 @@ fun ListDTO.toDomain(): DomainList = DomainList(
     placeIds = placeIds ?: emptyList()
 )
 
-fun DomainList.toDTO(): ListDTO = ListDTO.fromDomain(this)
+fun DomainList.toDTO(): UserListDTO = UserListDTO.fromDomain(this)

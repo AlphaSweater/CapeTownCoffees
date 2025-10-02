@@ -3,7 +3,7 @@ package com.synaptix.capetowncoffees.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.synaptix.capetowncoffees.data.model.ListDTO
+import com.synaptix.capetowncoffees.data.model.UserListDTO
 import com.synaptix.capetowncoffees.data.model.toDomain
 import com.synaptix.capetowncoffees.data.model.toDTO
 import com.synaptix.capetowncoffees.domain.model.UserList
@@ -36,7 +36,7 @@ class UserListRepository @Inject constructor(
         Timber.d("Fetching saved lists from Firestore (DTO)")
         return try {
             val snapshot = collection.get().await()
-            snapshot.documents.mapNotNull { it.toObject(ListDTO::class.java)?.toDomain() }
+            snapshot.documents.mapNotNull { it.toObject(UserListDTO::class.java)?.toDomain() }
         } catch (e: Exception) {
             Timber.e("Error fetching saved lists: $e")
             emptyList()
@@ -72,7 +72,7 @@ class UserListRepository @Inject constructor(
                 return@addSnapshotListener
             }
             val items = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(ListDTO::class.java)?.toDomain()
+                doc.toObject(UserListDTO::class.java)?.toDomain()
             } ?: emptyList()
             trySend(items)
             Timber.d("Received ${items.size} saved lists from Firestore")
@@ -87,7 +87,7 @@ class UserListRepository @Inject constructor(
                 close(error)
                 return@addSnapshotListener
             }
-            val item = snapshot?.toObject(ListDTO::class.java)?.toDomain()
+            val item = snapshot?.toObject(UserListDTO::class.java)?.toDomain()
             Timber.d("Observed list: $item")
             trySend(item)
         }
