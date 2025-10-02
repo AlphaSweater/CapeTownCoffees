@@ -12,21 +12,25 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.slider.Slider
 import com.synaptix.capetowncoffees.R
 
-// --- THIS IS THE FIX: Use a Set to store multiple selected indices ---
 data class FilterCategory(
     val title: String,
     val options: List<String>,
     var isExpanded: Boolean = false,
-    val selectedOptionIndices: MutableSet<Int> = mutableSetOf() // Track multiple selections
+    val selectedOptionIndices: MutableSet<Int> = mutableSetOf()
 )
-// --- END OF FIX ---
 
 class SearchCategoryAdapter(
     private val categories: List<FilterCategory>,
     private val onSizeChanged: () -> Unit
-) : RecyclerView.Adapter<SearchCategoryAdapter.CategoryViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private companion object {
+        const val VIEW_TYPE_BUTTONS = 1
+        const val VIEW_TYPE_SLIDER = 2
+    }
 
     inner class CategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val headerRow: LinearLayout = itemView.findViewById(R.id.headerRow)
@@ -36,42 +40,111 @@ class SearchCategoryAdapter(
         val optionsContainer: LinearLayout = itemView.findViewById(R.id.optionsContainer)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_category_filter, parent, false)
-        return CategoryViewHolder(view)
+    inner class SliderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val headerRow: LinearLayout = itemView.findViewById(R.id.headerRow)
+        val categoryTitle: TextView = itemView.findViewById(R.id.tvCategoryTitle)
+        val arrowIcon: ImageView = itemView.findViewById(R.id.ivArrow)
+        val sliderContentContainer: LinearLayout = itemView.findViewById(R.id.sliderContentContainer)
+        val radiusSlider: Slider = itemView.findViewById(R.id.radiusSlider)
+        val sliderValueText: TextView = itemView.findViewById(R.id.tvSliderValue)
     }
 
-    override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
+    override fun getItemViewType(position: Int): Int {
+        return if (categories[position].title == "Search Radius") {
+            VIEW_TYPE_SLIDER
+        } else {
+            VIEW_TYPE_BUTTONS
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        return when (viewType) {
+            VIEW_TYPE_SLIDER -> {
+                val view = inflater.inflate(R.layout.item_category_slider, parent, false)
+                SliderViewHolder(view)
+            }
+            else -> {
+                val view = inflater.inflate(R.layout.item_category_filter, parent, false)
+                CategoryViewHolder(view)
+            }
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder.itemViewType) {
+            VIEW_TYPE_SLIDER -> {
+                val sliderHolder = holder as SliderViewHolder
+                bindSliderViewHolder(sliderHolder, position)
+            }
+            else -> {
+                val buttonHolder = holder as CategoryViewHolder
+                bindButtonViewHolder(buttonHolder, position)
+            }
+        }
+    }
+
+    private fun bindSliderViewHolder(holder: SliderViewHolder, position: Int) {
         val category = categories[position]
         holder.categoryTitle.text = category.title
 
-        updateCategoryView(holder, category)
+        if (category.options.isNotEmpty()) {
+            holder.radiusSlider.valueFrom = 0.0f
+            holder.radiusSlider.valueTo = (category.options.size - 1).toFloat()
+            holder.radiusSlider.stepSize = 1.0f
+        }
+
+        fun updateSliderText(value: Float) {
+            val index = value.toInt()
+            if (index in category.options.indices) {
+                holder.sliderValueText.text = category.options[index]
+            }
+        }
+
+        updateSliderText(holder.radiusSlider.value)
+
+        holder.radiusSlider.addOnChangeListener { _, value, _ ->
+            updateSliderText(value)
+        }
+
+        updateViewVisibility(holder.sliderContentContainer, category.isExpanded)
+        holder.arrowIcon.setImageResource(
+            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+        )
+
+        holder.headerRow.setOnClickListener {
+            category.isExpanded = !category.isExpanded
+            notifyItemChanged(position)
+            onSizeChanged()
+        }
+    }
+
+    private fun bindButtonViewHolder(holder: CategoryViewHolder, position: Int) {
+        val category = categories[position]
+        holder.categoryTitle.text = category.title
+
+        updateViewVisibility(holder.pillsScrollView, category.isExpanded)
+        holder.arrowIcon.setImageResource(
+            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+        )
 
         holder.optionsContainer.removeAllViews()
         val inflater = LayoutInflater.from(holder.itemView.context)
 
         category.options.forEachIndexed { index, optionText ->
             val button = inflater.inflate(R.layout.item_category, holder.optionsContainer, false) as MaterialButton
-
             button.apply {
                 text = optionText
                 icon = null
-                // --- THIS IS THE FIX: Check if the index is in the set ---
                 setStyle(this, category.selectedOptionIndices.contains(index))
-                // --- END OF FIX ---
             }
 
             button.setOnClickListener {
-                // --- THIS IS THE FIX: Add or remove the index from the set ---
                 if (category.selectedOptionIndices.contains(index)) {
-                    category.selectedOptionIndices.remove(index) // Deselect
+                    category.selectedOptionIndices.remove(index)
                 } else {
-                    category.selectedOptionIndices.add(index) // Select
+                    category.selectedOptionIndices.add(index)
                 }
-                // --- END OF FIX ---
-
-                // Re-apply the style to the clicked button
                 setStyle(it as MaterialButton, category.selectedOptionIndices.contains(index))
             }
             holder.optionsContainer.addView(button)
@@ -84,36 +157,31 @@ class SearchCategoryAdapter(
         }
     }
 
+    private fun updateViewVisibility(view: View, isExpanded: Boolean) {
+        if (isExpanded) {
+            view.slideDown()
+        } else {
+            if (view.visibility == View.VISIBLE) {
+                view.slideUp()
+            } else {
+                view.visibility = View.GONE
+            }
+        }
+    }
+
+    override fun getItemCount() = categories.size
+
     private fun setStyle(button: MaterialButton, isSelected: Boolean) {
         val context = button.context
         if (isSelected) {
-            // Selected state: Solid fill
             button.backgroundTintList = ContextCompat.getColorStateList(context, R.color.button_category)
             button.setTextColor(ContextCompat.getColor(context, R.color.white))
             button.iconTint = ContextCompat.getColorStateList(context, R.color.white)
         } else {
-            // Unselected state: Stroked outline
             button.backgroundTintList = ContextCompat.getColorStateList(context, R.color.background)
             button.strokeColor = ContextCompat.getColorStateList(context, R.color.button_category)
             button.setTextColor(ContextCompat.getColor(context, R.color.button_category))
             button.iconTint = ContextCompat.getColorStateList(context, R.color.button_category)
-        }
-    }
-
-    // updateCategoryView and animation helpers remain the same
-    private fun updateCategoryView(holder: CategoryViewHolder, category: FilterCategory) {
-        holder.arrowIcon.setImageResource(
-            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
-        )
-
-        if (category.isExpanded) {
-            holder.pillsScrollView.slideDown()
-        } else {
-            if (holder.pillsScrollView.visibility == View.VISIBLE) {
-                holder.pillsScrollView.slideUp()
-            } else {
-                holder.pillsScrollView.visibility = View.GONE
-            }
         }
     }
 
@@ -152,6 +220,4 @@ class SearchCategoryAdapter(
         }
         animator.start()
     }
-
-    override fun getItemCount() = categories.size
 }
