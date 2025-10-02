@@ -19,8 +19,8 @@ sealed class RegistrationResult {
 class RegisterUserUseCase @Inject constructor(
     private val IUserRepository: IUserRepository
 ) {
-    suspend operator fun invoke(email: String, password: String, firstName: String? = null, lastName: String? = null): RegistrationResult {
-        Timber.d("RegisterUserUseCase invoked: email=%s, firstName=%s, lastName=%s", email, firstName, lastName)
+    suspend operator fun invoke(email: String, password: String, fullName: String): RegistrationResult {
+        Timber.d("RegisterUserUseCase invoked: email=%s, fullName=%s", email, fullName)
         return try {
             Timber.d("Checking if email exists: %s", email)
             IUserRepository.emailExists(email)
@@ -36,11 +36,8 @@ class RegisterUserUseCase @Inject constructor(
                     return RegistrationResult.Error(exception.message ?: "Failed to check email")
                 }
 
-            // Create user data object for registration (excluding password)
-            val userData = User.newUser(email, firstName, lastName)
-
-            Timber.d("Registering user: %s", userData)
-            IUserRepository.registerUser(email, password, userData)
+            Timber.d("Registering user: %s", fullName)
+            IUserRepository.registerUser(email, password, fullName)
                 .onSuccess {
                     Timber.d("User registered successfully: %s", email)
                     return RegistrationResult.Success

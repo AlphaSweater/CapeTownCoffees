@@ -4,8 +4,7 @@ package com.synaptix.capetowncoffees.domain.model
 data class User(
     val id: String,
     val email: String,
-    val firstName: String?,
-    val lastName: String?,
+    val fullName: String,
     val photoBase64: String? = null,
     val createdAt: Long,
     val updatedAt: Long,
@@ -15,14 +14,12 @@ data class User(
         fun newUser(
             id: String,
             email: String,
-            firstName: String? = null,
-            lastName: String? = null,
+            fullName: String
         ): User {
             return User(
                 id = id,
                 email = email,
-                firstName = firstName,
-                lastName = lastName,
+                fullName = fullName,
                 photoBase64 = null,
                 createdAt = 0L,
                 updatedAt = 0L,

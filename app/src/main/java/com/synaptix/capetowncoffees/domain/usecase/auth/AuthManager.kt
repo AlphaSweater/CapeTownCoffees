@@ -14,8 +14,8 @@ class AuthManager @Inject constructor(
         return loginUserUseCase(email, password)
     }
 
-    suspend fun register(email: String, password: String, firstName: String? = null, lastName: String? = null): RegistrationResult {
-        return registerUserUseCase(email, password, firstName, lastName)
+    suspend fun register(email: String, password: String, fullName: String): RegistrationResult {
+        return registerUserUseCase(email, password, fullName)
     }
 
     suspend fun logout(): LogoutResult {

@@ -40,18 +40,14 @@ class UserRepository @Inject constructor(
     override suspend fun registerUser(
         email: String,
         password: String,
-        userData: User
+        fullName: String
     ): Result<User> {
         return try {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user ?: throw Exception("Failed to create user")
 
-            val newUserDTO = userData.copy(
-                id = firebaseUser.uid,
-                email = email,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
-            ).toDTO()
+            // Create new user dto
+            val newUserDTO = UserDTO.newUserDTO(firebaseUser.uid, email, fullName)
 
             create(newUserDTO, firebaseUser.uid)
             Result.success(newUserDTO.toDomain())

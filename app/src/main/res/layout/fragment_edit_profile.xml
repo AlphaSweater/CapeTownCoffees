@@ -180,7 +180,8 @@
                                 android:paddingVertical="14dp"
                                 android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary" />
+                                android:textColorHint="@color/text_secondary"
+                                android:text="@{viewModel.fullName}" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Email -->
@@ -212,7 +213,8 @@
                                 android:paddingVertical="14dp"
                                 android:paddingStart="16dp"
                                 android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary" />
+                                android:textColorHint="@color/text_secondary"
+                                android:text="@{viewModel.email}" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Current Password -->

@@ -11,13 +11,12 @@ import com.synaptix.capetowncoffees.util.errorOf
 import com.synaptix.capetowncoffees.util.loadingResource
 import com.synaptix.capetowncoffees.util.successOf
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.synaptix.capetowncoffees.domain.usecase.user.GetUserProfileUseCase
 import com.synaptix.capetowncoffees.domain.usecase.user.UpdateAuthCredentialsUseCase
+import com.synaptix.capetowncoffees.util.TimeUtils
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
@@ -26,24 +25,28 @@ class EditProfileViewModel @Inject constructor(
     private val updateAuthCredentialsUseCase: UpdateAuthCredentialsUseCase
 ) : ViewModel() {
 
-    data class UiState(
-        val firstName: String,
-        val lastName: String,
-        val email: String,
-        val photoBase64: String? = null
-    )
+    private val _email = MutableStateFlow("")
+    val email: StateFlow<String> = _email.asStateFlow()
 
-    private val _uiState = MutableStateFlow<Resource<UiState>>(loadingResource())
-    val uiState: StateFlow<Resource<UiState>> = _uiState.asStateFlow()
+    private val _photoBase64 = MutableStateFlow<String?>(null)
+    val photoBase64: StateFlow<String?> = _photoBase64.asStateFlow()
+
+    private val _uiState = MutableStateFlow<Resource<Boolean>>(loadingResource())
+    val uiState: StateFlow<Resource<Boolean>> = _uiState.asStateFlow()
 
     private val _updateState = MutableStateFlow<Resource<String>>(loadingResource())
     val updateState: StateFlow<Resource<String>> = _updateState.asStateFlow()
+
+    private val _fullName = MutableStateFlow("")
+    val fullName: StateFlow<String> = _fullName.asStateFlow()
 
     private var currentUser: User? = null
 
     private var profilePictureUri: Uri? = null
 
-    init { loadUserProfile() }
+    init {
+        loadUserProfile()
+    }
 
     /**
      * Call this from your UI when the user selects a new profile picture.
@@ -58,18 +61,16 @@ class EditProfileViewModel @Inject constructor(
             getUserProfileUseCase()
                 .onSuccess { user ->
                     currentUser = user
-                    _uiState.value = successOf(
-                        UiState(user.firstName ?: "", user.lastName ?: "", user.email, user.photoBase64)
-                    )
+                    _fullName.value = user.fullName
+                    _email.value = user.email
+                    _photoBase64.value = user.photoBase64
+                    _uiState.value = successOf(true)
                 }
                 .onFailure { e -> _uiState.value = errorOf(e.message ?: "Failed to load profile") }
         }
     }
 
     fun updateProfile(
-        firstName: String,
-        lastName: String,
-        email: String?,
         currentPassword: String?,
         newPassword: String?,
         context: Context? = null
@@ -77,13 +78,12 @@ class EditProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _updateState.value = loadingResource()
             val updatedUser = currentUser?.copy(
-                firstName = firstName.ifEmpty { null },
-                lastName = lastName.ifEmpty { null },
-                email = email ?: currentUser!!.email,
-                updatedAt = System.currentTimeMillis()
+                fullName = _fullName.value.ifEmpty { null } ?: currentUser!!.fullName,
+                email = _email.value.ifEmpty { null } ?: currentUser!!.email,
+                updatedAt = TimeUtils.nowSeconds()
             ) ?: return@launch
 
-            val safeEmail = email ?: currentUser?.email ?: ""
+            val safeEmail = _email.value
             val safeNewPassword = newPassword ?: ""
 
             val authChanges = if (!currentPassword.isNullOrBlank() && (safeEmail.isNotBlank() || safeNewPassword.isNotBlank())) {

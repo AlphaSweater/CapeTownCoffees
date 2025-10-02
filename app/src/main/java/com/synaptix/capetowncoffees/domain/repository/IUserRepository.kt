@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface IUserRepository {
     fun getCurrentUser(): FirebaseUser?
     fun getCurrentUserId(): String?
-    suspend fun registerUser(email: String, password: String, userData: User): Result<User>
+    suspend fun registerUser(email: String, password: String, fullName: String): Result<User>
     suspend fun loginUser(email: String, password: String): Result<FirebaseUser>
     fun logoutUser(): Result<Unit>
     suspend fun getUserProfile(userId: String): Result<User?>
