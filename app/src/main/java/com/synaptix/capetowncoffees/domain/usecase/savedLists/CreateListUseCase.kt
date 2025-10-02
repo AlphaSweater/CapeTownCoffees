@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.domain.usecase.savedLists
 
-import com.synaptix.capetowncoffees.domain.repository.IListRepository
+import com.synaptix.capetowncoffees.domain.repository.IUserListRepository
 import javax.inject.Inject
 
 sealed class CreateListResult {
@@ -9,7 +9,7 @@ sealed class CreateListResult {
 }
 
 class CreateListUseCase @Inject constructor(
-    private val repo: IListRepository
+    private val repo: IUserListRepository
 ) {
     suspend operator fun invoke(
         name: String,

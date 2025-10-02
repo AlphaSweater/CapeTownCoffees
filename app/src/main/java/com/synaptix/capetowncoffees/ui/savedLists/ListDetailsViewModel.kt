@@ -6,9 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
-import com.synaptix.capetowncoffees.domain.model.List
+import com.synaptix.capetowncoffees.domain.model.UserList
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
-import com.synaptix.capetowncoffees.domain.repository.IListRepository
+import com.synaptix.capetowncoffees.domain.repository.IUserListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -16,7 +16,7 @@ import timber.log.Timber
 
 @HiltViewModel
 class ListDetailsViewModel @Inject constructor(
-    private val savedRepo: IListRepository,
+    private val savedRepo: IUserListRepository,
     private val placesRepo: IPlacesApiRepository
 ) : ViewModel() {
 
@@ -28,7 +28,7 @@ class ListDetailsViewModel @Inject constructor(
         _listId.value = id
     }
 
-    fun observeList(id: String): LiveData<List?> = savedRepo.observeList(id).asLiveData()
+    fun observeList(id: String): LiveData<UserList?> = savedRepo.observeList(id).asLiveData()
 
     private val _places = MutableLiveData<kotlin.collections.List<CoffeePlaceFull>>()
     val places: LiveData<kotlin.collections.List<CoffeePlaceFull>> get() = _places
