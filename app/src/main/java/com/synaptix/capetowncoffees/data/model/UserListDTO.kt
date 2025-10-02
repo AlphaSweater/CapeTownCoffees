@@ -9,6 +9,7 @@ data class ListDTO(
     val id: String = "",  // Firestore document ID
     val name: String? = null,
     val description: String? = null,
+    @field:JvmField
     val isPublic: Boolean? = null,
     val placeIds: List<String>? = null,
     val createdAt: Long = TimeUtils.nowSeconds(),
