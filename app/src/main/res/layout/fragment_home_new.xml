@@ -58,6 +58,14 @@
         </com.google.android.material.card.MaterialCardView>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -112,6 +120,7 @@
                     android:paddingVertical="8dp">
 
                     <TextView
+                        android:id="@+id/tvFeaturedTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Featured"
@@ -165,6 +174,7 @@
                     android:paddingVertical="8dp">
 
                     <TextView
+                        android:id="@+id/tvCafeName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Near Me"

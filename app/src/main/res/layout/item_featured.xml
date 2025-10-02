@@ -91,12 +91,26 @@
                     app:tint="@color/icon_primary" />
 
                 <TextView
-                    android:id="@+id/tvCafeDistance"
+                    android:id="@+id/tvCafeAddress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:text="Cape Town, City Centre"
                     android:textColor="@color/text_favourite"
+                    android:textSize="14sp" />
+                    
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="12dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="@color/text_primary" />
+                    
+                <TextView
+                    android:id="@+id/tvFeaturedDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1.2 km away"
+                    android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
             </LinearLayout>
 

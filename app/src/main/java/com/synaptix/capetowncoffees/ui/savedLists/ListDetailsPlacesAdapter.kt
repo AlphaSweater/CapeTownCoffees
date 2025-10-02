@@ -28,7 +28,7 @@ class ListDetailsPlacesAdapter : ListAdapter<CoffeePlaceFull, ListDetailsPlacesA
 
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvName: TextView = itemView.findViewById(R.id.tvCafeName)
-        private val tvDistance: TextView = itemView.findViewById(R.id.tvCafeDistance)
+        private val tvDistance: TextView = itemView.findViewById(R.id.tvDistance)
         private val tvRating: TextView = itemView.findViewById(R.id.tvCafeRating)
         private val ivImage: ImageView = itemView.findViewById(R.id.ivCafeImage)
 
