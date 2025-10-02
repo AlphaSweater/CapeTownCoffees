@@ -28,6 +28,7 @@ android {
 
     defaultConfig {
         applicationId = "com.synaptix.capetowncoffees"
+        // minSdk increased from 24 to 26 to support features/libraries that require Android 8.0 (API 26) or higher.
         minSdk = 26
         targetSdk = 36
         versionCode = 1
