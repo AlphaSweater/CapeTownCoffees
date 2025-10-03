@@ -177,36 +177,37 @@ abstract class BaseRepository<T : Any>(
 
     // --- 🔄 Realtime Observers ---
     /**
-     * Observes a single document for real-time updates.
+     * Observes a document for real-time updates, optionally under a parent document.
+     * If parentDocId is null, observes at the root collection.
      */
-    protected fun observeDocument(documentId: String): Flow<Result<T?>> = callbackFlow {
-        val listener = collection.document(documentId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(Result.failure(error))
-                    return@addSnapshotListener
-                }
-                trySend(Result.success(snapshot?.toObject(getType())))
+    protected fun observeDocument(documentId: String, parentDocId: String? = null): Flow<Result<T?>> = callbackFlow {
+        val docRef = getCollection(parentDocId).document(documentId)
+        val listener = docRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+                return@addSnapshotListener
             }
+            trySend(Result.success(snapshot?.toObject(getType())))
+        }
         awaitClose { listener.remove() }
     }
 
     /**
-     * Observes a query or collection for real-time updates.
+     * Observes a query or collection for real-time updates, optionally under a parent document.
+     * If parentDocId is null, observes at the root collection.
      */
-    protected fun observeCollection(query: Query? = null): Flow<Result<List<T>>> = callbackFlow {
-        val finalQuery = query ?: collection
-        val listener = finalQuery
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(Result.failure(error))
-                    return@addSnapshotListener
-                }
-                val items = snapshot?.documents?.mapNotNull { doc ->
-                    runCatching { doc.toObject(getType()) }.getOrNull()
-                } ?: emptyList()
-                trySend(Result.success(items))
+    protected fun observeCollection(parentDocId: String? = null, query: Query? = null): Flow<Result<List<T>>> = callbackFlow {
+        val finalQuery = query ?: getCollection(parentDocId)
+        val listener = finalQuery.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+                return@addSnapshotListener
             }
+            val items = snapshot?.documents?.mapNotNull { doc ->
+                runCatching { doc.toObject(getType()) }.getOrNull()
+            } ?: emptyList()
+            trySend(Result.success(items))
+        }
         awaitClose { listener.remove() }
     }
 
