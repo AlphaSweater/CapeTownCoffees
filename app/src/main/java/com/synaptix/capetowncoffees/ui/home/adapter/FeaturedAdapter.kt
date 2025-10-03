@@ -2,7 +2,6 @@ package com.synaptix.capetowncoffees.ui.home.adapter
 
 import android.view.LayoutInflater
 import android.view.View
-import android.location.Location
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
@@ -14,6 +13,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
+import com.synaptix.capetowncoffees.util.calculateDistanceTo
 
 class FeaturedAdapter(
     private val placesClient: PlacesClient,
@@ -74,7 +74,7 @@ class FeaturedAdapter(
         }
         
         // Set distance
-        val distanceText = calculateDistance(item.location)
+        val distanceText = currentLocation?.calculateDistanceTo(item.location) ?: ""
         if (distanceText.isNotEmpty()) {
             holder.distance.text = distanceText
             holder.distance.visibility = View.VISIBLE
@@ -94,25 +94,6 @@ class FeaturedAdapter(
         submitList(newItems)
     }
     
-    private fun calculateDistance(latLng: LatLng?): String {
-        if (currentLocation == null || latLng == null) return ""
-        
-        val results = FloatArray(1)
-        Location.distanceBetween(
-            currentLocation!!.latitude,
-            currentLocation!!.longitude,
-            latLng.latitude,
-            latLng.longitude,
-            results
-        )
-        
-        val distanceInKm = results[0] / 1000 // Convert meters to kilometers
-        return if (distanceInKm < 1) {
-            "${String.format("%.0f", results[0])} m"
-        } else {
-            "${String.format("%.1f", distanceInKm)} km"
-        }
-    }
 
     // getItemCount is provided by ListAdapter
 }

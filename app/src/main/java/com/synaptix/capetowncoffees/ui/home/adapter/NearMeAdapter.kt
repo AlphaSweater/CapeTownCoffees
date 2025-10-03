@@ -13,10 +13,10 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 
-import android.location.Location
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.google.android.gms.maps.model.LatLng
+import com.synaptix.capetowncoffees.util.calculateDistanceTo
 
 class NearMeAdapter(
     private val placesClient: PlacesClient,
@@ -52,27 +52,18 @@ class NearMeAdapter(
         if (userLocation != null) {
             currentLocation = userLocation
         }
-        submitList(newItems)
-    }
-    
-    private fun calculateDistance(latLng: LatLng?): String {
-        if (currentLocation == null || latLng == null) return ""
         
-        val results = FloatArray(1)
-        Location.distanceBetween(
-            currentLocation!!.latitude,
-            currentLocation!!.longitude,
-            latLng.latitude,
-            latLng.longitude,
-            results
-        )
+        // Create a new list to ensure the DiffUtil detects changes properly
+        val newList = newItems.toList()
         
-        val distanceInKm = results[0] / 1000 // Convert meters to kilometers
-        return if (distanceInKm < 1) {
-            "${String.format("%.0f", results[0])} m away"
-        } else {
-            "${String.format("%.1f", distanceInKm)} km away"
+        // Submit the new list with a callback to ensure the UI updates
+        submitList(newList) {
+            // This runs after the list is updated on the main thread
+            notifyDataSetChanged() // Force a full refresh to ensure all items are updated
         }
+        
+        // Log the update for debugging
+        android.util.Log.d("NearMeAdapter", "Updated ${newList.size} items")
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -132,8 +123,9 @@ class NearMeAdapter(
         holder.name.text = cafe.name ?: ""
         
         // Set distance
-        val distanceText = calculateDistance(cafe.location)
+        val distanceText = currentLocation?.calculateDistanceTo(cafe.location) ?: ""
         holder.distance.text = distanceText
+        holder.distance.visibility = if (distanceText.isNotEmpty()) View.VISIBLE else View.GONE
         
         // Set rating
         cafe.rating?.let { rating ->

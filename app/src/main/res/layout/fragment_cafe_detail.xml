@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,10 +31,9 @@
             android:layout_height="260dp">
 
             <ImageView
-                android:id="@+id/ivHeader"
+                android:id="@+id/ivImage"
                 android:layout_width="match_parent"
                 android:layout_height="278dp"
-                android:contentDescription="Cafe header"
                 android:scaleType="centerCrop"
                 android:src="@drawable/featured_placeholder" />
 
@@ -83,7 +96,7 @@
                         android:id="@+id/tvCafeName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Truth Coffee Roasting"
+                        android:text="@string/cafe_name"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -162,7 +175,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="About"
+                        android:text="@string/about"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
@@ -171,7 +184,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Quirky cafe that's a steampunk world of pipes and old metal, with gourmet, home-roasted coffee."
+                        android:text="@string/description"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"/>
 
@@ -180,7 +193,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Opening Hours"
+                        android:text="@string/opening_hours"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
@@ -192,15 +205,10 @@
                         android:layout_marginTop="6dp">
 
                         <TextView
+                            android:id="@+id/tvOpeningHours"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Monday - Saturday      7:00 am - 10:00 pm"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"/>
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Sunday                     8:00 am - 10:00 pm"
+                            android:text="@string/opening_hours"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
@@ -210,7 +218,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:text="Contact"
+                        android:text="@string/contact"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
@@ -228,10 +236,11 @@
                             android:src="@drawable/ic_location"
                             app:tint="@color/text_secondary" />
                         <TextView
+                            android:id="@+id/tvCafeAddress"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="36 Buitenkant St, Cape Town City Centre, Cape Town, 8000"
+                            android:text="Address"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
@@ -251,10 +260,11 @@
                             app:tint="@color/text_secondary"
                             tools:ignore="UseAppTint" />
                         <TextView
+                            android:id="@+id/tvPhone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="021 201 7000"
+                            android:text="@string/phone_number"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
@@ -279,7 +289,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Top Reviews"
+                    android:text="@string/top_reviews"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"/>
@@ -289,4 +299,6 @@
             <include layout="@layout/item_review"/>
         </LinearLayout>
     </LinearLayout>
-</ScrollView>
+
+    </ScrollView>
+</FrameLayout>

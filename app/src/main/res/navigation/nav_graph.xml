@@ -90,18 +90,7 @@
         android:label="Cafe Details"
         tools:layout="@layout/fragment_cafe_detail">
         <argument
-            android:name="cafeName"
-            app:argType="string" />
-        <argument
-            android:name="cafeRating"
-            android:defaultValue="0.0"
-            app:argType="float" />
-        <argument
-            android:name="cafeDistance"
-            android:defaultValue="0.0"
-            app:argType="float" />
-        <argument
-            android:name="cafePriceRange"
+            android:name="placeId"
             android:defaultValue=""
             app:argType="string" />
     </fragment>
