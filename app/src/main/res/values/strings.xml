@@ -48,6 +48,8 @@
 
     <!-- Common Actions -->
     <string name="action_next">Next</string>
+    <string name="no_opening_hours_available">Opening hours not available</string>
+    <string name="directions">Get Directions</string>
     <string name="action_back">Back</string>
 
     <!-- Theme Menu -->
@@ -88,4 +90,25 @@
     Questions about this policy or your data? Email us at support@capetowncoffees.example.
 </string>
 
+    <!-- Home Page -->
+    <string name="cafe_featured">Featured</string>
+    <string name="see_all">See All</string>
+    <string name="near_me">Near Me</string>
+
+    <!-- Near Me Item and Featured Item -->
+    <string name="cafe_name">Cafe Name</string>
+    <string name="location">Cape Town, City Centre</string>
+    <string name="cafe_rating">4.6 (5203)</string>
+    <string name="distance">1.2 km away</string>
+    <string name="featured_label">FEATURED</string>
+
+    <string name="about">About</string>
+    <string name="opening_hours">Opening Hours</string>
+    <string name="contact">Contact</string>
+    <string name="top_reviews">Top Reviews</string>
+    <string name="address">Address</string>
+    <string name="phone_number">021 201 7000</string>
+    <string name="description">
+        Description of the coffee place.
+    </string>
 </resources>

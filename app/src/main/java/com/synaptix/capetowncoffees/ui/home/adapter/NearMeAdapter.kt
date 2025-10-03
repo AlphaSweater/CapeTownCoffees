@@ -13,17 +13,33 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import com.google.android.gms.maps.model.LatLng
+import com.synaptix.capetowncoffees.util.calculateDistanceTo
+
 class NearMeAdapter(
-    private var cafes: List<CoffeePlaceLite> = emptyList(),
     private val placesClient: PlacesClient,
+    private var currentLocation: LatLng? = null,
     private val onItemClick: (CoffeePlaceLite) -> Unit = {}
-) : RecyclerView.Adapter<NearMeAdapter.ViewHolder>() {
+) : ListAdapter<CoffeePlaceLite, NearMeAdapter.ViewHolder>(DiffCallback()) {
+    
+    private class DiffCallback : DiffUtil.ItemCallback<CoffeePlaceLite>() {
+        override fun areItemsTheSame(oldItem: CoffeePlaceLite, newItem: CoffeePlaceLite): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: CoffeePlaceLite, newItem: CoffeePlaceLite): Boolean {
+            return oldItem == newItem
+        }
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val image: ImageView = view.findViewById(R.id.ivCafeImage)
+        val image: ImageView = view.findViewById(R.id.ivImage)
         val name: TextView = view.findViewById(R.id.tvCafeName)
         val address: TextView = view.findViewById(R.id.tvCafeAddress)
         val rating: TextView = view.findViewById(R.id.tvCafeRating)
+        val distance: TextView = view.findViewById(R.id.tvDistance)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,13 +48,26 @@ class NearMeAdapter(
         return ViewHolder(view)
     }
 
-    fun updateItems(newItems: List<CoffeePlaceLite>) {
-        cafes = newItems
-        notifyDataSetChanged()
+    fun updateItems(newItems: List<CoffeePlaceLite>, userLocation: LatLng? = null) {
+        if (userLocation != null) {
+            currentLocation = userLocation
+        }
+        
+        // Create a new list to ensure the DiffUtil detects changes properly
+        val newList = newItems.toList()
+        
+        // Submit the new list with a callback to ensure the UI updates
+        submitList(newList) {
+            // This runs after the list is updated on the main thread
+            notifyDataSetChanged() // Force a full refresh to ensure all items are updated
+        }
+        
+        // Log the update for debugging
+        android.util.Log.d("NearMeAdapter", "Updated ${newList.size} items")
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val cafe = cafes[position]
+        val cafe = getItem(position)
         
         // Debug logging for Signature Cafe
         val isSignatureCafe = cafe.name?.contains("Signature Cafe", ignoreCase = true) == true
@@ -93,9 +122,16 @@ class NearMeAdapter(
         
         holder.name.text = cafe.name ?: ""
         
+        // Set distance
+        val distanceText = currentLocation?.calculateDistanceTo(cafe.location) ?: ""
+        holder.distance.text = distanceText
+        holder.distance.visibility = if (distanceText.isNotEmpty()) View.VISIBLE else View.GONE
+        
+        // Set rating
         cafe.rating?.let { rating ->
             val ratingText = String.format("%.1f (%d)", rating, cafe.ratingCount ?: 0)
             holder.rating.text = ratingText
+            holder.rating.visibility = View.VISIBLE
         } ?: run {
             holder.rating.visibility = View.GONE
         }
@@ -110,5 +146,5 @@ class NearMeAdapter(
             onItemClick(cafe)
         }
     }
-    override fun getItemCount() = cafes.size
+    // getItemCount is provided by ListAdapter
 }

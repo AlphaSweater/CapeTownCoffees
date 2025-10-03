@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView 
+<androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardUseCompatPadding="false"
@@ -10,53 +9,43 @@
     app:cardElevation="0dp"
     app:cardBackgroundColor="@android:color/transparent">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <!-- Rounded image container -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivImage"
             android:layout_width="match_parent"
-            android:layout_height="280dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardUseCompatPadding="false"
-            app:cardPreventCornerOverlap="true"
-            app:cardBackgroundColor="@android:color/transparent">
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/featured_placeholder"
+            app:shapeAppearanceOverlay="@style/RoundedImage16"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/ivCafeImage"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/cafe_placeholder"
-                    app:shapeAppearanceOverlay="@style/RoundedImage16" />
-
-                <!-- Optional bookmark icon (top-right) -->
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_gravity="top|end"
-                    android:layout_margin="8dp"
-                    android:background="@drawable/circle_white_bg"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_favorite_border"
-                    app:tint="@color/black"
-                    android:backgroundTint="@color/button_text"/>
-            </FrameLayout>
-        </androidx.cardview.widget.CardView>
+        <!-- Heart icon (top-right of image) -->
+        <ImageView
+            android:id="@+id/ivFavorite"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="@drawable/circle_white_bg"
+            android:padding="6dp"
+            android:src="@drawable/ic_favorite_border"
+            app:layout_constraintTop_toTopOf="@id/ivImage"
+            app:layout_constraintEnd_toEndOf="@id/ivImage"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            app:tint="@color/black"
+            android:backgroundTint="@color/button_text"/>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingBottom="1dp">
+            android:paddingBottom="1dp"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/ivImage"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <!-- Title row with right-aligned download button -->
             <LinearLayout
@@ -70,7 +59,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Cafe Name"
+                    android:text="@string/cafe_name"
                     android:textColor="@color/text_primary"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -98,18 +87,43 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_location"
-                    android:tint="@color/icon_primary"
-                    tools:ignore="UseAppTint" />
+                    app:tint="@color/icon_primary" />
 
                 <TextView
                     android:id="@+id/tvCafeAddress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="Cape Town, City Centre"
+                    android:text="@string/location"
                     android:textColor="@color/text_favourite"
                     android:textSize="14sp" />
+
+
             </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_location"
+                app:tint="@color/icon_primary" />
+
+            <TextView
+                android:id="@+id/tvDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/distance"
+                android:textColor="@color/text_favourite"
+                android:textSize="14sp" />
+        </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -123,15 +137,14 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
                     android:src="@drawable/ic_star"
-                    android:tint="@color/icon_primary"
-                    tools:ignore="UseAppTint" />
+                    app:tint="@color/icon_primary" />
 
                 <TextView
                     android:id="@+id/tvCafeRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="4,6 (5203)"
+                    android:text="@string/cafe_rating"
                     android:textColor="@color/text_favourite"
                     android:textSize="14sp" />
 
@@ -154,5 +167,5 @@
                     android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

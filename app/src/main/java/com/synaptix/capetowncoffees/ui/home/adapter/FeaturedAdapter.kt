@@ -4,25 +4,38 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RatingBar
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
+import com.synaptix.capetowncoffees.util.calculateDistanceTo
 
 class FeaturedAdapter(
-    private var items: List<CoffeePlaceLite> = emptyList(),
     private val placesClient: PlacesClient,
+    private var currentLocation: LatLng? = null,
     private val onItemClick: (CoffeePlaceLite) -> Unit = {}
-) : RecyclerView.Adapter<FeaturedAdapter.ViewHolder>() {
+) : ListAdapter<CoffeePlaceLite, FeaturedAdapter.ViewHolder>(DiffCallback()) {
+
+    private class DiffCallback : DiffUtil.ItemCallback<CoffeePlaceLite>() {
+        override fun areItemsTheSame(oldItem: CoffeePlaceLite, newItem: CoffeePlaceLite): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: CoffeePlaceLite, newItem: CoffeePlaceLite): Boolean {
+            return oldItem == newItem
+        }
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val image: ImageView = view.findViewById(R.id.ivFeaturedImage)
+        val image: ImageView = view.findViewById(R.id.ivImage)
         val title: TextView = view.findViewById(R.id.tvCafeName)
         val rating: TextView = view.findViewById(R.id.tvCafeRating)
-        val distance: TextView = view.findViewById(R.id.tvFeaturedDistance)
+        val distance: TextView = view.findViewById(R.id.tvDistance)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,7 +45,7 @@ class FeaturedAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = items[position]
+        val item = getItem(position)
         
         // Load image using Places API
         item.images?.firstOrNull()?.let { photoMetadata ->
@@ -51,23 +64,36 @@ class FeaturedAdapter(
         
         holder.title.text = item.name ?: ""
         
+        // Set rating
         item.rating?.let { rating ->
             val ratingText = String.format("%.1f (%d)", rating, item.ratingCount ?: 0)
             holder.rating.text = ratingText
+            holder.rating.visibility = View.VISIBLE
+        } ?: run {
+            holder.rating.visibility = View.GONE
         }
         
-        // Hide distance if not available
-        holder.distance.visibility = View.GONE
+        // Set distance
+        val distanceText = currentLocation?.calculateDistanceTo(item.location) ?: ""
+        if (distanceText.isNotEmpty()) {
+            holder.distance.text = distanceText
+            holder.distance.visibility = View.VISIBLE
+        } else {
+            holder.distance.visibility = View.GONE
+        }
         
         holder.itemView.setOnClickListener {
             onItemClick(item)
         }
     }
 
-    fun updateItems(newItems: List<CoffeePlaceLite>) {
-        items = newItems
-        notifyDataSetChanged()
+    fun updateItems(newItems: List<CoffeePlaceLite>, userLocation: LatLng? = null) {
+        if (userLocation != null) {
+            currentLocation = userLocation
+        }
+        submitList(newItems)
     }
+    
 
-    override fun getItemCount() = items.size
+    // getItemCount is provided by ListAdapter
 }

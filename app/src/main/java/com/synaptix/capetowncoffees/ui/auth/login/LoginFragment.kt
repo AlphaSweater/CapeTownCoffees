@@ -62,10 +62,24 @@ class LoginFragment : Fragment() {
                     Timber.d("UI state: Loading")
                     binding.buttonlogin.isEnabled = false
                 }
+                // Update the navigation in the success state
                 is LoginUiState.Success -> {
-                    Timber.d("UI state: Success, navigating to HomeFragment")
+                    Timber.d("UI state: Success, preparing to navigate to HomeFragment")
                     binding.buttonlogin.isEnabled = true
-                    findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
+
+                    try {
+                        Timber.d("Current back stack before navigation: ${findNavController().currentBackStackEntry?.destination?.label}")
+                        Timber.d("Attempting navigation with action: action_authLoginFragment_to_homeFragment")
+
+                        // Try with the action ID
+                        findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
+
+                        // If we get here, navigation was attempted but might have failed silently
+                        Timber.d("Navigation function was called, but we don't know if it succeeded")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Navigation failed with exception")
+                    }
+
                     viewModel.resetState()
                 }
                 is LoginUiState.Error -> {

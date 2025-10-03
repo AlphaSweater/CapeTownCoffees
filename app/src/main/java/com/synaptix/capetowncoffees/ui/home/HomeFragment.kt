@@ -2,13 +2,20 @@ package com.synaptix.capetowncoffees.ui.home
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -17,59 +24,69 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.R
-import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.FeaturedAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.NearMeAdapter
+import com.synaptix.capetowncoffees.ui.home.adapter.*
+import com.synaptix.capetowncoffees.ui.savedLists.CafeDetailViewModel
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
-import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
+    @Inject
+    lateinit var placesClient: PlacesClient
+    
+    @Inject
+    lateinit var fusedLocationClient: FusedLocationProviderClient
+    
     private var _binding: FragmentHomeNewBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModels()
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    @Inject
-    lateinit var placesClient: com.google.android.libraries.places.api.net.PlacesClient
-
+    private val cafeDetailViewModel: CafeDetailViewModel by activityViewModels()
+    
     private val categories = listOf(
         Category(1, "All", R.drawable.ic_medal),
+        Category(2, "Popular", R.drawable.ic_star),
         Category(3, "Pet Friendly", R.drawable.baseline_pets_24),
         Category(4, "Nearby", R.drawable.ic_location),
         Category(5, "Dates", R.drawable.ic_heart)
     )
 
-    private val categoryAdapter by lazy {
-        CategoryAdapter { category ->
-            // Handle category selection
+    private lateinit var categoryAdapter: CategoryAdapter
+    private lateinit var featuredAdapter: FeaturedAdapter
+    private lateinit var nearMeAdapter: NearMeAdapter
+    
+    private fun initAdapters() {
+        categoryAdapter = CategoryAdapter { category ->
             viewModel.filterByCategory(category)
         }
-    }
 
-    private val nearMeAdapter by lazy {
-        NearMeAdapter(
-            emptyList(),
-            placesClient,
+        featuredAdapter = FeaturedAdapter(
+            placesClient = placesClient,
+            currentLocation = null,
+            onItemClick = { featuredItem ->
+                // Handle featured item click
+                navigateToCafeDetails(featuredItem)
+            }
+        )
+
+        nearMeAdapter = NearMeAdapter(
+            placesClient = placesClient,
+            currentLocation = null, // Will be updated when location is available
             onItemClick = { cafe ->
                 navigateToCafeDetails(cafe)
             }
         )
-    }
-
-    private val featuredAdapter by lazy {
-        FeaturedAdapter(emptyList(), placesClient) { featuredItem ->
-            // Handle featured item click
-            // navigateToCafeDetails(featuredItem.id)
-        }
     }
 
     override fun onCreateView(
@@ -87,34 +104,89 @@ class HomeFragment : Fragment() {
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        setupUI()
-        setupObservers()
-        requestLocation()
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        when {
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                    permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                // Precise location access granted
+                requestLocation()
+            }
+            else -> {
+                // No location access granted
+                showError("Location permission is required to show nearby coffee places")
+            }
+        }
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        // Initialize adapters after view is created and PlacesClient is injected
+        initAdapters()
+        setupUI()
+        setupObservers()
+        
+        loadData()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh data when returning to this fragment
+        loadData()
+    }
+    
+    private fun loadData() {
+        if (checkLocationPermission()) {
+            requestLocation()
+        } else {
+            requestLocationPermission()
+        }
+    }
+    
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+    
+    private fun checkLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    private fun requestLocationPermission() {
+        locationPermissionRequest.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+    
     private fun setupUI() {
-        // Setup categories RecyclerView
+        // Set up RecyclerViews
         binding.rvCategories.apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = categoryAdapter
-            setHasFixedSize(true)
-        }
-        categoryAdapter.updateCategories(categories)
-
-        // Setup near me RecyclerView
-        binding.rvNearMe.apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-            adapter = nearMeAdapter
-            setHasFixedSize(true)
         }
 
-        // Setup featured RecyclerView
         binding.rvFeatured.apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = featuredAdapter
+            setHasFixedSize(true)
+        }
+        
+        binding.rvNearMe.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = nearMeAdapter
             setHasFixedSize(true)
         }
 
@@ -146,7 +218,19 @@ class HomeFragment : Fragment() {
     }
 
     @SuppressLint("MissingPermission")
+    private var currentLocation: LatLng? = null
+    
     private fun requestLocation() {
+        if (!checkLocationPermission()) {
+            showError("Location permission not granted")
+            return
+        }
+        
+        if (!isNetworkAvailable()) {
+            showError("No internet connection")
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -156,11 +240,18 @@ class HomeFragment : Fragment() {
                             location.latitude,
                             location.longitude
                         )
+                        currentLocation = latLng
                         viewModel.setCurrentLocation(latLng)
+                        // The UI will be updated automatically through the uiState flow in updateUI()
                     } else {
                         // Last location is null, request a new one using the suspend function
                         viewLifecycleOwner.lifecycleScope.launch {
                             try {
+                                if (!checkLocationPermission()) {
+                                    showError("Location permission not granted")
+                                    return@launch
+                                }
+                                
                                 val newLocation = LocationUtil.getCurrentLocation(requireContext())
                                 newLocation?.let {
                                     val newLatLng = com.google.android.gms.maps.model.LatLng(
@@ -168,30 +259,59 @@ class HomeFragment : Fragment() {
                                         it.longitude
                                     )
                                     viewModel.setCurrentLocation(newLatLng)
-                                }
+                                } ?: showError("Could not get current location")
                             } catch (e: Exception) {
                                 Timber.e(e, "Error getting current location")
-                                showError("Could not get current location")
+                                showError("Could not get current location: ${e.message}")
                             }
                         }
                     }
                 }.addOnFailureListener { e ->
                     Timber.e(e, "Error getting last location")
-                    showError("Could not get location")
+                    showError("Error getting location: ${e.message}")
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Location permission not granted")
-                showError("Location permission required")
+                Timber.e(e, "Error in requestLocation")
+                showError("Error: ${e.message}")
             }
         }
     }
 
     private fun updateUI(state: HomeViewModel.HomeUiState.Success) {
-        // Update near me list
-        nearMeAdapter.updateItems(state.places)
-
-        // Update featured items
-        featuredAdapter.updateItems(state.featuredPlaces)
+        try {
+            // Update near me list with current location
+            currentLocation?.let { location ->
+                nearMeAdapter.updateItems(state.places, location)
+                
+                // Update featured items with current location
+                if (state.featuredPlaces.isNotEmpty()) {
+                    featuredAdapter.updateItems(state.featuredPlaces, location)
+                    binding.rvFeatured.visibility = View.VISIBLE
+                } else {
+                    binding.rvFeatured.visibility = View.GONE
+                }
+                
+                // Update categories
+                categoryAdapter.updateCategories(categories)
+            } ?: run {
+                // If we don't have location, still try to show featured items without distance
+                if (state.featuredPlaces.isNotEmpty()) {
+                    featuredAdapter.updateItems(state.featuredPlaces, null)
+                    binding.rvFeatured.visibility = View.VISIBLE
+                } else {
+                    binding.rvFeatured.visibility = View.GONE
+                }
+                
+                // Update categories without location
+                categoryAdapter.updateCategories(categories)
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error updating UI")
+            // Fallback to basic update if there's an error
+            nearMeAdapter.updateItems(state.places, null)
+            featuredAdapter.updateItems(state.featuredPlaces, null)
+            categoryAdapter.updateCategories(categories)
+        }
     }
 
     private fun showLoading(isLoading: Boolean) {
@@ -199,17 +319,24 @@ class HomeFragment : Fragment() {
     }
 
     private fun showError(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        viewLifecycleOwner.lifecycleScope.launch {
+            binding.progressBar.visibility = View.GONE
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun navigateToCafeDetails(coffeePlace: CoffeePlaceLite) {
-        val action = HomeFragmentDirections.actionHomeFragmentToCafeDetailFragment(
-            cafeName = coffeePlace.name ?: "Cafe",
-            cafeRating = coffeePlace.rating?.toFloat() ?: 0f,
-            cafeDistance = 0f, // You might want to calculate this
-            cafePriceRange = coffeePlace.priceLevel?.let { "$".repeat(it.coerceAtMost(4)) } ?: "$"
-        )
-        findNavController().navigate(action)
+        try {
+            val bundle = Bundle().apply {
+                putString("placeId", coffeePlace.id)
+            }
+            findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
+        } catch (e: Exception) {
+            Timber.e(e, "Error navigating to cafe detail")
+            if (findNavController().currentDestination?.id == R.id.homeFragment) {
+                findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment)
+            }
+        }
     }
 
     override fun onDestroyView() {
