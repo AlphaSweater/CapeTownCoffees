@@ -88,4 +88,15 @@
     Questions about this policy or your data? Email us at support@capetowncoffees.example.
 </string>
 
+    <!-- Home Page -->
+    <string name="cafe_featured">Featured</string>
+    <string name="see_all">See All</string>
+    <string name="near_me">Near Me</string>
+
+    <!-- Near Me Item and Featured Item -->
+    <string name="cafe_name">Cafe Name</string>
+    <string name="location">Cape Town, City Centre</string>
+    <string name="cafe_rating">4.6 (5203)</string>
+    <string name="distance">1.2 km away</string>
+    <string name="featured_label">FEATURED</string>
 </resources>

@@ -30,7 +30,7 @@ class ListDetailsPlacesAdapter : ListAdapter<CoffeePlaceFull, ListDetailsPlacesA
         private val tvName: TextView = itemView.findViewById(R.id.tvCafeName)
         private val tvDistance: TextView = itemView.findViewById(R.id.tvDistance)
         private val tvRating: TextView = itemView.findViewById(R.id.tvCafeRating)
-        private val ivImage: ImageView = itemView.findViewById(R.id.ivCafeImage)
+        private val ivImage: ImageView = itemView.findViewById(R.id.ivImage)
 
         fun bind(item: CoffeePlaceFull) {
             tvName.text = item.name ?: "Unknown"
