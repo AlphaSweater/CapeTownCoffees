@@ -1,5 +1,7 @@
 package com.synaptix.capetowncoffees.ui.home.adapter
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.view.LayoutInflater
 import android.view.View
@@ -18,13 +20,13 @@ import com.synaptix.capetowncoffees.R
 data class FilterCategory(
     val title: String,
     val options: List<String>,
-    var isExpanded: Boolean = false,
+    var isExpanded: Boolean = true, // Keep this as true for the default state
     val selectedOptionIndices: MutableSet<Int> = mutableSetOf()
 )
 
 class SearchCategoryAdapter(
     private val categories: List<FilterCategory>,
-    private val onSizeChanged: () -> Unit
+    private val onSizeChanged: () -> Unit // This is now used only when a sub-category is toggled
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
@@ -88,6 +90,12 @@ class SearchCategoryAdapter(
         val category = categories[position]
         holder.categoryTitle.text = category.title
 
+        // Set initial visibility based on isExpanded state without animation
+        holder.sliderContentContainer.visibility = if (category.isExpanded) View.VISIBLE else View.GONE
+        holder.arrowIcon.setImageResource(
+            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+        )
+
         if (category.options.isNotEmpty()) {
             holder.radiusSlider.valueFrom = 0.0f
             holder.radiusSlider.valueTo = (category.options.size - 1).toFloat()
@@ -107,14 +115,14 @@ class SearchCategoryAdapter(
             updateSliderText(value)
         }
 
-        updateViewVisibility(holder.sliderContentContainer, category.isExpanded)
-        holder.arrowIcon.setImageResource(
-            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
-        )
-
         holder.headerRow.setOnClickListener {
             category.isExpanded = !category.isExpanded
-            notifyItemChanged(position)
+            // Animate the change
+            if (category.isExpanded) holder.sliderContentContainer.slideDown() else holder.sliderContentContainer.slideUp()
+            holder.arrowIcon.setImageResource(
+                if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+            )
+            // Notify the fragment that the size has changed
             onSizeChanged()
         }
     }
@@ -123,7 +131,8 @@ class SearchCategoryAdapter(
         val category = categories[position]
         holder.categoryTitle.text = category.title
 
-        updateViewVisibility(holder.pillsScrollView, category.isExpanded)
+        // Set initial visibility based on isExpanded state without animation
+        holder.pillsScrollView.visibility = if (category.isExpanded) View.VISIBLE else View.GONE
         holder.arrowIcon.setImageResource(
             if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
         )
@@ -152,20 +161,13 @@ class SearchCategoryAdapter(
 
         holder.headerRow.setOnClickListener {
             category.isExpanded = !category.isExpanded
-            notifyItemChanged(position)
+            // Animate the change
+            if (category.isExpanded) holder.pillsScrollView.slideDown() else holder.pillsScrollView.slideUp()
+            holder.arrowIcon.setImageResource(
+                if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+            )
+            // Notify the fragment that the size has changed
             onSizeChanged()
-        }
-    }
-
-    private fun updateViewVisibility(view: View, isExpanded: Boolean) {
-        if (isExpanded) {
-            view.slideDown()
-        } else {
-            if (view.visibility == View.VISIBLE) {
-                view.slideUp()
-            } else {
-                view.visibility = View.GONE
-            }
         }
     }
 
@@ -187,21 +189,20 @@ class SearchCategoryAdapter(
 
     private fun View.slideDown() {
         val view = this
-        if (view.visibility == View.VISIBLE && view.height > 0) return
         view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         val targetHeight = view.measuredHeight
-        if (targetHeight == 0) {
-            view.visibility = View.VISIBLE
-            return
-        }
+
+        if (view.visibility == View.VISIBLE && view.height == targetHeight) return
+
+        view.updateLayoutParams<ViewGroup.LayoutParams> { height = 0 }
+        view.visibility = View.VISIBLE
+
         val animator = ValueAnimator.ofInt(0, targetHeight).apply {
             addUpdateListener {
                 view.updateLayoutParams<ViewGroup.LayoutParams> { height = it.animatedValue as Int }
             }
             duration = 300
         }
-        view.updateLayoutParams<ViewGroup.LayoutParams> { height = 0 }
-        view.visibility = View.VISIBLE
         animator.start()
     }
 
@@ -209,15 +210,20 @@ class SearchCategoryAdapter(
         val view = this
         val startHeight = view.height
         if (startHeight == 0) return
+
         val animator = ValueAnimator.ofInt(startHeight, 0).apply {
             addUpdateListener {
                 view.updateLayoutParams<ViewGroup.LayoutParams> { height = it.animatedValue as Int }
-                if (it.animatedValue as Int == 0) {
-                    view.visibility = View.GONE
-                }
             }
             duration = 300
         }
+
+        // Corrected this line to use the framework's AnimatorListenerAdapter
+        animator.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                view.visibility = View.GONE
+            }
+        })
         animator.start()
     }
 }

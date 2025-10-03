@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -50,25 +51,37 @@ class SearchFragment : Fragment() {
 
         val filterCategories = listOf(
             FilterCategory("Search Radius", radiusOptions),
-            FilterCategory("Speciality Filters", listOf("Cat Cafes", "Dessert Focused", "Pet Friendly", "Study Spots", "Cozy Vibes")),
-            FilterCategory("Quick Filters", listOf("Open Now", "Top Rated", "Wi-Fi", "Pet Friendly"))
+            FilterCategory("Speciality Filters", listOf("Cat Cafes", "Dessert Focused", "Pet Friendly", "Study Spots", "Cozy Vibes", "Artisan Roasters", "Vegan Options", "Local Chains")),
+            FilterCategory("Quick Filters", listOf("Open Now", "Top Rated", "Wi-Fi", "Pet Friendly", "Outdoor Seating", "Drive-Thru", "Cashless Payment")),
+            FilterCategory("Amenities", listOf("Charging Ports", "Wheelchair Accessible", "Parking Available", "Restrooms")),
+            FilterCategory("Ambience", listOf("Quiet", "Lively", "Romantic", "Family Friendly"))
         )
 
+        // The onSizeChanged callback is no longer needed for this logic.
         categoryAdapter = SearchCategoryAdapter(filterCategories) {
-            if (isMasterFilterExpanded) {
-                binding.filtersContainer.slideDown(forceAnimate = true)
-            }
+            // This now only handles sub-category changes after the initial open.
+            binding.filtersContainer.slideDown(true)
         }
+
 
         binding.recyclerCategories.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = categoryAdapter
+            isNestedScrollingEnabled = false
         }
     }
 
     private fun updateMasterFilterView() {
         if (isMasterFilterExpanded) {
-            binding.filtersContainer.slideDown()
+            // This is the key change: Make the container visible with zero height first.
+            // Then, in the next frame (doOnPreDraw), calculate the real height and animate.
+            // This ensures all sub-categories are measured correctly on the initial open.
+            val view = binding.filtersContainer
+            view.visibility = View.VISIBLE
+            view.updateLayoutParams<ViewGroup.LayoutParams> { height = 0 }
+            view.doOnPreDraw {
+                view.slideDown()
+            }
             binding.masterFilterArrow.setImageResource(R.drawable.ic_arrow_down)
         } else {
             binding.filtersContainer.slideUp()
@@ -81,13 +94,13 @@ class SearchFragment : Fragment() {
 
         view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         val targetHeight = view.measuredHeight
-
         val startHeight = if (forceAnimate) view.height else 0
 
-        if (view.visibility == View.VISIBLE && startHeight == targetHeight && !forceAnimate) return
+        if (view.visibility == View.VISIBLE && startHeight == targetHeight && !forceAnimate) {
+            return
+        }
 
         view.visibility = View.VISIBLE
-
         val animator = ValueAnimator.ofInt(startHeight, targetHeight).apply {
             addUpdateListener {
                 view.updateLayoutParams<ViewGroup.LayoutParams> {
