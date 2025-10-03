@@ -20,12 +20,13 @@ import com.synaptix.capetowncoffees.util.OrderMode
 import com.synaptix.capetowncoffees.util.myOrder
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.awaitAll
+import javax.inject.Inject
+import javax.inject.Singleton
 
-/**
- * Firestore-backed implementation of IReviewRepository for reviews.
- * Supports CRUD and paginated access for place and user reviews.
- */
-class CoffeeReviewRepository(
+@Singleton
+class CoffeeReviewRepository @Inject constructor(
     firestore: FirebaseFirestore,
     private val placesApiRepository: IPlacesApiRepository,
     private val getUserProfileUseCase: GetUserProfileUseCase
@@ -37,33 +38,20 @@ class CoffeeReviewRepository(
 
     override fun getType(): Class<AppReviewDTO> = AppReviewDTO::class.java
 
-    // ----------------------------
-    // CRUD
-    // ----------------------------
     override suspend fun getReviewsForUser(
         reviewerId: String,
         limit: Int?
-    ): Result<List<CoffeeReview>> {
-        val dtoResult = getAllByFieldFromCollectionGroup(
+    ): Result<List<CoffeeReview>> =
+        getAllByFieldFromCollectionGroup(
             childCollection = "reviews",
             fieldName = "reviewerId",
             value = reviewerId,
             limit = limit
-        )
-
-        return dtoResult.fold(
-            onSuccess = { dtos ->
-                val userDto = getUserProfileUseCase(reviewerId)
-                    .getOrNull()
-                    ?.toDTO() ?: placeholderUser(reviewerId)
-
-                // All user reviews are in-app; map to domain and return as List<CoffeeReview>
-                val inApp: List<InAppReview> = dtos.toDomainListForSingleUser(userDto) // dto.placeId is used
-                Result.success(inApp) // covariant to List<CoffeeReview>
-            },
-            onFailure = { e -> Result.failure(e) }
-        )
-    }
+        ).map { dtos ->
+            val userDto = getUserProfileUseCase(reviewerId)
+                .getOrNull()?.toDTO() ?: placeholderUser(reviewerId)
+            dtos.toDomainListForSingleUser(userDto)
+        }
 
     override suspend fun getReviewsForPlace(
         placeId: String,
@@ -75,37 +63,24 @@ class CoffeeReviewRepository(
         val dbResult = dbDeferred.await()
         val apiResult = apiDeferred.await()
 
-        val dtos: List<AppReviewDTO> = dbResult.getOrNull().orEmpty()
+        val inApp: List<InAppReview> = dbResult
+            .map { it.orEmpty() }
+            .map { dtos ->
+                val userIds = dtos.mapNotNull { it.userId }.distinct()
+                val users = buildUserMapFromUseCase(userIds, strict = false)
+                dtos.toDomainListWithUsers(users = users, strict = false)
+            }
+            .getOrElse { emptyList() } // DB failure shouldn't nuke Google reviews
 
-        // 1) Build user map for these DTOs (parallel fetch)
-        val userIds: List<String> = dtos.mapNotNull { it.userId }.distinct()
-        val usersMap: Map<String, CoffeeUserDTO> = buildUserMapFromUseCase(userIds, strict = false)
+        val google: List<CoffeeReview> = apiResult.getOrElse { emptyList() }
 
-
-        // 2) Map in-app reviews using extension to convert to domain models with user info
-        val inApp: List<InAppReview> =
-            if (usersMap.isNotEmpty()) dtos.toDomainListWithUsers(
-                users = usersMap,
-                strict = false
-            ) else emptyList()
-
-        // 3) Google reviews already come as domain models
-        val google: List<CoffeeReview> = apiResult.getOrNull().orEmpty()
-
-        // 4) Merge and apply default sectioned ordering
-        val mergedReviews = (inApp + google).myOrder(OrderMode.DefaultSectioned)
-
-        Result.success(mergedReviews)
+        Result.success((inApp + google).myOrder(OrderMode.DefaultSectioned))
     }
 
     override suspend fun addReview(
         coffeeReview: InAppReview,
         placeId: String
-    ): Result<String> {
-        // New extension: domain -> DTO
-        val dto = coffeeReview.toDto()
-        return create(dto, parentDocId = placeId)
-    }
+    ): Result<String> = create(coffeeReview.toDto(), parentDocId = placeId)
 
     override suspend fun deleteReview(
         reviewId: String,
@@ -115,20 +90,13 @@ class CoffeeReviewRepository(
     override suspend fun getReview(
         reviewId: String,
         placeId: String
-    ): Result<CoffeeReview?> {
-        val dtoResult = getById(reviewId, parentDocId = placeId)
-        return dtoResult.fold(
-            onSuccess = { dto ->
-                // Single DTO -> domain (in-app)
-                val userDto = getUserProfileUseCase(dto?.userId ?: "")
-                    .getOrNull()
-                    ?.toDTO() ?: placeholderUser(dto?.userId ?: "unknown")
-
-                Result.success(dto?.toDomain(userDto))
-            },
-            onFailure = { e -> Result.failure(e) }
-        )
-    }
+    ): Result<CoffeeReview?> =
+        getById(reviewId, parentDocId = placeId).map { dto ->
+            val uid = dto?.userId.orEmpty()
+            val userDto = getUserProfileUseCase(uid).getOrNull()?.toDTO()
+                ?: placeholderUser(uid.ifBlank { "unknown" })
+            dto?.toDomain(userDto)
+        }
 
     // ----------------------------
     // Pagination
@@ -153,14 +121,10 @@ class CoffeeReviewRepository(
         )
 
         val userDto = getUserProfileUseCase(reviewerId)
-            .getOrNull()
-            ?.toDTO() ?: placeholderUser(reviewerId)
-
-        // Page of DTOs -> domain
-        val inApp: List<InAppReview> = dtoPage.data.toDomainListForSingleUser(userDto)
+            .getOrNull()?.toDTO() ?: placeholderUser(reviewerId)
 
         return PaginatedResult(
-            data = inApp, // covariant
+            data = dtoPage.data.toDomainListForSingleUser(userDto),
             hasMore = dtoPage.hasMore
         )
     }
@@ -172,32 +136,22 @@ class CoffeeReviewRepository(
         orderBy: Pair<String, Query.Direction>?,
         key: String
     ): PaginatedResult<CoffeeReview> {
-        val query = getCollection(placeId)
-
         val dtoPage = fetchPage(
             pageSize = pageSize,
             parentDocId = placeId,
             reset = reset,
-            query = query,
+            query = getCollection(placeId),
             orderBy = orderBy,
             key = key
         )
 
-        val dtos: List<AppReviewDTO> = dtoPage.data
-
-        val userIds: List<String> = dtos.mapNotNull { it.userId }.distinct()
-        val usersMap: Map<String, CoffeeUserDTO> = buildUserMapFromUseCase(userIds, strict = false)
-
-
-        // 2) Map in-app reviews using extension to convert to domain models with user info
-        val inApp: List<InAppReview> =
-            if (usersMap.isNotEmpty()) dtos.toDomainListWithUsers(
-                users = usersMap,
-                strict = false
-            ) else emptyList()
+        val users = buildUserMapFromUseCase(
+            dtoPage.data.mapNotNull { it.userId }.distinct(),
+            strict = false
+        )
 
         return PaginatedResult(
-            data = inApp, // covariant
+            data = dtoPage.data.toDomainListWithUsers(users = users, strict = false),
             hasMore = dtoPage.hasMore
         )
     }
@@ -205,42 +159,29 @@ class CoffeeReviewRepository(
     // ============================
     // Helpers
     // ============================
-
-    /**
-     * Fetch profiles for distinct userIds in parallel and convert to CoffeeUserDTO map.
-     * If 'strict' is true, throws if any profile is missing; otherwise, uses a placeholder.
-     */
     private suspend fun buildUserMapFromUseCase(
         userIds: List<String>,
         strict: Boolean = false
-    ): Map<String, CoffeeUserDTO> = coroutineScope {
+    ): Map<String, CoffeeUserDTO> = supervisorScope {
         val distinct = userIds.distinct()
-        if (distinct.isEmpty()) return@coroutineScope emptyMap()
+        if (distinct.isEmpty()) return@supervisorScope emptyMap()
 
-        // kick off all fetches
-        val jobs = distinct.associateWith { uid ->
+        // launch all; one failure shouldn’t cancel others unless strict=true and we rethrow later
+        val results = distinct.map { uid ->
             async {
+                // Map success to DTO; if it fails and strict=false, fallback to placeholder.
                 getUserProfileUseCase(uid)
+                    .map { it.toDTO() }
+                    .recoverCatching { e ->
+                        if (strict) throw e
+                        placeholderUser(uid)
+                    }
+                    .map { dto -> uid to dto }
+                    .getOrThrow() // we want either (uid,dto) or throw if strict & failed
             }
-        }
+        }.awaitAll()
 
-        // gather results
-        val pairs: List<Pair<String, CoffeeUserDTO>?> = jobs.map { (uid, deferred) ->
-            val res = deferred.await()
-            res.fold(
-                onSuccess = { profile -> uid to profile.toDTO() },
-                onFailure = {
-                    if (strict) null else uid to placeholderUser(uid)
-                }
-            )
-        }
-
-        val present = pairs.filterNotNull().toMap()
-        if (strict && present.size != distinct.size) {
-            val missing = distinct - present.keys
-            error("Missing user profiles for userIds=$missing")
-        }
-        present
+        results.toMap()
     }
 
     private fun placeholderUser(userId: String) = CoffeeUserDTO(
