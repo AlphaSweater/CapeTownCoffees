@@ -81,27 +81,34 @@ class EditProfileViewModel @Inject constructor(
     fun updateProfile() {
         viewModelScope.launch {
             val user = currentUser ?: run {
-                _uiState.value = EditProfileUiState.Error("No user data available")
+                _uiState.value = EditProfileUiState.Error("User not found")
                 return@launch
             }
 
             _uiState.value = EditProfileUiState.Loading
 
             try {
-                // Create an updated user with the current values
-                val updatedUser = user.copy(
-                    fullName = user.fullName, // This should be the new full name from the UI
-                    // Add any other fields that can be updated
-                    // photoBase64 will be handled by the use case
+                // Create the Params object with all required parameters
+                val params = UpdateUserProfileUseCase.Params(
+                    updatedUser = user.copy(
+                        fullName = user.fullName, // This should be the new full name from the UI
+                        // Add any other fields that can be updated
+                    ),
+                    profilePictureUri = profilePictureUri,
+                    currentPassword = if (newPassword.isNotBlank()) currentPassword else null,
+                    newPassword = if (newPassword.isNotBlank()) newPassword else null,
+                    context = null // Pass a valid context if needed for file operations
                 )
 
-                updateProfileUseCase.execute(
-                    updatedUser = updatedUser,
-                    profilePictureUri = profilePictureUri,
-                    context = null
-                ).onSuccess {
+                // Execute the use case with the Params object
+                updateProfileUseCase.execute(params).onSuccess {
+                    // Clear password fields on success
+                    currentPassword = ""
+                    newPassword = ""
+                    confirmPassword = ""
+
                     _uiState.value = EditProfileUiState.Success(
-                        user = updatedUser,
+                        user = user,
                         isFormValid = true,
                         successMessage = "Profile updated successfully"
                     )
@@ -109,7 +116,7 @@ class EditProfileViewModel @Inject constructor(
                     _uiState.value = EditProfileUiState.Error("Failed to update profile: ${exception.message}")
                 }
             } catch (e: Exception) {
-                _uiState.value = EditProfileUiState.Error("An unexpected error occurred: ${e.message}")
+                _uiState.value = EditProfileUiState.Error("An error occurred: ${e.message}")
             }
         }
     }

@@ -1,11 +1,13 @@
 package com.synaptix.capetowncoffees.ui.profile.editProfile
 
+// Remove this import as it's not needed
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -15,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentEditProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -64,6 +67,23 @@ class EditProfileFragment : Fragment() {
             btnBack.setOnClickListener { findNavController().navigateUp() }
             btnEditPhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
             btnSaveChanges.setOnClickListener { viewModel.updateProfile() }
+            
+            // Add click listener for the change password button
+            btnChangePassword.setOnClickListener {
+                val isVisible = layoutPasswordFields.isVisible
+                layoutPasswordFields.visibility = if (isVisible) View.GONE else View.VISIBLE
+                btnChangePassword.text = if (isVisible) {
+                    getString(R.string.change)
+                } else {
+                    getString(android.R.string.cancel)
+                }
+                // Clear password fields when hiding
+                if (isVisible) {
+                    etCurrentPassword.text?.clear()
+                    etNewPassword.text?.clear()
+                    etConfirmNewPassword.text?.clear()
+                }
+            }
         }
     }
 
@@ -88,7 +108,7 @@ class EditProfileFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
+                viewModel.uiState.collect { state: EditProfileUiState ->
                     when (state) {
                         is EditProfileUiState.Loading -> showLoading(true)
                         is EditProfileUiState.Success -> {
@@ -98,20 +118,28 @@ class EditProfileFragment : Fragment() {
                                 if (binding.tvFullName.text?.toString() != user.fullName) {
                                     binding.tvFullName.setText(user.fullName)
                                 }
-                                binding.etEmail.setText(user.email)
+                                // Set email if field exists
+                                binding.etEmail?.setText(user.email)
+                                
                                 // Load profile picture if available
                                 user.photoBase64?.let { base64 ->
-                                    // Load image from base64
+                                    // TODO: Load image from base64
                                 }
                             }
-                            state.successMessage?.let { message ->
-                                showSuccess(message)
+                            
+                            // Show success message if available
+                            state.successMessage?.let { successMessage: String ->
+                                showSuccess(successMessage)
                             }
+                            
+                            // Update save button state based on form validity
                             binding.btnSaveChanges.isEnabled = state.isFormValid
                         }
                         is EditProfileUiState.Error -> {
                             showLoading(false)
-                            showError(state.message)
+                            if (state.message.isNotBlank()) {
+                                showError(state.message)
+                            }
                         }
                     }
                 }
@@ -119,20 +147,23 @@ class EditProfileFragment : Fragment() {
         }
     }
 
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.isVisible = isLoading
-        binding.btnSaveChanges.isEnabled = !isLoading
+    private fun showLoading(show: Boolean) {
+        binding.progressBar.isVisible = show
+        binding.editProfileContent.isVisible = !show
+        binding.btnSaveChanges.isEnabled = !show
     }
-
-    private fun showSuccess(message: String) {
-        view?.let { view ->
-            Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
-        }
-    }
-
+    
     private fun showError(message: String) {
         view?.let { view ->
             Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun showSuccess(message: String) {
+        view?.let { view ->
+            Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.success_green))
+                .show()
         }
     }
 
