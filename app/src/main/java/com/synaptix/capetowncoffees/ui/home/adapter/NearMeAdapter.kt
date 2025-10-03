@@ -52,19 +52,9 @@ class NearMeAdapter(
         if (userLocation != null) {
             currentLocation = userLocation
         }
-        
-        // Create a new list to ensure the DiffUtil detects changes properly
-        val newList = newItems.toList()
-        
-        // Submit the new list with a callback to ensure the UI updates
-        submitList(newList) {
-            // This runs after the list is updated on the main thread
-            notifyDataSetChanged() // Force a full refresh to ensure all items are updated
-        }
-        
-        // Log the update for debugging
-        android.util.Log.d("NearMeAdapter", "Updated ${newList.size} items")
+        submitList(newItems)
     }
+    
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val cafe = getItem(position)

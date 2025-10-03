@@ -1,12 +1,16 @@
 package com.synaptix.capetowncoffees.ui.savedLists
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -20,10 +24,13 @@ import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -35,9 +42,15 @@ class CafeDetailFragment : Fragment() {
     private val viewModel: CafeDetailViewModel by activityViewModels()
     private var _binding: FragmentCafeDetailBinding? = null
     private val binding get() = _binding!!
+    private var currentLocation: LatLng? = null
+    private var currentCafe: CoffeePlaceFull? = null
     
     // Navigation arguments
     private val args: CafeDetailFragmentArgs by navArgs()
+    
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,6 +72,9 @@ class CafeDetailFragment : Fragment() {
         
         // Load coffee place details
         loadCoffeePlace()
+        
+        // Request location when the fragment starts
+        getCurrentLocation()
     }
     
     private fun setupUiListeners() {
@@ -72,6 +88,11 @@ class CafeDetailFragment : Fragment() {
             btnHeart.setOnClickListener {
                 // TODO: Implement favorite functionality
             }
+            
+            // Set up distance refresh
+            tvDistance.setOnClickListener {
+                getCurrentLocation()
+            }
         }
     }
     
@@ -81,20 +102,26 @@ class CafeDetailFragment : Fragment() {
                 when (state) {
                     is CafeDetailUiState.Loading -> {
                         showLoading(true)
-
                     }
                     is CafeDetailUiState.Success -> {
                         showLoading(false)
                         updateUI(state.coffeePlace)
+                        
+                        // If we have a location, update the distance
+                        currentLocation?.let {
+                            updateDistance(state.coffeePlace)
+                        } ?: run {
+                            // If we don't have a location yet, try to get it
+                            getCurrentLocation()
+                        }
                     }
                     is CafeDetailUiState.Error -> {
                         showLoading(false)
-
+                        Timber.e("Error loading cafe details: ${state.message}")
                     }
                 }
             }
         }
-        
     }
     
     private fun loadCoffeePlace() {
@@ -103,8 +130,19 @@ class CafeDetailFragment : Fragment() {
     }
 
     private fun updateUI(cafe: CoffeePlaceFull) {
-        Log.d("CafeDetailFragment", "Updating UI for cafe: ${cafe.name}")
-        Log.d("CafeDetailFragment", "Phone number fields - national: '${cafe.nationalPhoneNumber}', international: '${cafe.internationalPhoneNumber}'")
+        Timber.d("Updating UI for cafe: ${cafe.name}")
+        Timber.d("Phone number fields - national: '${cafe.nationalPhoneNumber}', international: '${cafe.internationalPhoneNumber}'")
+        
+        // Store the cafe reference for later use
+        currentCafe = cafe
+        
+        // If we already have a location, update the distance
+        currentLocation?.let {
+            updateDistance(cafe)
+        } ?: run {
+            // If we don't have a location yet, try to get it
+            getCurrentLocation()
+        }
         
         binding.apply {
             // Load cafe image if available
@@ -179,15 +217,33 @@ class CafeDetailFragment : Fragment() {
                 tvPhone.visibility = View.GONE
             }
 
-            // Rating
+            // Rating and Distance
             cafe.rating?.let { rating ->
                 tvRating.text = String.format("%.1f", rating)
                 ratingBar.rating = rating.toFloat()
                 ratingBar.visibility = View.VISIBLE
                 tvRating.visibility = View.VISIBLE
+                
+                // Update distance if location is available
+                currentLocation?.let { userLocation ->
+                    cafe.location?.let { cafeLocation ->
+                        val distanceText = LocationUtil.getFormattedDistance(userLocation, cafeLocation)
+                        tvDistance.text = distanceText
+                        tvDistance.visibility = View.VISIBLE
+                        ivPin.visibility = View.VISIBLE
+                    } ?: run {
+                        tvDistance.visibility = View.GONE
+                        ivPin.visibility = View.GONE
+                    }
+                } ?: run {
+                    tvDistance.visibility = View.GONE
+                    ivPin.visibility = View.GONE
+                }
             } ?: run {
                 ratingBar.visibility = View.GONE
                 tvRating.visibility = View.GONE
+                tvDistance.visibility = View.GONE
+                ivPin.visibility = View.GONE
             }
             
             // Show rating count if available
@@ -196,6 +252,119 @@ class CafeDetailFragment : Fragment() {
                 tvRating.visibility = View.VISIBLE
             } ?: run {
                 tvRating.visibility = View.GONE
+            }
+        }
+    }
+    
+    private fun getCurrentLocation() {
+        Timber.d("getCurrentLocation called")
+        
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Timber.d("Location permissions not granted, requesting...")
+            // Request permissions if not granted
+            requestPermissions(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+            return
+        }
+
+        Timber.d("Location permissions granted, fetching location...")
+        
+        // Get the current location in a coroutine
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                Timber.d("Starting location fetch...")
+                currentLocation = withContext(Dispatchers.IO) {
+                    val location = LocationUtil.getCurrentLocation(requireContext())
+                    Timber.d("Location fetched: $location")
+                    location
+                }
+                
+                Timber.d("Current location set to: $currentLocation")
+                
+                // Update the UI with the new location
+                (viewModel.uiState.value as? CafeDetailUiState.Success)?.let { state ->
+                    Timber.d("Updating distance for cafe: ${state.coffeePlace.name}")
+                    updateDistance(state.coffeePlace)
+                } ?: run {
+                    Timber.d("UI state is not in Success state")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error getting location")
+                withContext(Dispatchers.Main) {
+                    Timber.d("Error occurred, hiding distance views")
+                    binding.tvDistance.visibility = View.GONE
+                    binding.ivPin.visibility = View.GONE
+                }
+            }
+        }
+    }
+    
+    private fun updateDistance(cafe: CoffeePlaceFull) {
+        Timber.d("updateDistance called for cafe: ${cafe.name}")
+        Timber.d("Cafe location: ${cafe.location}")
+        Timber.d("Current user location: $currentLocation")
+        
+        cafe.location?.let { cafeLocation ->
+            currentLocation?.let { userLocation ->
+                Timber.d("Calculating distance between $userLocation and $cafeLocation")
+                val distanceText = LocationUtil.getFormattedDistance(userLocation, cafeLocation)
+                Timber.d("Calculated distance: $distanceText")
+                
+                // Make sure we're on the main thread when updating the UI
+                view?.post {
+                    binding.tvDistance.text = distanceText
+                    binding.tvDistance.visibility = View.VISIBLE
+                    binding.ivPin.visibility = View.VISIBLE
+                    Timber.d("Distance UI updated with: $distanceText")
+                }
+                return@let
+            } ?: run {
+                Timber.d("Current user location is null")
+                view?.post {
+                    binding.tvDistance.visibility = View.GONE
+                    binding.ivPin.visibility = View.GONE
+                }
+            }
+        } ?: run {
+            Timber.d("Cafe location is null")
+            view?.post {
+                binding.tvDistance.visibility = View.GONE
+                binding.ivPin.visibility = View.GONE
+            }
+        }
+    }
+    
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && 
+                grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Timber.d("Location permissions granted, getting current location...")
+                // Permission granted, get the location
+                getCurrentLocation()
+            } else {
+                Timber.d("Location permissions denied")
+                // Permission denied
+                binding.tvDistance.visibility = View.GONE
+                binding.ivPin.visibility = View.GONE
             }
         }
     }
