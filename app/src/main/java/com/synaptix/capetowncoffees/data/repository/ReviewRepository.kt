@@ -19,8 +19,8 @@ class ReviewRepository(
 
     override fun getType(): Class<AppReviewDTO> = AppReviewDTO::class.java
 
-    override suspend fun getReviewsForUser(userId: String, limit: Int?): List<Review> {
-        val dtoResult = getAllByField("reviewerId", userId, limit)
+    override suspend fun getReviewsForUser(reviewerId: String, limit: Int?): List<Review> {
+        val dtoResult = getAllByFieldFromCollectionGroup("reviews", "reviewerId", reviewerId, limit)
         return dtoResult.getOrElse { emptyList() }.map { it.toDomain() }
     }
 
@@ -29,18 +29,18 @@ class ReviewRepository(
         return dtoResult.getOrElse { emptyList() }.map { it.toDomain() }
     }
 
-    override suspend fun addReview(review: Review): String {
+    override suspend fun addReview(review: Review, placeId: String): String {
         val dto = review.toDTO()
         requireNotNull(dto) { "Only IN_APP reviews can be added." }
-        return create(dto).getOrThrow()
+        return create(dto, parentDocId = placeId).getOrThrow()
     }
 
-    override suspend fun deleteReview(reviewId: String) {
-        delete(reviewId).getOrThrow()
+    override suspend fun deleteReview(reviewId: String, placeId: String) {
+        delete(reviewId, parentDocId = placeId).getOrThrow()
     }
 
-    override suspend fun getReview(reviewId: String): Review? {
-        val dtoResult = getById(reviewId)
+    override suspend fun getReview(reviewId: String, placeId: String): Review? {
+        val dtoResult = getById(reviewId, parentDocId = placeId)
         return dtoResult.getOrNull()?.toDomain()
     }
 }

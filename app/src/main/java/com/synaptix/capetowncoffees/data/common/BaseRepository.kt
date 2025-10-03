@@ -141,6 +141,47 @@ abstract class BaseRepository<T : Any>(
         }
     }
 
+    protected suspend fun getAllFromCollectionGroup(
+        childCollection: String,
+        query: Query? = null,
+        limit: Int? = null
+    ): Result<List<T>> {
+        return try {
+            var finalQuery: Query = firestore.collectionGroup(childCollection)
+            if (query != null) {
+                finalQuery = query
+            }
+            if (limit != null) {
+                finalQuery = finalQuery.limit(limit.toLong())
+            }
+            val snapshot = finalQuery.get().await()
+            val items = snapshot.documents.mapNotNull { it.toObject(getType()) }
+            Result.success(items)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    protected suspend fun getAllByFieldFromCollectionGroup(
+        childCollection: String,
+        fieldName: String,
+        value: Any,
+        limit: Int? = null
+    ): Result<List<T>> {
+        return try {
+            var query = firestore.collectionGroup(childCollection)
+                .whereEqualTo(fieldName, value)
+            if (limit != null) {
+                query = query.limit(limit.toLong())
+            }
+            val snapshot = query.get().await()
+            val items = snapshot.documents.mapNotNull { it.toObject(getType()) }
+            Result.success(items)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Real-time listener for a single document
     protected fun observeDocument(documentId: String): Flow<T?> = callbackFlow {
         val listener = collection.document(documentId)
