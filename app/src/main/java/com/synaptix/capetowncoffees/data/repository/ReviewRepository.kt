@@ -13,8 +13,10 @@ class ReviewRepository(
     firestore: FirebaseFirestore
 ) : BaseRepository<AppReviewDTO>(
     firestore = firestore,
+    parentCollection = "coffee_places",
     childCollection = "reviews"
 ), IReviewRepository {
+
     override fun getType(): Class<AppReviewDTO> = AppReviewDTO::class.java
 
     override suspend fun getReviewsForUser(userId: String, limit: Int?): List<Review> {
@@ -23,7 +25,7 @@ class ReviewRepository(
     }
 
     override suspend fun getReviewsForPlace(placeId: String, limit: Int?): List<Review> {
-        val dtoResult = getAllByField("placeId", placeId, limit)
+        val dtoResult = getAll(limit = limit, parentDocId = placeId)
         return dtoResult.getOrElse { emptyList() }.map { it.toDomain() }
     }
 

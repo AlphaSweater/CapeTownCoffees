@@ -23,12 +23,23 @@ abstract class BaseRepository<T : Any>(
             firestore.collection(childCollection)
         }
 
-    protected suspend fun create(item: T, id: String? = null): Result<String> {
+    protected fun getCollection(parentDocId: String? = null): CollectionReference {
+        return if (parentCollection != null && (parentDocId ?: parentDocumentId) != null) {
+            firestore.collection(parentCollection)
+                .document(parentDocId ?: parentDocumentId!!)
+                .collection(childCollection)
+        } else {
+            firestore.collection(childCollection)
+        }
+    }
+
+    protected suspend fun create(item: T, id: String? = null, parentDocId: String? = null): Result<String> {
         return try {
+            val colRef = getCollection(parentDocId)
             val docRef = if (id != null) {
-                collection.document(id)
+                colRef.document(id)
             } else {
-                collection.document()
+                colRef.document()
             }
             docRef.set(item).await()
             Result.success(docRef.id)
@@ -37,36 +48,44 @@ abstract class BaseRepository<T : Any>(
         }
     }
 
-    protected suspend fun update(id: String, item: T): Result<Unit> {
+    protected suspend fun update(id: String, item: T, parentDocId: String? = null): Result<Unit> {
         return try {
-            collection.document(id).set(item).await()
+            val colRef = getCollection(parentDocId)
+            colRef.document(id).set(item).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    protected suspend fun delete(id: String): Result<Unit> {
+    protected suspend fun delete(id: String, parentDocId: String? = null): Result<Unit> {
         return try {
-            collection.document(id).delete().await()
+            val colRef = getCollection(parentDocId)
+            colRef.document(id).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    protected suspend fun getById(id: String): Result<T?> {
+    protected suspend fun getById(id: String, parentDocId: String? = null): Result<T?> {
         return try {
-            val snapshot = collection.document(id).get().await()
+            val colRef = getCollection(parentDocId)
+            val snapshot = colRef.document(id).get().await()
             Result.success(snapshot.toObject(getType()))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    protected suspend fun getAll(query: Query = collection): Result<List<T>> {
+    protected suspend fun getAll(query: Query? = null, limit: Int? = null, parentDocId: String? = null): Result<List<T>> {
         return try {
-            val snapshot = query.get().await()
+            val colRef = getCollection(parentDocId)
+            var finalQuery = query ?: colRef
+            if (limit != null) {
+                finalQuery = finalQuery.limit(limit.toLong())
+            }
+            val snapshot = finalQuery.get().await()
             val items = snapshot.documents.mapNotNull {
                 it.toObject(getType())
             }
@@ -76,15 +95,16 @@ abstract class BaseRepository<T : Any>(
         }
     }
 
-    protected suspend fun getItemsByIds(ids: List<String>): Result<List<T>> {
+    protected suspend fun getItemsByIds(ids: List<String>, parentDocId: String? = null): Result<List<T>> {
         if (ids.isEmpty()) {
             return Result.success(emptyList())
         }
         return try {
+            val colRef = getCollection(parentDocId)
             val items = mutableListOf<T>()
             ids.chunked(10).forEach { chunk ->
                 val snapshots = chunk.map { id ->
-                    collection.document(id).get().await()
+                    colRef.document(id).get().await()
                 }
                 items.addAll(snapshots.mapNotNull { it.toObject(getType()) })
             }
@@ -94,10 +114,10 @@ abstract class BaseRepository<T : Any>(
         }
     }
 
-    // Fetch the first document where a field equals a value
-    protected suspend fun getByField(fieldName: String, value: Any): Result<T?> {
+    protected suspend fun getByField(fieldName: String, value: Any, parentDocId: String? = null): Result<T?> {
         return try {
-            val query = collection.whereEqualTo(fieldName, value).limit(1)
+            val colRef = getCollection(parentDocId)
+            val query = colRef.whereEqualTo(fieldName, value).limit(1)
             val snapshot = query.get().await()
             val item = snapshot.documents.firstOrNull()?.toObject(getType())
             Result.success(item)
@@ -106,10 +126,10 @@ abstract class BaseRepository<T : Any>(
         }
     }
 
-    // Fetch all documents where a field equals a value, with optional limit
-    protected suspend fun getAllByField(fieldName: String, value: Any, limit: Int? = null): Result<List<T>> {
+    protected suspend fun getAllByField(fieldName: String, value: Any, limit: Int? = null, parentDocId: String? = null): Result<List<T>> {
         return try {
-            var query = collection.whereEqualTo(fieldName, value)
+            val colRef = getCollection(parentDocId)
+            var query = colRef.whereEqualTo(fieldName, value)
             if (limit != null) {
                 query = query.limit(limit.toLong())
             }

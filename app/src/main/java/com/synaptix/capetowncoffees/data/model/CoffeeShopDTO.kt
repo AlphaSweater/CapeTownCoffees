@@ -6,6 +6,14 @@ import com.synaptix.capetowncoffees.util.TimeUtils
 data class CoffeeShopDTO(
     @DocumentId
     val id: String = "",      // Firestore document ID and Places API Place ID
-    val name: String,
-    val addedAt: Long = TimeUtils.nowSeconds()
-)
+    val addedAt: Long,
+) {
+    companion object {
+        fun createNew(id: String): CoffeeShopDTO {
+            return CoffeeShopDTO(
+                id = id,
+                addedAt = TimeUtils.nowSeconds()
+            )
+        }
+    }
+}
