@@ -13,6 +13,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 
+import android.location.Location
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.google.android.gms.maps.model.LatLng
@@ -54,7 +55,7 @@ class NearMeAdapter(
         }
         submitList(newItems)
     }
-    
+
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val cafe = getItem(position)
@@ -116,7 +117,7 @@ class NearMeAdapter(
         val distanceText = currentLocation?.calculateDistanceTo(cafe.location) ?: ""
         holder.distance.text = distanceText
         holder.distance.visibility = if (distanceText.isNotEmpty()) View.VISIBLE else View.GONE
-        
+
         // Set rating
         cafe.rating?.let { rating ->
             val ratingText = String.format("%.1f (%d)", rating, cafe.ratingCount ?: 0)

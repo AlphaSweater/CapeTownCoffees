@@ -44,10 +44,10 @@ class CafeDetailFragment : Fragment() {
     private val binding get() = _binding!!
     private var currentLocation: LatLng? = null
     private var currentCafe: CoffeePlaceFull? = null
-    
+
     // Navigation arguments
     private val args: CafeDetailFragmentArgs by navArgs()
-    
+
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
     }
@@ -63,39 +63,39 @@ class CafeDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         // Set up UI listeners
         setupUiListeners()
-        
+
         // Observe ViewModel state
         observeViewModel()
-        
+
         // Load coffee place details
         loadCoffeePlace()
-        
+
         // Request location when the fragment starts
         getCurrentLocation()
     }
-    
+
     private fun setupUiListeners() {
         binding.apply {
             // Set up back button
             btnBack.setOnClickListener {
                 findNavController().navigateUp()
             }
-            
+
             // Set up favorite button
             btnHeart.setOnClickListener {
                 // TODO: Implement favorite functionality
             }
-            
+
             // Set up distance refresh
             tvDistance.setOnClickListener {
                 getCurrentLocation()
             }
         }
     }
-    
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
@@ -106,7 +106,7 @@ class CafeDetailFragment : Fragment() {
                     is CafeDetailUiState.Success -> {
                         showLoading(false)
                         updateUI(state.coffeePlace)
-                        
+
                         // If we have a location, update the distance
                         currentLocation?.let {
                             updateDistance(state.coffeePlace)
@@ -123,7 +123,7 @@ class CafeDetailFragment : Fragment() {
             }
         }
     }
-    
+
     private fun loadCoffeePlace() {
         // Get the coffee place from navigation arguments
         viewModel.loadCoffeePlace(placeId = args.placeId.ifEmpty { null })
@@ -132,10 +132,10 @@ class CafeDetailFragment : Fragment() {
     private fun updateUI(cafe: CoffeePlaceFull) {
         Timber.d("Updating UI for cafe: ${cafe.name}")
         Timber.d("Phone number fields - national: '${cafe.nationalPhoneNumber}', international: '${cafe.internationalPhoneNumber}'")
-        
+
         // Store the cafe reference for later use
         currentCafe = cafe
-        
+
         // If we already have a location, update the distance
         currentLocation?.let {
             updateDistance(cafe)
@@ -143,14 +143,14 @@ class CafeDetailFragment : Fragment() {
             // If we don't have a location yet, try to get it
             getCurrentLocation()
         }
-        
+
         binding.apply {
             // Load cafe image if available
             cafe.images?.firstOrNull()?.let { photoMetadata ->
                 val photoRequest = FetchPhotoRequest.builder(photoMetadata)
                     .setMaxWidth(1000) // Adjust based on your needs
                     .build()
-                    
+
                 placesClient.fetchPhoto(photoRequest)
                     .addOnSuccessListener { fetchPhotoResponse ->
                         val bitmap = fetchPhotoResponse.bitmap
@@ -165,14 +165,14 @@ class CafeDetailFragment : Fragment() {
                 // No images available, set default image
                 ivImage.setImageResource(R.drawable.featured_placeholder)
             }
-            
+
             // Cafe Name
             tvCafeName.text = cafe.name ?: ""
 
             // Address
             val addressText = cafe.address ?: ""
             tvCafeAddress.text = addressText
-            
+
             // Set up opening hours with grouped days
             cafe.currentOpeningHours?.let { hours ->
                 if (hours.isNotEmpty()) {
@@ -184,7 +184,7 @@ class CafeDetailFragment : Fragment() {
             } ?: run {
                 tvOpeningHours.text = getString(R.string.no_opening_hours_available)
             }
-            
+
             // Set up click listener for address to open maps if location is available
             if (cafe.location != null) {
                 tvCafeAddress.paintFlags = tvCafeAddress.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
@@ -195,16 +195,16 @@ class CafeDetailFragment : Fragment() {
                 tvCafeAddress.paintFlags = tvCafeAddress.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
                 tvCafeAddress.setOnClickListener(null)
             }
-            
+
             // Phone Number
             val phoneNumber = cafe.nationalPhoneNumber ?: cafe.internationalPhoneNumber
             Log.d("CafeDetailFragment", "Using phone number: '$phoneNumber'")
-            
+
             if (!phoneNumber.isNullOrEmpty()) {
                 // Show phone number in the dedicated phone TextView
                 tvPhone.text = phoneNumber
                 tvPhone.visibility = View.VISIBLE
-                
+
                 // Make phone number clickable
                 tvPhone.setOnClickListener {
                     val intent = Intent(Intent.ACTION_DIAL).apply {
@@ -223,7 +223,7 @@ class CafeDetailFragment : Fragment() {
                 ratingBar.rating = rating.toFloat()
                 ratingBar.visibility = View.VISIBLE
                 tvRating.visibility = View.VISIBLE
-                
+
                 // Update distance if location is available
                 currentLocation?.let { userLocation ->
                     cafe.location?.let { cafeLocation ->
@@ -245,7 +245,7 @@ class CafeDetailFragment : Fragment() {
                 tvDistance.visibility = View.GONE
                 ivPin.visibility = View.GONE
             }
-            
+
             // Show rating count if available
             cafe.ratingCount?.let { count ->
                 tvRating.text = "($count)"
@@ -255,10 +255,10 @@ class CafeDetailFragment : Fragment() {
             }
         }
     }
-    
+
     private fun getCurrentLocation() {
         Timber.d("getCurrentLocation called")
-        
+
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -281,7 +281,7 @@ class CafeDetailFragment : Fragment() {
         }
 
         Timber.d("Location permissions granted, fetching location...")
-        
+
         // Get the current location in a coroutine
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -291,9 +291,9 @@ class CafeDetailFragment : Fragment() {
                     Timber.d("Location fetched: $location")
                     location
                 }
-                
+
                 Timber.d("Current location set to: $currentLocation")
-                
+
                 // Update the UI with the new location
                 (viewModel.uiState.value as? CafeDetailUiState.Success)?.let { state ->
                     Timber.d("Updating distance for cafe: ${state.coffeePlace.name}")
@@ -311,18 +311,18 @@ class CafeDetailFragment : Fragment() {
             }
         }
     }
-    
+
     private fun updateDistance(cafe: CoffeePlaceFull) {
         Timber.d("updateDistance called for cafe: ${cafe.name}")
         Timber.d("Cafe location: ${cafe.location}")
         Timber.d("Current user location: $currentLocation")
-        
+
         cafe.location?.let { cafeLocation ->
             currentLocation?.let { userLocation ->
                 Timber.d("Calculating distance between $userLocation and $cafeLocation")
                 val distanceText = LocationUtil.getFormattedDistance(userLocation, cafeLocation)
                 Timber.d("Calculated distance: $distanceText")
-                
+
                 // Make sure we're on the main thread when updating the UI
                 view?.post {
                     binding.tvDistance.text = distanceText
@@ -346,7 +346,7 @@ class CafeDetailFragment : Fragment() {
             }
         }
     }
-    
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -354,7 +354,7 @@ class CafeDetailFragment : Fragment() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && 
+            if (grantResults.isNotEmpty() &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                 grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 Timber.d("Location permissions granted, getting current location...")
@@ -368,23 +368,23 @@ class CafeDetailFragment : Fragment() {
             }
         }
     }
-    
+
     private fun formatOpeningHours(hours: List<String>): String {
         if (hours.isEmpty()) return getString(R.string.no_opening_hours_available)
-        
+
         val dayAbbreviations = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        
+
         // First, extract just the time part from each day's hours
         val hoursByDay = hours.mapIndexed { index, fullDayHours ->
             // Extract just the time part (e.g., "9:00 AM - 6:00 PM" from "Monday: 9:00 AM - 6:00 PM")
             val timePart = fullDayHours.substringAfter(": ", fullDayHours)
             dayAbbreviations[index] to timePart
         }
-        
+
         val result = mutableListOf<String>()
         var currentRange = mutableListOf<String>()
         var currentHours = ""
-        
+
         for ((day, hour) in hoursByDay) {
             if (currentHours != hour) {
                 if (currentRange.isNotEmpty()) {
@@ -395,15 +395,15 @@ class CafeDetailFragment : Fragment() {
             }
             currentRange.add(day)
         }
-        
+
         // Add the last range
         if (currentRange.isNotEmpty()) {
             result.add(formatDayRange(currentRange, currentHours))
         }
-        
+
         return result.joinToString("\n")
     }
-    
+
     private fun formatDayRange(days: List<String>, hours: String): String {
         return when (days.size) {
             1 -> "${days[0]}: $hours"
@@ -411,24 +411,24 @@ class CafeDetailFragment : Fragment() {
             else -> "${days.first()} - ${days.last()}: $hours"
         }
     }
-    
+
     private fun openMaps(location: LatLng, address: String) {
         val gmmIntentUri = Uri.parse("geo:${location.latitude},${location.longitude}?q=${Uri.encode(address)}")
         val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
         mapIntent.setPackage("com.google.android.apps.maps")
-        
+
         if (mapIntent.resolveActivity(requireContext().packageManager) != null) {
             startActivity(mapIntent)
         } else {
             // Fallback to browser if Google Maps is not installed
             val browserIntent = Intent(
-                Intent.ACTION_VIEW, 
+                Intent.ACTION_VIEW,
                 Uri.parse("https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}")
             )
             startActivity(browserIntent)
         }
     }
-    
+
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
