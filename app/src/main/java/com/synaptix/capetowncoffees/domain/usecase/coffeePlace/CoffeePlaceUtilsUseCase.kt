@@ -1,68 +1,86 @@
 package com.synaptix.capetowncoffees.domain.usecase.coffeePlace
 
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.nowSeconds
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.parseTimeToLocalTime
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.toLocalDate
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.toLocalTime
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.Locale
 import javax.inject.Inject
 
 class CoffeePlaceUtilsUseCase @Inject constructor(
     private val coffeePlaceRepository: ICoffeePlaceRepository
 ) {
-    /**
-     * Checks if a coffee place exists in the database by its ID.
-     */
+
     suspend fun checkIfPlaceExists(placeId: String): Boolean {
         val result = coffeePlaceRepository.checkCoffeePlaceExists(placeId)
         return result.isSuccess && result.getOrNull() == true
     }
 
     /**
-     * Parses an opening hours string and checks if the place is open right now.
-     * Example format: "Mon-Fri 08:00-17:00; Sat-Sun 09:00-15:00"
-     * This is a simple implementation, you can extend for more complex cases.
+     * Minimal: returns true if open "right now" based on Google Places weekday_text.
+     * Uses CoffeeTimeUtils' global default prefs (locale/zone), no explicit prefs needed.
      */
-    fun isPlaceOpenNow(openingHours: String): Boolean {
-        val now = java.time.LocalTime.now()
-        val today = java.time.LocalDate.now()
-        val dayOfWeek = today.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH)
-        // Example: "Mon-Fri 08:00-17:00; Sat-Sun 09:00-15:00"
-        val entries = openingHours.split(";").map { it.trim() }
-        for (entry in entries) {
-            val parts = entry.split(" ")
+    fun isPlaceOpenNow(weekdayText: List<String>): Boolean {
+        val nowSec = nowSeconds()
+        val todayDate: LocalDate = toLocalDate(nowSec) // uses defaultPrefsProvider()
+        val nowTime: LocalTime = toLocalTime(nowSec)   // uses defaultPrefsProvider()
+        val today = todayDate.dayOfWeek
+        val yesterday = todayDate.minusDays(1).dayOfWeek
+
+        val dayMap = mapOf(
+            "monday" to DayOfWeek.MONDAY,
+            "tuesday" to DayOfWeek.TUESDAY,
+            "wednesday" to DayOfWeek.WEDNESDAY,
+            "thursday" to DayOfWeek.THURSDAY,
+            "friday" to DayOfWeek.FRIDAY,
+            "saturday" to DayOfWeek.SATURDAY,
+            "sunday" to DayOfWeek.SUNDAY
+        )
+
+        for (line in weekdayText) {
+            val clean = normalize(line)
+            val parts = clean.split(":", limit = 2)
             if (parts.size != 2) continue
-            val days = parts[0]
-            val times = parts[1]
-            // Handle day ranges like "Mon-Fri"
-            if (days.contains("-")) {
-                val range = days.split("-")
-                if (range.size == 2) {
-                    val startDay = range[0]
-                    val endDay = range[1]
-                    val daysList = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-                    val startIdx = daysList.indexOf(startDay)
-                    val endIdx = daysList.indexOf(endDay)
-                    val todayIdx = daysList.indexOf(dayOfWeek)
-                    if (todayIdx in startIdx..endIdx) {
-                        val timeParts = times.split("-")
-                        if (timeParts.size == 2) {
-                            val openTime = java.time.LocalTime.parse(timeParts[0], java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-                            val closeTime = java.time.LocalTime.parse(timeParts[1], java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-                            return now.isAfter(openTime) && now.isBefore(closeTime)
-                        }
-                    }
+
+            val dayStr = parts[0].trim().lowercase(Locale.ENGLISH)
+            val timesStr = parts[1].trim()
+
+            val lineDay = dayMap[dayStr] ?: continue
+            if (lineDay != today && lineDay != yesterday) continue
+            if (timesStr.equals("closed", ignoreCase = true)) continue
+
+            val ranges = timesStr.split(",").map { it.trim() }
+            for (range in ranges) {
+                val bounds = range.split('–', '—', '-', '−').map { it.trim() }
+                if (bounds.size != 2) continue
+
+                val open = parseTimeToLocalTime(bounds[0]) ?: continue
+                val close = parseTimeToLocalTime(bounds[1]) ?: continue
+
+                if (close == LocalTime.MIDNIGHT) {
+                    if (lineDay == today && nowTime >= open) return true
+                    continue
                 }
-            } else if (days == dayOfWeek) {
-                val timeParts = times.split("-")
-                if (timeParts.size == 2) {
-                    val openTime = java.time.LocalTime.parse(timeParts[0], java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-                    val closeTime = java.time.LocalTime.parse(timeParts[1], java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-                    return now.isAfter(openTime) && now.isBefore(closeTime)
+
+                if (close.isAfter(open)) {
+                    if (lineDay == today && nowTime >= open && nowTime <= close) return true
+                } else {
+                    if (lineDay == today && nowTime >= open) return true
+                    if (lineDay == yesterday && nowTime <= close) return true
                 }
             }
         }
+
         return false
     }
 
-    // Add more utility methods as needed
+    private fun normalize(s: String): String =
+        s.replace('\u2009', ' ')
+            .replace('\u00A0', ' ')
+            .replace('\u202F', ' ')
+            .trim()
 }
