@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.data.mapper
 
-import com.synaptix.capetowncoffees.domain.model.Review as MyReview
+import com.synaptix.capetowncoffees.domain.model.CoffeeReview as MyReview
 import com.synaptix.capetowncoffees.data.model.AppReviewDTO
 import com.google.android.libraries.places.api.model.Review as GoogleReview
 import com.synaptix.capetowncoffees.domain.model.ReviewSource

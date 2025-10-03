@@ -8,7 +8,7 @@ import com.google.android.libraries.places.api.model.Review as GoogleReview
  * Unified domain model for reviews, supporting both in-app and Google sources.
  * Enables aggregation, sorting, and display of reviews from multiple sources.
  */
-data class Review(
+data class CoffeeReview(
     val source: ReviewSource,
     val id: String? = null,
     val reviewerId: String?,
@@ -29,7 +29,7 @@ data class Review(
             placeId: String,
             rating: Double,
             text: String
-        ): Review = Review(
+        ): CoffeeReview = CoffeeReview(
             source = ReviewSource.IN_APP,
             id = "",
             reviewerId = reviewerId,
@@ -47,18 +47,18 @@ data class Review(
 /**
  * Converts this Review to a AppReviewDTO if source is IN_APP.
  */
-fun Review.toDTO(): AppReviewDTO? =
+fun CoffeeReview.toDTO(): AppReviewDTO? =
     if (source == ReviewSource.IN_APP) ReviewMapper.toAppReviewDTO(this) else null
 
 /**
  * Converts this AppReviewDTO to a domain Review.
  */
-fun AppReviewDTO.toDomain(): Review = ReviewMapper.fromAppReviewDto(this, placeId) // placeId can be passed if known
+fun AppReviewDTO.toDomain(): CoffeeReview = ReviewMapper.fromAppReviewDto(this, placeId) // placeId can be passed if known
 
 /**
  * Converts this GoogleReview to a domain Review.
  */
-fun GoogleReview.toDomain(placeId: String): Review = ReviewMapper.fromGoogleReview(this, placeId)
+fun GoogleReview.toDomain(placeId: String): CoffeeReview = ReviewMapper.fromGoogleReview(this, placeId)
 
 /**
  * Source of a review.
