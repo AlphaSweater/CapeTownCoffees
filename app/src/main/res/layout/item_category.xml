@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/btnCategory"
     android:layout_width="wrap_content"
-    android:layout_height="40dp"
+    android:layout_height="50dp"
     android:layout_marginEnd="10dp"
     android:minWidth="0dp"
     android:minHeight="0dp"
@@ -25,4 +25,4 @@
     app:backgroundTint="@color/background"
     app:strokeColor="@color/button_category"
     app:strokeWidth="1dp"
-    app:cornerRadius="20dp" />
+    app:cornerRadius="25dp" />
