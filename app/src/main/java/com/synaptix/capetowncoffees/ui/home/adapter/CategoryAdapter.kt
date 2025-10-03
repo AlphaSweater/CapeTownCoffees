@@ -86,12 +86,11 @@ class CategoryAdapter(
     fun updateCategories(newCategories: List<Category>) {
         categories.clear()
         categories.addAll(newCategories)
-        selectedPosition = RecyclerView.NO_POSITION
         notifyDataSetChanged()
     }
 
     private fun updateSelectedPosition(newPosition: Int) {
-        if (newPosition in categories.indices) {
+        if (newPosition in 0 until itemCount) {
             val previousPosition = selectedPosition
             selectedPosition = newPosition
 
