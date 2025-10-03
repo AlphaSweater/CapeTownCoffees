@@ -103,7 +103,7 @@
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_filter" />
+                    android:src="@drawable/ic_ctc_filter" />
 
                 <TextView
                     android:layout_width="0dp"
