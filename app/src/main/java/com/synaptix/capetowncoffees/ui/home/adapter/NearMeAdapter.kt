@@ -13,6 +13,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 
+import android.location.Location
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.google.android.gms.maps.model.LatLng
@@ -52,19 +53,9 @@ class NearMeAdapter(
         if (userLocation != null) {
             currentLocation = userLocation
         }
-        
-        // Create a new list to ensure the DiffUtil detects changes properly
-        val newList = newItems.toList()
-        
-        // Submit the new list with a callback to ensure the UI updates
-        submitList(newList) {
-            // This runs after the list is updated on the main thread
-            notifyDataSetChanged() // Force a full refresh to ensure all items are updated
-        }
-        
-        // Log the update for debugging
-        android.util.Log.d("NearMeAdapter", "Updated ${newList.size} items")
+        submitList(newItems)
     }
+
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val cafe = getItem(position)
@@ -126,7 +117,7 @@ class NearMeAdapter(
         val distanceText = currentLocation?.calculateDistanceTo(cafe.location) ?: ""
         holder.distance.text = distanceText
         holder.distance.visibility = if (distanceText.isNotEmpty()) View.VISIBLE else View.GONE
-        
+
         // Set rating
         cafe.rating?.let { rating ->
             val ratingText = String.format("%.1f (%d)", rating, cafe.ratingCount ?: 0)
