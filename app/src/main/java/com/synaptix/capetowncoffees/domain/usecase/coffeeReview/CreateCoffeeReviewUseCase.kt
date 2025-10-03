@@ -5,6 +5,7 @@ import com.synaptix.capetowncoffees.domain.repository.ICoffeeReviewRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CreateCoffeePlaceUseCase
 import com.synaptix.capetowncoffees.data.model.CoffeePlaceDTO
+import com.synaptix.capetowncoffees.domain.model.InAppReview
 import javax.inject.Inject
 
 /**
@@ -32,7 +33,7 @@ class CreateCoffeeReviewUseCase @Inject constructor(
      * val result = createCoffeeReviewUseCase(coffeeReview, placeId)
      * ```
      */
-    suspend operator fun invoke(coffeeReview: CoffeeReview, placeId: String): Result<String> {
+    suspend operator fun invoke(coffeeReview: InAppReview, placeId: String): Result<String> {
         val placeExists = coffeePlaceUtilsUseCase.checkIfPlaceExists(placeId)
         if (!placeExists) {
             val newPlace = CoffeePlaceDTO.createNew(placeId)
