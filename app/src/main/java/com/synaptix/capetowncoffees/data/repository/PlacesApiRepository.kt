@@ -3,14 +3,18 @@ package com.synaptix.capetowncoffees.data.repository
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.CircularBounds
+import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.api.net.SearchNearbyRequest
+import com.synaptix.capetowncoffees.data.mapper.toDomain
+import com.synaptix.capetowncoffees.data.mapper.toDomainList
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
+import com.synaptix.capetowncoffees.domain.model.GooglePlaceReview
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -87,6 +91,21 @@ class PlacesApiRepository @Inject constructor(
             Result.success(details)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch coffee place details for placeId=$placeId")
+            Result.failure(e)
+        }
+    }
+
+    // -----------------------------
+    // Get coffee place reviews
+    // -----------------------------
+    override suspend fun getCoffeePlaceReviews(placeId: String): Result<List<GooglePlaceReview>> {
+        return try {
+            val request = FetchPlaceRequest.builder(placeId, listOf(Place.Field.REVIEWS)).build()
+            val response = placesClient.fetchPlace(request).await()
+            val reviews = response.place.reviews?.toDomainList(placeId) ?: emptyList()
+            Result.success(reviews)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch reviews for placeId=$placeId")
             Result.failure(e)
         }
     }

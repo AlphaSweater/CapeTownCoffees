@@ -5,7 +5,6 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.TagExtractor
-import com.synaptix.capetowncoffees.domain.model.toDomain
 
 object CoffeePlaceMapper {
     fun toFull(place: Place): CoffeePlaceFull = CoffeePlaceFull(
@@ -24,8 +23,7 @@ object CoffeePlaceMapper {
         nationalPhoneNumber = place.nationalPhoneNumber,
         internationalPhoneNumber = place.internationalPhoneNumber,
         websiteUrl = place.websiteUri?.toString(),
-        tags = TagExtractor.extract(place),
-        coffeeReviews = place.reviews?.take(10)?.map { it.toDomain(place.id ?: "") } ?: emptyList()
+        tags = TagExtractor.extract(place)
     )
 
     fun toLite(place: Place): CoffeePlaceLite = CoffeePlaceLite(

@@ -53,7 +53,7 @@ data class CoffeePlaceFull(
     val tags: List<Tag>, // Unified tags for UI
 
     // ⭐ Reviews
-    val coffeeReviews: List<CoffeeReview>?, // In-app and Google reviews combined
+    val coffeeReviews: List<CoffeeReview> = emptyList(), // In-app and Google reviews combined
 
     // 💰 Other attributes
     val priceLevel: Int? = null // Google price level (0-4)
@@ -68,7 +68,6 @@ data class CoffeePlaceFull(
             Place.Field.LOCATION,
             Place.Field.PRIMARY_TYPE,
             Place.Field.TYPES,
-            Place.Field.REVIEWS,
             Place.Field.RATING,
             Place.Field.USER_RATING_COUNT,
             Place.Field.PHOTO_METADATAS,

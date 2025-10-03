@@ -3,6 +3,7 @@ package com.synaptix.capetowncoffees.domain.repository
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import com.google.firebase.firestore.Query
+import com.synaptix.capetowncoffees.domain.model.InAppReview
 
 /**
  * IReviewRepository defines the contract for accessing and managing reviews in the domain layer.
@@ -35,7 +36,7 @@ interface ICoffeeReviewRepository {
      * @param placeId The place ID.
      * @return Result containing the Firestore document ID of the new review.
      */
-    suspend fun addReview(coffeeReview: CoffeeReview, placeId: String): Result<String>
+    suspend fun addReview(coffeeReview: InAppReview, placeId: String): Result<String>
 
     /**
      * Deletes a review for a place by its document ID.

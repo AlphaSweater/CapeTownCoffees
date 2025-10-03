@@ -1,8 +1,11 @@
 package com.synaptix.capetowncoffees.domain.repository
 
 import com.google.android.gms.maps.model.LatLng
-import com.synaptix.capetowncoffees.domain.model.*
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
+import com.synaptix.capetowncoffees.domain.model.GooglePlaceReview
 
 interface IPlacesApiRepository {
 
@@ -25,6 +28,11 @@ interface IPlacesApiRepository {
     suspend fun getCoffeePlaceDetails(
         placeId: String
     ): Result<CoffeePlaceFull>
+
+    /**
+     * Get reviews for a coffee place.
+     */
+    suspend fun getCoffeePlaceReviews(placeId: String): Result<List<GooglePlaceReview>>
 
     /**
      * Get autocomplete suggestions (for search box).
