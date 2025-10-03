@@ -7,6 +7,7 @@ import com.synaptix.capetowncoffees.data.model.UserListDTO
 import com.synaptix.capetowncoffees.data.model.toDomain
 import com.synaptix.capetowncoffees.data.model.toDTO
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
