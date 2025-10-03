@@ -6,16 +6,34 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
+/**
+ * BaseRepository provides generic Firestore CRUD, batch, transaction, observer, and pagination support for any entity type.
+ *
+ * @param firestore The Firestore instance.
+ * @param parentCollection Optional parent collection name for subcollections.
+ * @param parentDocumentId Optional parent document ID for subcollections.
+ * @param childCollection The collection name for the entity type.
+ */
 abstract class BaseRepository<T : Any>(
     protected val firestore: FirebaseFirestore,
     private val parentCollection: String? = null,
     private val parentDocumentId: String? = null,
     private val childCollection: String
 ) {
+    /**
+     * Each repository must define its entity type for mapping and to know what type of repo it is.
+     */
+    protected abstract fun getType(): Class<T>
+
+    /**
+     * Reference to the collection for this repository, built dynamically if parent info is provided.
+     */
     protected val collection: CollectionReference
         get() = getCollection()
 
-    // Dynamically build the collection reference
+    /**
+     * Dynamically build the collection reference, supporting subcollections.
+     */
     protected fun getCollection(parentDocId: String? = null): CollectionReference {
         return if (parentCollection != null && (parentDocId ?: parentDocumentId) != null) {
             firestore.collection(parentCollection)
@@ -27,6 +45,9 @@ abstract class BaseRepository<T : Any>(
     }
 
     // --- 🔧 Helpers ---
+    /**
+     * Executes a query and maps results to entity type, with defensive mapping.
+     */
     private suspend fun Query.getResults(limit: Int? = null): List<T> {
         var q = this
         if (limit != null) q = q.limit(limit.toLong())
@@ -37,6 +58,9 @@ abstract class BaseRepository<T : Any>(
     }
 
     // --- 🔨 CRUD ---
+    /**
+     * Creates a new document for the entity, optionally with a custom ID and parent document.
+     */
     protected suspend fun create(item: T, id: String? = null, parentDocId: String? = null): Result<String> =
         runCatching {
             val colRef = getCollection(parentDocId)
@@ -45,31 +69,49 @@ abstract class BaseRepository<T : Any>(
             docRef.id
         }
 
+    /**
+     * Updates the entire document for the entity.
+     */
     protected suspend fun update(id: String, item: T, parentDocId: String? = null): Result<Unit> =
         runCatching {
             getCollection(parentDocId).document(id).set(item).await()
         }
 
+    /**
+     * Updates specific fields of the document for the entity.
+     */
     protected suspend fun updateFields(id: String, fields: Map<String, Any>, parentDocId: String? = null): Result<Unit> =
         runCatching {
             getCollection(parentDocId).document(id).update(fields).await()
         }
 
+    /**
+     * Deletes the document for the entity.
+     */
     protected suspend fun delete(id: String, parentDocId: String? = null): Result<Unit> =
         runCatching {
             getCollection(parentDocId).document(id).delete().await()
         }
 
+    /**
+     * Gets a document by ID for the entity.
+     */
     protected suspend fun getById(id: String, parentDocId: String? = null): Result<T?> =
         runCatching {
             getCollection(parentDocId).document(id).get().await().toObject(getType())
         }
 
+    /**
+     * Gets all documents for the entity, optionally with a query and limit.
+     */
     protected suspend fun getAll(query: Query? = null, limit: Int? = null, parentDocId: String? = null): Result<List<T>> =
         runCatching {
             (query ?: getCollection(parentDocId)).getResults(limit)
         }
 
+    /**
+     * Gets documents by a list of IDs for the entity.
+     */
     protected suspend fun getItemsByIds(ids: List<String>, parentDocId: String? = null): Result<List<T>> =
         runCatching {
             if (ids.isEmpty()) return@runCatching emptyList()
@@ -84,6 +126,9 @@ abstract class BaseRepository<T : Any>(
             items
         }
 
+    /**
+     * Gets a document by field value for the entity.
+     */
     protected suspend fun getByField(fieldName: String, value: Any, parentDocId: String? = null): Result<T?> =
         runCatching {
             val snapshot = getCollection(parentDocId)
@@ -94,12 +139,18 @@ abstract class BaseRepository<T : Any>(
             snapshot.documents.firstOrNull()?.toObject(getType())
         }
 
+    /**
+     * Gets all documents by field value for the entity, optionally with a limit.
+     */
     protected suspend fun getAllByField(fieldName: String, value: Any, limit: Int? = null, parentDocId: String? = null): Result<List<T>> =
         runCatching {
             val query = getCollection(parentDocId).whereEqualTo(fieldName, value)
             query.getResults(limit)
         }
 
+    /**
+     * Gets all documents from a collection group, optionally with a query and limit.
+     */
     protected suspend fun getAllFromCollectionGroup(
         childCollection: String,
         query: Query? = null,
@@ -109,6 +160,9 @@ abstract class BaseRepository<T : Any>(
             (query ?: firestore.collectionGroup(childCollection)).getResults(limit)
         }
 
+    /**
+     * Gets all documents by field value from a collection group, optionally with a limit.
+     */
     protected suspend fun getAllByFieldFromCollectionGroup(
         childCollection: String,
         fieldName: String,
@@ -122,6 +176,9 @@ abstract class BaseRepository<T : Any>(
         }
 
     // --- 🔄 Realtime Observers ---
+    /**
+     * Observes a single document for real-time updates.
+     */
     protected fun observeDocument(documentId: String): Flow<Result<T?>> = callbackFlow {
         val listener = collection.document(documentId)
             .addSnapshotListener { snapshot, error ->
@@ -134,6 +191,9 @@ abstract class BaseRepository<T : Any>(
         awaitClose { listener.remove() }
     }
 
+    /**
+     * Observes a query or collection for real-time updates.
+     */
     protected fun observeCollection(query: Query? = null): Flow<Result<List<T>>> = callbackFlow {
         val finalQuery = query ?: collection
         val listener = finalQuery
@@ -151,26 +211,47 @@ abstract class BaseRepository<T : Any>(
     }
 
     // --- ⚡ Batch & Transaction Support ---
+    /**
+     * Runs a Firestore batch operation.
+     */
     protected suspend fun runBatch(actions: (WriteBatch) -> Unit): Result<Unit> =
         runCatching {
             firestore.runBatch { batch -> actions(batch) }.await()
         }
 
+    /**
+     * Runs a Firestore transaction.
+     */
     protected suspend fun <R> runTransaction(actions: (Transaction) -> R): Result<R> =
         runCatching {
             firestore.runTransaction { tx -> actions(tx) }.await()
         }
 
-    // --- ⏭ Pagination helper ---
+    /**
+     * Internal map of pagination cursors (DocumentSnapshot) for each independent pagination context.
+     * Use the 'key' parameter in fetchPage/fetchPageFromCollectionGroup to manage multiple paginations (e.g., tabs, filters).
+     */
     private val snapshotMap = mutableMapOf<String, DocumentSnapshot?>()
+    private val collectionGroupSnapshotMap = mutableMapOf<String, DocumentSnapshot?>()
 
+    /**
+     * Fetches a page of results from the collection, supporting independent paginations via 'key'.
+     *
+     * @param pageSize Number of items per page.
+     * @param parentDocId Optional parent document ID for subcollections.
+     * @param reset If true, resets the pagination cursor for this key.
+     * @param query Optional custom query.
+     * @param orderBy Optional order by field and direction.
+     * @param key Unique key for this pagination context (default: childCollection).
+     * @return PaginatedResult<T> containing data and hasMore flag.
+     */
     suspend fun fetchPage(
         pageSize: Int,
         parentDocId: String? = null,
         reset: Boolean = false,
         query: Query? = null,
         orderBy: Pair<String, Query.Direction>? = null,
-        key: String = childCollection // 👈 allows multiple independent paginations
+        key: String = childCollection
     ): PaginatedResult<T> {
         if (reset) snapshotMap[key] = null
 
@@ -193,10 +274,52 @@ abstract class BaseRepository<T : Any>(
         )
     }
 
-    // Each repository defines its entity type
-    protected abstract fun getType(): Class<T>
+    /**
+     * Fetches a page of results from a Firestore collection group, supporting independent paginations via 'key'.
+     *
+     * @param childCollection The collection group name.
+     * @param pageSize Number of items per page.
+     * @param reset If true, resets the pagination cursor for this key.
+     * @param query Optional custom query.
+     * @param orderBy Optional order by field and direction.
+     * @param key Unique key for this pagination context (default: childCollection).
+     * @return PaginatedResult<T> containing data and hasMore flag.
+     */
+    suspend fun fetchPageFromCollectionGroup(
+        childCollection: String,
+        pageSize: Int,
+        reset: Boolean = false,
+        query: Query? = null,
+        orderBy: Pair<String, Query.Direction>? = null,
+        key: String = childCollection
+    ): PaginatedResult<T> {
+        if (reset) collectionGroupSnapshotMap[key] = null
+
+        var q = query ?: firestore.collectionGroup(childCollection)
+        orderBy?.let { q = q.orderBy(it.first, it.second) }
+        q = q.limit(pageSize.toLong())
+
+        collectionGroupSnapshotMap[key]?.let { q = q.startAfter(it) }
+
+        val snapshot = q.get().await()
+        if (snapshot.isEmpty) return PaginatedResult(emptyList(), false)
+
+        collectionGroupSnapshotMap[key] = snapshot.documents.last()
+
+        return PaginatedResult(
+            data = snapshot.documents.mapNotNull { doc ->
+                runCatching { doc.toObject(getType()) }.getOrNull()
+            },
+            hasMore = snapshot.size() == pageSize
+        )
+    }
 }
 
+/**
+ * Wrapper for paginated results.
+ * @param data The list of items for this page.
+ * @param hasMore True if more data is available for further paging.
+ */
 data class PaginatedResult<T>(
     val data: List<T>,
     val hasMore: Boolean
