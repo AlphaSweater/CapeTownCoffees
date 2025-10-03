@@ -135,6 +135,18 @@ class CafeDetailFragment : Fragment() {
             val addressText = cafe.address ?: ""
             tvCafeAddress.text = addressText
             
+            // Set up opening hours with grouped days
+            cafe.currentOpeningHours?.let { hours ->
+                if (hours.isNotEmpty()) {
+                    val formattedHours = formatOpeningHours(hours)
+                    tvOpeningHours.text = formattedHours
+                } else {
+                    tvOpeningHours.text = getString(R.string.no_opening_hours_available)
+                }
+            } ?: run {
+                tvOpeningHours.text = getString(R.string.no_opening_hours_available)
+            }
+            
             // Set up click listener for address to open maps if location is available
             if (cafe.location != null) {
                 tvCafeAddress.paintFlags = tvCafeAddress.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
@@ -185,11 +197,53 @@ class CafeDetailFragment : Fragment() {
             } ?: run {
                 tvRating.visibility = View.GONE
             }
-            
         }
     }
     
-    private fun openMaps(location: LatLng, address: String = "") {
+    private fun formatOpeningHours(hours: List<String>): String {
+        if (hours.isEmpty()) return getString(R.string.no_opening_hours_available)
+        
+        val dayAbbreviations = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        
+        // First, extract just the time part from each day's hours
+        val hoursByDay = hours.mapIndexed { index, fullDayHours ->
+            // Extract just the time part (e.g., "9:00 AM - 6:00 PM" from "Monday: 9:00 AM - 6:00 PM")
+            val timePart = fullDayHours.substringAfter(": ", fullDayHours)
+            dayAbbreviations[index] to timePart
+        }
+        
+        val result = mutableListOf<String>()
+        var currentRange = mutableListOf<String>()
+        var currentHours = ""
+        
+        for ((day, hour) in hoursByDay) {
+            if (currentHours != hour) {
+                if (currentRange.isNotEmpty()) {
+                    result.add(formatDayRange(currentRange, currentHours))
+                    currentRange.clear()
+                }
+                currentHours = hour
+            }
+            currentRange.add(day)
+        }
+        
+        // Add the last range
+        if (currentRange.isNotEmpty()) {
+            result.add(formatDayRange(currentRange, currentHours))
+        }
+        
+        return result.joinToString("\n")
+    }
+    
+    private fun formatDayRange(days: List<String>, hours: String): String {
+        return when (days.size) {
+            1 -> "${days[0]}: $hours"
+            2 -> "${days[0]} & ${days[1]}: $hours"
+            else -> "${days.first()} - ${days.last()}: $hours"
+        }
+    }
+    
+    private fun openMaps(location: LatLng, address: String) {
         val gmmIntentUri = Uri.parse("geo:${location.latitude},${location.longitude}?q=${Uri.encode(address)}")
         val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
         mapIntent.setPackage("com.google.android.apps.maps")

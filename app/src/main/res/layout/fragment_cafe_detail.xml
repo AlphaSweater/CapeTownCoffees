@@ -184,7 +184,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Quirky cafe that's a steampunk world of pipes and old metal, with gourmet, home-roasted coffee."
+                        android:text="@string/description"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"/>
 
@@ -205,15 +205,10 @@
                         android:layout_marginTop="6dp">
 
                         <TextView
+                            android:id="@+id/tvOpeningHours"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Monday - Saturday      7:00 am - 10:00 pm"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"/>
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Sunday                     8:00 am - 10:00 pm"
+                            android:text="@string/opening_hours"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
@@ -245,7 +240,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="36 Buitenkant St, Cape Town City Centre, Cape Town, 8000"
+                            android:text="Address"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>
@@ -269,7 +264,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="021 201 7000"
+                            android:text="@string/phone_number"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"/>
                     </LinearLayout>

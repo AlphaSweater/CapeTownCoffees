@@ -128,6 +128,16 @@ class HomeFragment : Fragment() {
         setupUI()
         setupObservers()
         
+        loadData()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh data when returning to this fragment
+        loadData()
+    }
+    
+    private fun loadData() {
         if (checkLocationPermission()) {
             requestLocation()
         } else {
