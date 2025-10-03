@@ -6,7 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
+import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val placesApiRepository: IPlacesApiRepository
+    private val searchNearbyCoffeePlacesUseCase: SearchNearbyCoffeePlacesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -73,7 +74,7 @@ class HomeViewModel @Inject constructor(
 
             // Always show top 3 highly rated places as featured
             val featuredPlaces = allPlaces
-                .filter { it.rating ?: 0.0 >= 4.0 }
+                .filter { (it.rating ?: 0.0) >= 4.0 }
                 .take(3)
 
             _uiState.value = HomeUiState.Success(
@@ -100,24 +101,17 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = HomeUiState.Loading
-
-                val latLng =
-                    currentLocation ?: throw IllegalStateException("Location not available")
-
-                // Show loading state with empty lists while we fetch data
+                val latLng = currentLocation ?: throw IllegalStateException("Location not available")
                 _uiState.value = HomeUiState.Success(
                     places = emptyList(),
                     featuredPlaces = emptyList()
                 )
-
-                val params = IPlacesApiRepository.CoffeeSearchParams(
-                    radiusMeters = 5000, // 5km radius
-                    maxResults = 10
-                )
-
-                // Get nearby coffee places
+                val params = CoffeeSearchParameters.Builder()
+                    .radiusMeters(5000)
+                    .maxResults(10)
+                    .build()
                 allPlaces = runCatching {
-                    placesApiRepository.searchNearbyCoffeePlaces(
+                    searchNearbyCoffeePlacesUseCase(
                         params = params,
                         userLatLng = latLng
                     ).getOrThrow()
@@ -125,13 +119,11 @@ class HomeViewModel @Inject constructor(
                     onSuccess = { it },
                     onFailure = {
                         _uiState.value = HomeUiState.Error(
-                            it.message
-                                ?: "Failed to load coffee places. Please check your internet connection."
+                            it.message ?: "Failed to load coffee places. Please check your internet connection."
                         )
                         emptyList()
                     }
                 )
-
                 if (allPlaces.isEmpty()) {
                     _uiState.value = HomeUiState.Error(
                         "No coffee places found nearby. Try moving to a different location."
@@ -140,13 +132,8 @@ class HomeViewModel @Inject constructor(
                     updateUiWithFilteredPlaces()
                 }
             } catch (e: Exception) {
-                val errorMessage = when (e) {
-                    is java.net.UnknownHostException -> "No internet connection"
-                    is java.net.SocketTimeoutException -> "Connection timed out"
-                    is java.net.ConnectException -> "Could not connect to server"
-                    else -> e.message ?: "Failed to load data"
-                }
-                _uiState.value = HomeUiState.Error(errorMessage)
+                Timber.e(e)
+                _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred.")
             }
         }
     }
@@ -171,4 +158,3 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
-
