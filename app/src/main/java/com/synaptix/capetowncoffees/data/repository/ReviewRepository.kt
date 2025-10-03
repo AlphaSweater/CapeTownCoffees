@@ -24,29 +24,45 @@ class ReviewRepository(
 
     override fun getType(): Class<AppReviewDTO> = AppReviewDTO::class.java
 
-    override suspend fun getReviewsForUser(reviewerId: String, limit: Int?): List<Review> {
+    override suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<Review>> {
         val dtoResult = getAllByFieldFromCollectionGroup("reviews", "reviewerId", reviewerId, limit)
-        return dtoResult.getOrElse { emptyList() }.map { it.toDomain() }
+        return if (dtoResult.isSuccess) {
+            Result.success(dtoResult.getOrNull()?.map { it.toDomain() } ?: emptyList())
+        } else {
+            Result.failure(dtoResult.exceptionOrNull() ?: Exception("Error fetching user reviews"))
+        }
     }
 
-    override suspend fun getReviewsForPlace(placeId: String, limit: Int?): List<Review> {
+    override suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<Review>> {
         val dtoResult = getAll(limit = limit, parentDocId = placeId)
-        return dtoResult.getOrElse { emptyList() }.map { it.toDomain() }
+        return if (dtoResult.isSuccess) {
+            Result.success(dtoResult.getOrNull()?.map { it.toDomain() } ?: emptyList())
+        } else {
+            Result.failure(dtoResult.exceptionOrNull() ?: Exception("Error fetching place reviews"))
+        }
     }
 
-    override suspend fun addReview(review: Review, placeId: String): String {
+    override suspend fun addReview(review: Review, placeId: String): Result<String> {
         val dto = review.toDTO()
-        requireNotNull(dto) { "Only IN_APP reviews can be added." }
-        return create(dto, parentDocId = placeId).getOrThrow()
+        return try {
+            requireNotNull(dto) { "Only IN_APP reviews can be added." }
+            create(dto, parentDocId = placeId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    override suspend fun deleteReview(reviewId: String, placeId: String) {
-        delete(reviewId, parentDocId = placeId).getOrThrow()
+    override suspend fun deleteReview(reviewId: String, placeId: String): Result<Unit> {
+        return delete(reviewId, parentDocId = placeId)
     }
 
-    override suspend fun getReview(reviewId: String, placeId: String): Review? {
+    override suspend fun getReview(reviewId: String, placeId: String): Result<Review?> {
         val dtoResult = getById(reviewId, parentDocId = placeId)
-        return dtoResult.getOrNull()?.toDomain()
+        return if (dtoResult.isSuccess) {
+            Result.success(dtoResult.getOrNull()?.toDomain())
+        } else {
+            Result.failure(dtoResult.exceptionOrNull() ?: Exception("Error fetching review"))
+        }
     }
 
     // Paginated methods

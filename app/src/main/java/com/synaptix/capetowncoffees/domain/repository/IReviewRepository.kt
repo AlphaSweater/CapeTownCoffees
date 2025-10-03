@@ -13,41 +13,41 @@ interface IReviewRepository {
      * Gets all reviews written by a user across all places.
      * @param reviewerId The user ID.
      * @param limit Optional max number of reviews to return.
-     * @return List of domain Review objects.
+     * @return Result containing a list of domain Review objects.
      */
-    suspend fun getReviewsForUser(reviewerId: String, limit: Int?): List<Review>
+    suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<Review>>
 
     /**
      * Gets all reviews for a specific place.
      * @param placeId The place ID.
      * @param limit Optional max number of reviews to return.
-     * @return List of domain Review objects.
+     * @return Result containing a list of domain Review objects.
      */
-    suspend fun getReviewsForPlace(placeId: String, limit: Int?): List<Review>
+    suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<Review>>
 
     /**
      * Adds a new review for a place. Only IN_APP reviews are allowed.
      * @param review The domain Review object.
      * @param placeId The place ID.
-     * @return The Firestore document ID of the new review.
-     * @throws IllegalArgumentException if review cannot be converted to DTO.
+     * @return Result containing the Firestore document ID of the new review.
      */
-    suspend fun addReview(review: Review, placeId: String): String
+    suspend fun addReview(review: Review, placeId: String): Result<String>
 
     /**
      * Deletes a review for a place by its document ID.
      * @param reviewId The review document ID.
      * @param placeId The place ID.
+     * @return Result indicating success or failure.
      */
-    suspend fun deleteReview(reviewId: String, placeId: String)
+    suspend fun deleteReview(reviewId: String, placeId: String): Result<Unit>
 
     /**
      * Gets a single review for a place by its document ID.
      * @param reviewId The review document ID.
      * @param placeId The place ID.
-     * @return The domain Review object, or null if not found.
+     * @return Result containing the domain Review object, or null if not found.
      */
-    suspend fun getReview(reviewId: String, placeId: String): Review?
+    suspend fun getReview(reviewId: String, placeId: String): Result<Review?>
 
     /**
      * Gets paginated reviews for a user from all coffee places.
