@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout 
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -39,20 +39,23 @@
                     android:src="@drawable/ic_search"
                     app:tint="@color/icon_primary" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etSearch"
+                <TextView
+                    android:id="@+id/tvSearch"
                     android:layout_width="0dp"
-                    android:textSize="16sp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@null"
                     android:hint="Search for Coffee shops..."
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
+                    android:gravity="center_vertical"
                     android:paddingStart="16dp"
                     android:paddingEnd="8dp"
                     android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_tip" />
+                    android:textColorHint="@color/text_tip"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
