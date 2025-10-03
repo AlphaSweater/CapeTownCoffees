@@ -2,6 +2,7 @@ package com.synaptix.capetowncoffees.domain.repository
 
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.domain.model.*
+import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 
 interface IPlacesApiRepository {
 
@@ -14,7 +15,7 @@ interface IPlacesApiRepository {
      * Uses new Places SDK FindNearbyPlaces API.
      */
     suspend fun searchNearbyCoffeePlaces(
-        params: CoffeeSearchParams,
+        params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceLite>>
 
@@ -35,7 +36,7 @@ interface IPlacesApiRepository {
 
 
     // -----------------------------
-    // Search Parameters
+    // Base Search Parameters
     // -----------------------------
 
     /**
@@ -83,25 +84,5 @@ interface IPlacesApiRepository {
             "liquor_store",
             "casino"
         )
-
-        // Default search configuration
-        const val requireOperational: Boolean = true
-        const val defaultRadiusMeters: Int = 2000
-        const val maxResults: Int = 20
     }
-
-    /**
-     * Caller-configurable search params.
-     * These are merged with [BaseSearchParams] inside implementation.
-     */
-    data class CoffeeSearchParams(
-        val radiusMeters: Int = BaseSearchParams.defaultRadiusMeters,
-        val query: String? = "coffee",
-        val onlyOpenNow: Boolean = false,
-        val maxResults: Int = BaseSearchParams.maxResults,
-        val sortByDistance: Boolean = true,
-
-        // Strictness: if true → only strict coffee places; else relaxed mode
-        val strictCoffeeOnly: Boolean = true
-    )
 }

@@ -10,8 +10,8 @@ import com.google.android.libraries.places.api.net.SearchNearbyRequest
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
+import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
-import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository.CoffeeSearchParams
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
@@ -29,7 +29,7 @@ class PlacesApiRepository @Inject constructor(
     // -----------------------------
     // Search nearby coffee places using the user's current location.
     override suspend fun searchNearbyCoffeePlaces(
-        params: CoffeeSearchParams,
+        params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceLite>> {
         return try {
@@ -47,7 +47,7 @@ class PlacesApiRepository @Inject constructor(
     /**
      * Build a SearchNearbyRequest for coffee places using user's location.
      */
-    private fun buildNearbyRequest(params: CoffeeSearchParams, userLatLng: LatLng): SearchNearbyRequest {
+    private fun buildNearbyRequest(params: CoffeeSearchParameters, userLatLng: LatLng): SearchNearbyRequest {
         val searchArea = CircularBounds.newInstance(userLatLng, params.radiusMeters.toDouble())
         return SearchNearbyRequest.builder(searchArea, liteFields)
             .apply {
@@ -91,6 +91,7 @@ class PlacesApiRepository @Inject constructor(
         }
     }
 
+    // TODO: Make sure results somewhat follow Base params
     // -----------------------------
     // Autocomplete suggestions
     // -----------------------------
