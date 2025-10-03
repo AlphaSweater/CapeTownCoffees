@@ -119,13 +119,13 @@
                                     android:layout_height="24dp"
                                     android:layout_alignBottom="@id/ivProfilePicture"
                                     android:layout_alignEnd="@id/ivProfilePicture"
-                                    android:layout_marginEnd="-4dp"
-                                    android:layout_marginBottom="0dp"
+                                    android:layout_marginEnd="2dp"
+                                    android:layout_marginBottom="2dp"
                                     android:background="@drawable/circle_background"
-                                    android:padding="4dp"
+                                    android:padding="6dp"
                                     android:src="@drawable/baseline_edit_24"
                                     android:contentDescription="@string/change_photo"
-                                    app:tint="@color/text_secondary" />
+                                    app:tint="@color/white" />
                             </RelativeLayout>
 
                             <!-- User's full name -->
@@ -153,14 +153,17 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:background="@null"
-                                    android:inputType="textPersonName"
+                                    android:inputType="textPersonName|textCapWords"
                                     android:imeOptions="actionNext"
                                     android:paddingVertical="14dp"
                                     android:paddingStart="16dp"
                                     android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_secondary" />
+                                    android:textColorHint="@color/text_secondary"
+                                    android:singleLine="true"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:textSize="16sp" />
                             </com.google.android.material.textfield.TextInputLayout>
-
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -198,18 +201,6 @@
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/btnChangePassword"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/change"
-                                android:textColor="@color/button_primary"
-                                android:textSize="14sp"
-                                android:drawableEnd="@drawable/baseline_edit_24"
-                                android:drawablePadding="4dp"
-                                android:paddingVertical="8dp"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="4dp"/>
                         </LinearLayout>
 
                         <!-- Email Field -->
@@ -251,38 +242,73 @@
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Password Field -->
-                        <com.google.android.material.textfield.TextInputLayout
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:hint="@string/password"
-                            app:boxBackgroundMode="outline"
-                            app:boxBackgroundColor="@color/coffee_cream"
-                            app:boxStrokeColor="@color/button_category"
-                            app:boxStrokeWidth="2dp"
-                            app:boxStrokeWidthFocused="2dp"
-                            app:boxCornerRadiusTopStart="8dp"
-                            app:boxCornerRadiusTopEnd="8dp"
-                            app:boxCornerRadiusBottomStart="8dp"
-                            app:boxCornerRadiusBottomEnd="8dp"
-                            app:startIconDrawable="@drawable/ic_lock"
-                            app:startIconTint="@color/button_category"
-                            app:endIconTint="@color/button_category"
-                            app:hintTextColor="@color/button_category">
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingTop="16dp">
 
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/tvPassword"
-                                android:layout_width="match_parent"
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:background="@null"
-                                android:inputType="textPassword"
-                                android:imeOptions="actionNext"
-                                android:paddingVertical="14dp"
-                                android:paddingStart="16dp"
-                                android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary"
-                                android:text="••••••••" />
-                        </com.google.android.material.textfield.TextInputLayout>
+                                android:layout_weight="1"
+                                android:layout_marginEnd="8dp"
+                                android:hint="@string/password"
+                                app:boxBackgroundMode="outline"
+                                app:boxBackgroundColor="@color/coffee_cream"
+                                app:boxStrokeColor="@color/button_category"
+                                app:boxStrokeWidth="2dp"
+                                app:boxStrokeWidthFocused="2dp"
+                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxCornerRadiusTopEnd="8dp"
+                                app:boxCornerRadiusBottomStart="8dp"
+                                app:boxCornerRadiusBottomEnd="8dp"
+                                app:startIconDrawable="@drawable/ic_lock"
+                                app:startIconTint="@color/button_category"
+                                app:hintTextColor="@color/button_category"
+                                android:minHeight="56dp">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/tvPassword"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="@null"
+                                    android:focusable="false"
+                                    android:clickable="false"
+                                    android:longClickable="false"
+                                    android:cursorVisible="false"
+                                    android:paddingVertical="14dp"
+                                    android:paddingStart="16dp"
+                                    android:textColor="@color/text_primary"
+                                    android:textColorHint="@color/text_secondary"
+                                    android:text="••••••••"
+                                    android:ellipsize="end"
+                                    android:singleLine="true" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <TextView
+                                android:id="@+id/btnChangePassword"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:minWidth="100dp"
+                                android:minHeight="40dp"
+                                android:gravity="center"
+                                android:background="@drawable/bg_pill_outline"
+                                android:text="@string/change"
+                                android:textColor="@color/button_category"
+                                android:textSize="14sp"
+                                android:drawableEnd="@drawable/baseline_edit_24"
+                                android:drawableTint="@color/button_category"
+                                android:drawablePadding="6dp"
+                                android:paddingVertical="8dp"
+                                android:paddingHorizontal="16dp"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:foreground="?attr/selectableItemBackgroundBorderless"
+                                style="?android:attr/borderlessButtonStyle"/>
+                        </LinearLayout>
 
                         <!-- Password Field (initially hidden) -->
                         <LinearLayout
@@ -290,7 +316,29 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:visibility="gone">
+                            android:visibility="gone"
+                            android:paddingBottom="8dp">
+
+                            <!-- Change Password Header -->
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:text="@string/change_password"
+                                android:textColor="@color/text_primary"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+
+                            <!-- Change Password Description -->
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginBottom="16dp"
+                                android:text="@string/change_password_description"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="4dp" />
 
                             <!-- Current Password -->
                             <com.google.android.material.textfield.TextInputLayout
@@ -298,7 +346,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="16dp"
                                 android:hint="@string/current_password"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:minHeight="56dp"
+                                app:boxBackgroundMode="outline"
                                 app:boxBackgroundColor="@color/coffee_cream"
                                 app:boxStrokeColor="@color/button_category"
                                 app:boxStrokeWidth="2dp"
@@ -323,51 +372,18 @@
                                     android:paddingVertical="14dp"
                                     android:paddingStart="16dp"
                                     android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_secondary" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
-                            <!-- Email -->
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
-                                android:hint="@string/email"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                                app:boxBackgroundColor="@color/coffee_cream"
-                                app:boxStrokeColor="@color/button_category"
-                                app:boxStrokeWidth="2dp"
-                                app:boxStrokeWidthFocused="2dp"
-                                app:boxCornerRadiusTopStart="8dp"
-                                app:boxCornerRadiusTopEnd="8dp"
-                                app:boxCornerRadiusBottomStart="8dp"
-                                app:boxCornerRadiusBottomEnd="8dp"
-                                app:startIconDrawable="@drawable/ic_email"
-                                app:startIconTint="@color/button_category"
-                                app:endIconMode="clear_text"
-                                app:endIconTint="@color/button_category"
-                                app:hintTextColor="@color/button_category">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/etEmail"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:background="@null"
-                                    android:inputType="textEmailAddress"
-                                    android:imeOptions="actionNext"
-                                    android:paddingVertical="14dp"
-                                    android:paddingStart="16dp"
-                                    android:textColor="@color/text_primary"
                                     android:textColorHint="@color/text_secondary"
-                                    android:text="@string/loading"
-                                    android:enabled="false" />
+                                    android:singleLine="true"
+                                    android:ellipsize="end" />
                             </com.google.android.material.textfield.TextInputLayout>
-
+                            
                             <com.google.android.material.textfield.TextInputLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="16dp"
                                 android:hint="@string/new_password"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:minHeight="56dp"
+                                app:boxBackgroundMode="outline"
                                 app:boxBackgroundColor="@color/coffee_cream"
                                 app:boxStrokeColor="@color/button_category"
                                 app:boxStrokeWidth="2dp"
@@ -392,7 +408,9 @@
                                     android:paddingVertical="14dp"
                                     android:paddingStart="16dp"
                                     android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_secondary" />
+                                    android:textColorHint="@color/text_secondary"
+                                    android:singleLine="true"
+                                    android:ellipsize="end" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                             <!-- Confirm New Password -->
@@ -401,7 +419,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="16dp"
                                 android:hint="@string/confirm_new_password"
-                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:minHeight="56dp"
+                                app:boxBackgroundMode="outline"
                                 app:boxBackgroundColor="@color/coffee_cream"
                                 app:boxStrokeColor="@color/button_category"
                                 app:boxStrokeWidth="2dp"
@@ -420,29 +439,37 @@
                                     android:id="@+id/etConfirmNewPassword"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:background="@null"
                                     android:inputType="textPassword"
                                     android:imeOptions="actionDone"
+                                    android:paddingVertical="14dp"
+                                    android:paddingStart="16dp"
                                     android:textColor="@color/text_primary"
-                                    android:textColorHint="@color/text_secondary" />
+                                    android:textColorHint="@color/text_secondary"
+                                    android:singleLine="true"
+                                    android:ellipsize="end" />
                             </com.google.android.material.textfield.TextInputLayout>
-
-                            <!-- Save Button -->
-                            <TextView
-                                android:id="@+id/btnSaveChanges"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="24dp"
-                                android:paddingVertical="14dp"
-                                android:gravity="center"
-                                android:text="@string/save_changes"
-                                android:textColor="@color/text_alt"
-                                android:textStyle="bold"
-                                android:textSize="18sp"
-                                android:background="@drawable/bg_pill_dark" />
                         </LinearLayout>
-
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+                <!-- Save Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveChanges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginBottom="32dp"
+                    android:paddingVertical="14dp"
+                    android:text="@string/save_changes"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/button_category"
+                    app:cornerRadius="12dp"
+                    app:elevation="2dp"
+                    style="@style/Widget.Material3.Button" />
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>

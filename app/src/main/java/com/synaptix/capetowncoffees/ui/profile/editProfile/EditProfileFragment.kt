@@ -32,13 +32,19 @@ class EditProfileFragment : Fragment() {
     private val viewModel: EditProfileViewModel by viewModels()
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
+        if (uri != null) {
             try {
-                val inputStream = requireContext().contentResolver.openInputStream(it)
+                // First set the image in the UI
+                val inputStream = requireContext().contentResolver.openInputStream(uri)
                 val bitmap = BitmapFactory.decodeStream(inputStream)
                 binding.ivProfilePicture.setImageBitmap(bitmap)
                 inputStream?.close()
-                viewModel.setProfilePictureUri(it)
+                
+                // Then update the ViewModel with the URI
+                viewModel.setProfilePictureUri(uri)
+                
+                // Trigger an immediate save of the profile with the new image
+                viewModel.updateProfile(requireContext())
             } catch (e: Exception) {
                 showError("Failed to load image")
             }
@@ -66,7 +72,10 @@ class EditProfileFragment : Fragment() {
         binding.apply {
             btnBack.setOnClickListener { findNavController().navigateUp() }
             btnEditPhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
-            btnSaveChanges.setOnClickListener { viewModel.updateProfile() }
+            btnSaveChanges.setOnClickListener { 
+                // Pass the context to the ViewModel
+                viewModel.updateProfile(requireContext())
+            }
             
             // Add click listener for the change password button
             btnChangePassword.setOnClickListener {
@@ -114,16 +123,31 @@ class EditProfileFragment : Fragment() {
                         is EditProfileUiState.Success -> {
                             showLoading(false)
                             state.user.let { user ->
+                                // Set the email
+                                binding.tvEmail.setText(user.email ?: "")
                                 // Only set the text if it's different to prevent cursor jumping
                                 if (binding.tvFullName.text?.toString() != user.fullName) {
                                     binding.tvFullName.setText(user.fullName)
                                 }
-                                // Set email if field exists
-                                binding.etEmail?.setText(user.email)
                                 
                                 // Load profile picture if available
                                 user.photoBase64?.let { base64 ->
-                                    // TODO: Load image from base64
+                                    try {
+                                        val imageBytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
+                                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                        binding.ivProfilePicture.setImageBitmap(bitmap)
+                                    } catch (e: Exception) {
+                                        // If there's an error loading the image, show the default avatar
+                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                    }
+                                } ?: run {
+                                    // If no profile picture is available, show the default avatar
+                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                }
+                                
+                                // Set the user's name in the profile header if available
+                                user.fullName?.let { name ->
+                                    binding.tvFullName.setText(name)
                                 }
                             }
                             

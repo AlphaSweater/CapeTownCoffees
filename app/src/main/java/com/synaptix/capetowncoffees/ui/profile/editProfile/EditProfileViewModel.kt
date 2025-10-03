@@ -78,7 +78,7 @@ class EditProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateProfile() {
+    fun updateProfile(context: android.content.Context) {
         viewModelScope.launch {
             val user = currentUser ?: run {
                 _uiState.value = EditProfileUiState.Error("User not found")
@@ -97,7 +97,7 @@ class EditProfileViewModel @Inject constructor(
                     profilePictureUri = profilePictureUri,
                     currentPassword = if (newPassword.isNotBlank()) currentPassword else null,
                     newPassword = if (newPassword.isNotBlank()) newPassword else null,
-                    context = null // Pass a valid context if needed for file operations
+                    context = context // Pass the context for file operations
                 )
 
                 // Execute the use case with the Params object

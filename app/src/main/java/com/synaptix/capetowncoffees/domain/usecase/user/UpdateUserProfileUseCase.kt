@@ -59,13 +59,6 @@ class UpdateUserProfileUseCase @Inject constructor(
             }
         }
 
-        // Update the user profile
-        return userRepository.updateUserProfile(
-            userId = currentUser.id,
-            user = params.updatedUser
-        )
-
-
         // Handle profile picture update
         var userToUpdate = params.updatedUser.copy(
             updatedAt = System.currentTimeMillis()
@@ -75,7 +68,11 @@ class UpdateUserProfileUseCase @Inject constructor(
             val inputStream = params.context.contentResolver.openInputStream(params.profilePictureUri)
             val bytes = inputStream?.readBytes()
             inputStream?.close()
-            val base64Image = if (bytes != null) Base64.encodeToString(bytes, Base64.DEFAULT) else null
+            val base64Image = if (bytes != null) {
+                Base64.encodeToString(bytes, Base64.DEFAULT)
+            } else {
+                null
+            }
             userToUpdate = userToUpdate.copy(
                 photoBase64 = base64Image
             )
