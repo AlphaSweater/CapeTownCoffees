@@ -31,7 +31,9 @@ abstract class BaseRepository<T : Any>(
         var q = this
         if (limit != null) q = q.limit(limit.toLong())
         val snapshot = q.get().await()
-        return snapshot.documents.mapNotNull { it.toObject(getType()) }
+        return snapshot.documents.mapNotNull { doc ->
+            runCatching { doc.toObject(getType()) }.getOrNull()
+        }
     }
 
     // --- 🔨 CRUD ---
@@ -75,7 +77,9 @@ abstract class BaseRepository<T : Any>(
             val items = mutableListOf<T>()
             ids.chunked(10).forEach { chunk ->
                 val snapshots = chunk.map { id -> colRef.document(id).get().await() }
-                items.addAll(snapshots.mapNotNull { it.toObject(getType()) })
+                items.addAll(snapshots.mapNotNull { doc ->
+                    runCatching { doc.toObject(getType()) }.getOrNull()
+                })
             }
             items
         }
@@ -138,7 +142,9 @@ abstract class BaseRepository<T : Any>(
                     trySend(Result.failure(error))
                     return@addSnapshotListener
                 }
-                val items = snapshot?.documents?.mapNotNull { it.toObject(getType()) } ?: emptyList()
+                val items = snapshot?.documents?.mapNotNull { doc ->
+                    runCatching { doc.toObject(getType()) }.getOrNull()
+                } ?: emptyList()
                 trySend(Result.success(items))
             }
         awaitClose { listener.remove() }
@@ -155,18 +161,43 @@ abstract class BaseRepository<T : Any>(
             firestore.runTransaction { tx -> actions(tx) }.await()
         }
 
-    // --- ⏭ Pagination helper (cursor) ---
-    protected suspend fun getPage(
+    // --- ⏭ Pagination helper ---
+    private val snapshotMap = mutableMapOf<String, DocumentSnapshot?>()
+
+    suspend fun fetchPage(
         pageSize: Int,
-        lastSnapshot: DocumentSnapshot? = null,
-        parentDocId: String? = null
-    ): Result<List<T>> =
-        runCatching {
-            var query: Query = getCollection(parentDocId).limit(pageSize.toLong())
-            if (lastSnapshot != null) query = query.startAfter(lastSnapshot)
-            query.getResults()
-        }
+        parentDocId: String? = null,
+        reset: Boolean = false,
+        query: Query? = null,
+        orderBy: Pair<String, Query.Direction>? = null,
+        key: String = childCollection // 👈 allows multiple independent paginations
+    ): PaginatedResult<T> {
+        if (reset) snapshotMap[key] = null
+
+        var q = query ?: getCollection(parentDocId)
+        orderBy?.let { q = q.orderBy(it.first, it.second) }
+        q = q.limit(pageSize.toLong())
+
+        snapshotMap[key]?.let { q = q.startAfter(it) }
+
+        val snapshot = q.get().await()
+        if (snapshot.isEmpty) return PaginatedResult(emptyList(), false)
+
+        snapshotMap[key] = snapshot.documents.last()
+
+        return PaginatedResult(
+            data = snapshot.documents.mapNotNull { doc ->
+                runCatching { doc.toObject(getType()) }.getOrNull()
+            },
+            hasMore = snapshot.size() == pageSize
+        )
+    }
 
     // Each repository defines its entity type
     protected abstract fun getType(): Class<T>
 }
+
+data class PaginatedResult<T>(
+    val data: List<T>,
+    val hasMore: Boolean
+)
