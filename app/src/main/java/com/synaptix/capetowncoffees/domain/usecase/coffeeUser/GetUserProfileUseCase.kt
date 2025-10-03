@@ -1,21 +1,21 @@
-package com.synaptix.capetowncoffees.domain.usecase.user
+package com.synaptix.capetowncoffees.domain.usecase.coffeeUser
 
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import javax.inject.Inject
 
 /**
  * Use case for retrieving a user profile.
  */
 class GetUserProfileUseCase @Inject constructor(
-    private val userRepository: IUserRepository
+    private val userRepository: ICoffeeUserRepository
 ) {
     /**
      * Retrieves a user profile.
      *
      * @param userId The ID of the user to fetch. If null, fetches the current user.
      */
-    suspend operator fun invoke(userId: String? = null): Result<User> {
+    suspend operator fun invoke(userId: String? = null): Result<CoffeeUser> {
         val id = userId ?: userRepository.getCurrentUserId()
         ?: return Result.failure(IllegalStateException("No authenticated user"))
 

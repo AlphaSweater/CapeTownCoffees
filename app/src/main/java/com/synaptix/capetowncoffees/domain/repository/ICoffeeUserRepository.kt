@@ -1,14 +1,14 @@
 package com.synaptix.capetowncoffees.domain.repository
 
 import com.google.firebase.auth.FirebaseUser
-import com.synaptix.capetowncoffees.domain.model.User
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
 import kotlinx.coroutines.flow.Flow
 
 /**
  * IUserRepository defines the contract for accessing and managing user authentication and profiles.
  * It supports registration, login, profile management, password reset, and observing authentication state.
  */
-interface IUserRepository {
+interface ICoffeeUserRepository {
     // ----------------------------
     // Auth related
     // ----------------------------
@@ -33,7 +33,7 @@ interface IUserRepository {
      * @param fullName The user's full name.
      * @return Result containing the created User domain object, or an error.
      */
-    suspend fun registerUser(email: String, password: String, fullName: String): Result<User>
+    suspend fun registerUser(email: String, password: String, fullName: String): Result<CoffeeUser>
 
     /**
      * Checks if an email address is already registered.
@@ -79,20 +79,20 @@ interface IUserRepository {
      * @param userId The user's UID.
      * @return Result containing the User domain object, or null if not found.
      */
-    suspend fun getUserProfile(userId: String): Result<User?>
+    suspend fun getUserProfile(userId: String): Result<CoffeeUser?>
 
     /**
      * Gets the profile of the currently authenticated user.
      * @return Result containing the User domain object, or null if not found or not logged in.
      */
-    suspend fun getCurrentUserProfile(): Result<User?>
+    suspend fun getCurrentUserProfile(): Result<CoffeeUser?>
 
     /**
      * Observes real-time updates to a user's profile by UID.
      * @param userId The user's UID.
      * @return Flow emitting the User domain object, or null if not found.
      */
-    fun observeUserProfile(userId: String): Flow<User?>
+    fun observeUserProfile(userId: String): Flow<CoffeeUser?>
 
     /**
      * Updates a user's profile in Firestore.
@@ -100,7 +100,7 @@ interface IUserRepository {
      * @param user The updated User domain object.
      * @return Result indicating success or failure.
      */
-    suspend fun updateUserProfile(userId: String, user: User): Result<Unit>
+    suspend fun updateUserProfile(userId: String, user: CoffeeUser): Result<Unit>
 
     /**
      * Deletes the currently authenticated user's account and profile.

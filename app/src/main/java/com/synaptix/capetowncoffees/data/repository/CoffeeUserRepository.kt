@@ -6,10 +6,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.mapper.toDTO
 import com.synaptix.capetowncoffees.data.mapper.toDomain
-import com.synaptix.capetowncoffees.data.model.UserDTO
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
-import com.synaptix.capetowncoffees.util.TimeUtils
+import com.synaptix.capetowncoffees.data.model.CoffeeUserDTO
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,15 +19,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UserRepository @Inject constructor(
+class CoffeeUserRepository @Inject constructor(
     private val auth: FirebaseAuth,
     firestore: FirebaseFirestore
-) : BaseRepository<UserDTO>(
+) : BaseRepository<CoffeeUserDTO>(
     firestore = firestore,
     childCollection = "users"
-), IUserRepository {
+), ICoffeeUserRepository {
 
-    override fun getType(): Class<UserDTO> = UserDTO::class.java
+    override fun getType(): Class<CoffeeUserDTO> = CoffeeUserDTO::class.java
 
     // ----------------------------
     // Auth related
@@ -36,13 +36,13 @@ class UserRepository @Inject constructor(
     override fun getCurrentUser(): FirebaseUser? = auth.currentUser
     override fun getCurrentUserId(): String? = auth.currentUser?.uid
 
-    override suspend fun registerUser(email: String, password: String, fullName: String): Result<User> {
+    override suspend fun registerUser(email: String, password: String, fullName: String): Result<CoffeeUser> {
         val authResult = auth.createUserWithEmailAndPassword(email, password).await()
         val firebaseUser = authResult.user ?: return Result.failure(Exception("Failed to create user"))
-        val newUserDTO = UserDTO.newUserDTO(firebaseUser.uid, email, fullName)
-        val createResult = create(newUserDTO, firebaseUser.uid)
+        val newCoffeeUserDTO = CoffeeUserDTO.newUserDTO(firebaseUser.uid, email, fullName)
+        val createResult = create(newCoffeeUserDTO, firebaseUser.uid)
         return if (createResult.isSuccess) {
-            Result.success(newUserDTO.toDomain())
+            Result.success(newCoffeeUserDTO.toDomain())
         } else {
             Result.failure(createResult.exceptionOrNull() ?: Exception("Failed to create user in Firestore"))
         }
@@ -83,7 +83,7 @@ class UserRepository @Inject constructor(
     // User profile (Firestore)
     // ----------------------------
 
-    override suspend fun getUserProfile(userId: String): Result<User?> {
+    override suspend fun getUserProfile(userId: String): Result<CoffeeUser?> {
         val result = getById(userId)
         return if (result.isSuccess) {
             Result.success(result.getOrNull()?.toDomain())
@@ -92,16 +92,16 @@ class UserRepository @Inject constructor(
         }
     }
 
-    override suspend fun getCurrentUserProfile(): Result<User?> {
+    override suspend fun getCurrentUserProfile(): Result<CoffeeUser?> {
         val userId = getCurrentUserId() ?: return Result.failure(Exception("No user logged in"))
         return getUserProfile(userId)
     }
 
-    override fun observeUserProfile(userId: String): Flow<User?> =
+    override fun observeUserProfile(userId: String): Flow<CoffeeUser?> =
         observeDocument(userId).map { it.getOrNull()?.toDomain() }
 
-    override suspend fun updateUserProfile(userId: String, user: User): Result<Unit> {
-        val updatedUser = user.copy(updatedAt = TimeUtils.nowSeconds())
+    override suspend fun updateUserProfile(userId: String, user: CoffeeUser): Result<Unit> {
+        val updatedUser = user.copy(updatedAt = CoffeeTimeUtils.nowSeconds())
         return update(userId, updatedUser.toDTO())
     }
 

@@ -1,12 +1,12 @@
 package com.synaptix.capetowncoffees.data.mapper
 
-import com.synaptix.capetowncoffees.data.model.UserDTO
-import com.synaptix.capetowncoffees.domain.model.User
+import com.synaptix.capetowncoffees.data.model.CoffeeUserDTO
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
 
 // --- Mappers ---
 
 // Extension functions to convert between User and UserDTO
-fun User.toDTO(): UserDTO = UserDTO(
+fun CoffeeUser.toDTO(): CoffeeUserDTO = CoffeeUserDTO(
     id = id,
     email = email,
     fullName = fullName,
@@ -17,7 +17,7 @@ fun User.toDTO(): UserDTO = UserDTO(
 )
 
 // Converts UserDTO to User
-fun UserDTO.toDomain(): User = User(
+fun CoffeeUserDTO.toDomain(): CoffeeUser = CoffeeUser(
     id = id,
     email = email,
     fullName = fullName ?: "",

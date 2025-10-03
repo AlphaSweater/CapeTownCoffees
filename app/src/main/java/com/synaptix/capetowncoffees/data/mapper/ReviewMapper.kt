@@ -4,7 +4,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeeReview as MyReview
 import com.synaptix.capetowncoffees.data.model.AppReviewDTO
 import com.google.android.libraries.places.api.model.Review as GoogleReview
 import com.synaptix.capetowncoffees.domain.model.ReviewSource
-import com.synaptix.capetowncoffees.util.TimeUtils
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 
 /**
  * Mapper for converting between review DTOs and the unified domain Review model.
@@ -18,7 +18,7 @@ object ReviewMapper {
         val authorAttribution = googleReview.authorAttribution
         val googleTime = googleReview.publishTime // ISO8601 string
         val utcSeconds = try {
-            TimeUtils.parseIsoToSeconds(googleTime)
+            CoffeeTimeUtils.parseIsoToSeconds(googleTime)
         } catch (e: Exception) {
             null
         }

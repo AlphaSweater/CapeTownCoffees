@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.domain.usecase.auth
 
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import javax.inject.Inject
 import timber.log.Timber
 
@@ -16,7 +16,7 @@ sealed class LoginResult {
 
 // UseCase class for handling user login logic
 class LoginUserUseCase @Inject constructor(
-    private val IUserRepository: IUserRepository
+    private val ICoffeeUserRepository: ICoffeeUserRepository
 ) {
     // Invokes the login process with email and password parameters
     // Returns a LoginResult indicating the outcome
@@ -24,7 +24,7 @@ class LoginUserUseCase @Inject constructor(
         Timber.d("LoginUserUseCase invoked: email=%s", email)
         return try {
             Timber.d("Attempting login for email: %s", email)
-            IUserRepository.loginUser(email, password)
+            ICoffeeUserRepository.loginUser(email, password)
                 .onSuccess {
                     Timber.d("Login successful for email: %s", email)
                     return LoginResult.Success

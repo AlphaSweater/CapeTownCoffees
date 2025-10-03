@@ -1,17 +1,17 @@
-package com.synaptix.capetowncoffees.domain.usecase.user
+package com.synaptix.capetowncoffees.domain.usecase.coffeeUser
 
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import javax.inject.Inject
 
 /**
  * Use case for editing the current user's profile.
  */
 class UpdateUserProfileUseCase @Inject constructor(
-    private val userRepository: IUserRepository
+    private val userRepository: ICoffeeUserRepository
 ) {
     /**
      * Updates the current user's profile, including profile picture if provided.
@@ -22,7 +22,7 @@ class UpdateUserProfileUseCase @Inject constructor(
      * @return Result<Unit> indicating success or failure.
      */
     suspend fun execute(
-        updatedUser: User,
+        updatedUser: CoffeeUser,
         profilePictureUri: Uri? = null,
         context: Context? = null
     ): Result<Unit> {

@@ -7,7 +7,8 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 
-interface ICoffeePlacesRepository {
+interface ICoffeePlaceRepository {
+    suspend fun checkCoffeePlaceExists(id: String): Result<Boolean>
     suspend fun addCoffeePlace(coffeePlace: CoffeePlaceDTO, placeId: String?): Result<String>
     suspend fun deleteCoffeePlace(id: String): Result<Unit>
     suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull>

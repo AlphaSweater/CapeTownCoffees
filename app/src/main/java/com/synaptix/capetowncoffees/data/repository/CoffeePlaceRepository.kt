@@ -8,7 +8,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
-import com.synaptix.capetowncoffees.domain.repository.ICoffeePlacesRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -23,13 +23,26 @@ class CoffeePlaceRepository @Inject constructor(
 ) : BaseRepository<CoffeePlaceDTO>(
     firestore = firestore,
     childCollection = "coffee_places"
-), ICoffeePlacesRepository {
+), ICoffeePlaceRepository {
 
     override fun getType(): Class<CoffeePlaceDTO> = CoffeePlaceDTO::class.java
 
     // -----------------------------
     // Firestore management
     // -----------------------------
+    override suspend fun checkCoffeePlaceExists(id: String): Result<Boolean> {
+        return try {
+            val doc = getById(id)
+            if (doc.isSuccess) {
+                Result.success(true)
+            } else {
+                Result.success(false)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun addCoffeePlace(coffeePlace: CoffeePlaceDTO, placeId: String?): Result<String> {
         return try {
             if (placeId != null){

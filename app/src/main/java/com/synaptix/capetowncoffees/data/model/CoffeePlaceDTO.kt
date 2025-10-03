@@ -1,7 +1,7 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
-import com.synaptix.capetowncoffees.util.TimeUtils
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 
 data class CoffeePlaceDTO(
     @DocumentId
@@ -12,7 +12,7 @@ data class CoffeePlaceDTO(
         fun createNew(id: String): CoffeePlaceDTO {
             return CoffeePlaceDTO(
                 id = id,
-                addedAt = TimeUtils.nowSeconds()
+                addedAt = CoffeeTimeUtils.nowSeconds()
             )
         }
     }

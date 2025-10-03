@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.usecase.user.UpdateUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.UpdateUserProfileUseCase
 import com.synaptix.capetowncoffees.util.Resource
 import com.synaptix.capetowncoffees.util.errorOf
 import com.synaptix.capetowncoffees.util.loadingResource
@@ -14,9 +14,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.synaptix.capetowncoffees.domain.usecase.user.GetUserProfileUseCase
-import com.synaptix.capetowncoffees.domain.usecase.user.UpdateAuthCredentialsUseCase
-import com.synaptix.capetowncoffees.util.TimeUtils
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.UpdateAuthCredentialsUseCase
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
@@ -40,7 +40,7 @@ class EditProfileViewModel @Inject constructor(
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName.asStateFlow()
 
-    private var currentUser: User? = null
+    private var currentUser: CoffeeUser? = null
 
     private var profilePictureUri: Uri? = null
 
@@ -80,7 +80,7 @@ class EditProfileViewModel @Inject constructor(
             val updatedUser = currentUser?.copy(
                 fullName = _fullName.value.ifEmpty { null } ?: currentUser!!.fullName,
                 email = _email.value.ifEmpty { null } ?: currentUser!!.email,
-                updatedAt = TimeUtils.nowSeconds()
+                updatedAt = CoffeeTimeUtils.nowSeconds()
             ) ?: return@launch
 
             val safeEmail = _email.value

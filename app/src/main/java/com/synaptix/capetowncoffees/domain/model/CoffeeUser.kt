@@ -1,7 +1,7 @@
 package com.synaptix.capetowncoffees.domain.model
 
 // Domain model for user data in the application domain layer
-data class User(
+data class CoffeeUser(
     val id: String,
     val email: String,
     val fullName: String,
@@ -15,8 +15,8 @@ data class User(
             id: String,
             email: String,
             fullName: String
-        ): User {
-            return User(
+        ): CoffeeUser {
+            return CoffeeUser(
                 id = id,
                 email = email,
                 fullName = fullName,

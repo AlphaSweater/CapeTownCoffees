@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.domain.usecase.savedLists
+package com.synaptix.capetowncoffees.domain.usecase.coffeeList
 
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository

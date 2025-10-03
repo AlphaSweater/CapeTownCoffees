@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.domain.usecase.auth
 
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import javax.inject.Inject
 import timber.log.Timber
 
@@ -11,13 +11,13 @@ sealed class LogoutResult {
 }
 
 class LogoutUserUseCase @Inject constructor(
-    private val IUserRepository: IUserRepository
+    private val ICoffeeUserRepository: ICoffeeUserRepository
 ) {
     suspend operator fun invoke(): LogoutResult {
         Timber.d("LogoutUserUseCase invoked")
         return try {
             Timber.d("Attempting logout")
-            IUserRepository.logoutUser()
+            ICoffeeUserRepository.logoutUser()
                 .onSuccess {
                     Timber.d("Logout successful")
                     return LogoutResult.Success

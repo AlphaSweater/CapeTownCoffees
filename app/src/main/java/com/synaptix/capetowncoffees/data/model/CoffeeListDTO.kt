@@ -1,7 +1,7 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
-import com.synaptix.capetowncoffees.util.TimeUtils
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import com.synaptix.capetowncoffees.domain.model.CoffeeList as DomainList
 
 data class UserListDTO(
@@ -12,8 +12,8 @@ data class UserListDTO(
     @field:JvmField
     val isPublic: Boolean = false,
     val placeIds: List<String>? = null,
-    val createdAt: Long = TimeUtils.nowSeconds(),
-    val updatedAt: Long = TimeUtils.nowSeconds(),
+    val createdAt: Long = CoffeeTimeUtils.nowSeconds(),
+    val updatedAt: Long = CoffeeTimeUtils.nowSeconds(),
 ) {
     companion object {
         fun fromDomain(list: DomainList): UserListDTO = UserListDTO(
@@ -22,8 +22,8 @@ data class UserListDTO(
             description = list.description,
             isPublic = list.isPublic,
             placeIds = list.placeIds,
-            createdAt = TimeUtils.nowSeconds(),
-            updatedAt = TimeUtils.nowSeconds()
+            createdAt = CoffeeTimeUtils.nowSeconds(),
+            updatedAt = CoffeeTimeUtils.nowSeconds()
         )
     }
 }

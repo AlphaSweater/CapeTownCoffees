@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit
  * Utility functions for time conversion, formatting, and comparison.
  * All timestamps are in UTC seconds internally unless otherwise specified.
  */
-object TimeUtils {
+object CoffeeTimeUtils {
     // -----------------------------
     // Formatters (constants)
     // -----------------------------

@@ -3,9 +3,9 @@ package com.synaptix.capetowncoffees.di
 import com.synaptix.capetowncoffees.data.repository.PlacesApiRepository
 import com.synaptix.capetowncoffees.data.repository.CoffeeListRepository
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
-import com.synaptix.capetowncoffees.data.repository.UserRepository
+import com.synaptix.capetowncoffees.data.repository.CoffeeUserRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,8 +19,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        impl: UserRepository
-    ): IUserRepository
+        impl: CoffeeUserRepository
+    ): ICoffeeUserRepository
 
     @Binds
     @Singleton
