@@ -30,47 +30,28 @@ class CoffeeListRepository @Inject constructor(
     // ----------------------------
     // CRUD
     // ----------------------------
-    override suspend fun getLists(): Result<List<CoffeeList>> {
-        val dtoResult = getAll(parentDocId = auth.currentUser?.uid)
-        return if (dtoResult.isSuccess) {
-            Result.success(dtoResult.getOrNull()?.map { it.toDomain() } ?: emptyList())
-        } else {
-            Result.failure(dtoResult.exceptionOrNull() ?: Exception("Error fetching coffee lists"))
-        }
-    }
+    override suspend fun getLists(): Result<List<CoffeeList>> =
+        getAll(parentDocId = currentUidOrNull())
+            .map { list -> list.orEmpty().map { it.toDomain() } }
 
     override suspend fun createList(newCoffeeList: CoffeeList): Result<String> {
-        return try {
-            create(newCoffeeList.toDTO(), parentDocId = auth.currentUser?.uid)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val uid = currentUidOrNull() ?: return Result.failure(IllegalStateException("No user logged in"))
+        return create(newCoffeeList.toDTO(), parentDocId = uid)
     }
 
     override suspend fun updateList(id: String, updatedCoffeeList: CoffeeList): Result<Unit> {
-        return try {
-            update(id, updatedCoffeeList.toDTO(), parentDocId = auth.currentUser?.uid)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val uid = currentUidOrNull() ?: return Result.failure(IllegalStateException("No user logged in"))
+        return update(id, updatedCoffeeList.toDTO(), parentDocId = uid)
     }
 
     override suspend fun deleteList(id: String): Result<Unit> {
-        return try {
-            delete(id, parentDocId = auth.currentUser?.uid)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        val uid = currentUidOrNull() ?: return Result.failure(IllegalStateException("No user logged in"))
+        return delete(id, parentDocId = uid)
     }
 
-    override suspend fun getListById(id: String): Result<CoffeeList?> {
-        val dtoResult = getById(id, parentDocId = auth.currentUser?.uid)
-        return if (dtoResult.isSuccess) {
-            Result.success(dtoResult.getOrNull()?.toDomain())
-        } else {
-            Result.failure(dtoResult.exceptionOrNull() ?: Exception("Error fetching coffee list by id"))
-        }
-    }
+    override suspend fun getListById(id: String): Result<CoffeeList?> =
+        getById(id, parentDocId = currentUidOrNull())
+            .map { it?.toDomain() }
 
     // ----------------------------
     // Pagination
@@ -80,15 +61,15 @@ class CoffeeListRepository @Inject constructor(
         reset: Boolean,
         orderBy: Pair<String, Query.Direction>?
     ): PaginatedResult<CoffeeList> {
-        val dtoResult = fetchPage(
+        val dtoPage = fetchPage(
             pageSize = pageSize,
-            parentDocId = auth.currentUser?.uid,
+            parentDocId = currentUidOrNull(),
             reset = reset,
             orderBy = orderBy
         )
         return PaginatedResult(
-            data = dtoResult.data.map { it.toDomain() },
-            hasMore = dtoResult.hasMore
+            data = dtoPage.data.map { it.toDomain() },
+            hasMore = dtoPage.hasMore
         )
     }
 
@@ -104,5 +85,9 @@ class CoffeeListRepository @Inject constructor(
         observeDocument(documentId = id, parentDocId = parentDocId).map { result ->
             result.getOrNull()?.toDomain()
         }
-}
 
+    // ----------------------------
+    // Helpers
+    // ----------------------------
+    private fun currentUidOrNull(): String? = auth.currentUser?.uid
+}

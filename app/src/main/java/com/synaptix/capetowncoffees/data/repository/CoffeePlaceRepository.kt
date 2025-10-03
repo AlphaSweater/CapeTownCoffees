@@ -19,7 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class CoffeePlaceRepository @Inject constructor(
     firestore: FirebaseFirestore,
-    private val placesApiRepository: IPlacesApiRepository // depend on the interface, not impl
+    private val placesApiRepository: IPlacesApiRepository
 ) : BaseRepository<CoffeePlaceDTO>(
     firestore = firestore,
     childCollection = "coffee_places"
@@ -30,58 +30,32 @@ class CoffeePlaceRepository @Inject constructor(
     // -----------------------------
     // Firestore management
     // -----------------------------
-    override suspend fun checkCoffeePlaceExists(id: String): Result<Boolean> {
-        return try {
-            val doc = getById(id)
-            if (doc.isSuccess) {
-                Result.success(true)
-            } else {
-                Result.success(false)
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    override suspend fun checkCoffeePlaceExists(id: String): Result<Boolean> =
+        getById(id).map { it != null }
 
-    override suspend fun addCoffeePlace(coffeePlace: CoffeePlaceDTO, placeId: String?): Result<String> {
-        return try {
-            if (placeId != null){
-                create(coffeePlace, id = placeId)
-            } else {
-                create(coffeePlace)
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    override suspend fun addCoffeePlace(
+        coffeePlace: CoffeePlaceDTO,
+        placeId: String?
+    ): Result<String> =
+        if (placeId != null) create(coffeePlace, id = placeId) else create(coffeePlace)
 
-    override suspend fun deleteCoffeePlace(id: String): Result<Unit> {
-        return try {
-            delete(id)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+    override suspend fun deleteCoffeePlace(id: String): Result<Unit> = delete(id)
 
     // -----------------------------
     // Fetch details (Google + Firestore merge)
     // -----------------------------
     override suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull> = coroutineScope {
         val apiDeferred = async { placesApiRepository.getCoffeePlaceDetails(placeId) }
-        val dbDeferred = async { getById(placeId) }
+        val dbDeferred  = async { getById(placeId) }
 
         val apiResult = apiDeferred.await()
-        val dbResult = dbDeferred.await()
+        val dbResult  = dbDeferred.await()
 
-        if (apiResult.isFailure) return@coroutineScope apiResult
-        val googlePlace = apiResult.getOrNull() ?: return@coroutineScope Result.failure(Exception("No place found from API"))
-        val appPlaceDTO = dbResult.getOrNull()
-
-        val mergedPlace = if (appPlaceDTO != null) {
-            mergeFullPlace(googlePlace, appPlaceDTO)
-        } else googlePlace
-
-        Result.success(mergedPlace)
+        // If API failed, just return that failure as-is.
+        apiResult.mapCatching { googlePlace ->
+            val appPlaceDTO = dbResult.getOrNull()
+            if (appPlaceDTO != null) mergeFullPlace(googlePlace, appPlaceDTO) else googlePlace
+        }
     }
 
     // -----------------------------
@@ -90,31 +64,20 @@ class CoffeePlaceRepository @Inject constructor(
     override suspend fun searchNearbyCoffeePlaces(
         params: CoffeeSearchParameters,
         userLatLng: LatLng
-    ): Result<List<CoffeePlaceLite>> {
-        return try {
-            // Step 1: Fetch from Google API
-            val apiResult = placesApiRepository.searchNearbyCoffeePlaces(params, userLatLng)
-            if (apiResult.isFailure) return apiResult
-            val apiPlaces = apiResult.getOrNull().orEmpty()
+    ): Result<List<CoffeePlaceLite>> =
+        placesApiRepository.searchNearbyCoffeePlaces(params, userLatLng)
+            .onFailure { Timber.e(it, "Failed to search nearby coffee places (API)") }
+            .mapCatching { apiPlaces ->
+                val apiIds = apiPlaces.map { it.id }
+                val localMap = getItemsByIds(apiIds)
+                    .onFailure { Timber.w(it, "Local DB lookup failed, continuing with API results") }
+                    .getOrElse { emptyList() }
+                    .associateBy { it.id }
 
-            // Step 2: Collect API place IDs and fetch all matching CoffeePlaces in our DB
-            val apiIds = apiPlaces.map { it.id }
-            val localResult = getItemsByIds(apiIds)
-            val localPlaces = localResult.getOrNull().orEmpty()
-            val localMap = localPlaces.associateBy { it.id }
-
-            // Step 3: Merge API places with local data if available
-            val mergedPlaces = apiPlaces.map { apiPlace ->
-                val appData = localMap[apiPlace.id]
-                if (appData != null) mergeLitePlace(apiPlace, appData) else apiPlace
+                apiPlaces.map { apiPlace ->
+                    localMap[apiPlace.id]?.let { app -> mergeLitePlace(apiPlace, app) } ?: apiPlace
+                }
             }
-
-            Result.success(mergedPlaces)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to search nearby coffee places")
-            Result.failure(e)
-        }
-    }
 
     // -----------------------------
     // Autocomplete suggestions (Google-only for now)
@@ -122,33 +85,25 @@ class CoffeePlaceRepository @Inject constructor(
     override suspend fun getSuggestions(
         query: String,
         userLatLng: LatLng
-    ): Result<List<CoffeePlaceSuggestion>> {
-        return try {
-            val apiResult = placesApiRepository.getSuggestions(query, userLatLng)
-            if (apiResult.isFailure) return apiResult
-            val apiSuggestions = apiResult.getOrNull().orEmpty()
-
-            Result.success(apiSuggestions)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to get suggestions")
-            Result.failure(e)
-        }
-    }
+    ): Result<List<CoffeePlaceSuggestion>> =
+        placesApiRepository.getSuggestions(query, userLatLng)
+            .onFailure { Timber.e(it, "Failed to get suggestions") }
+            .map { it.orEmpty() }
 
     // -----------------------------
     // Merge helpers
     // -----------------------------
     private fun mergeFullPlace(apiPlace: CoffeePlaceFull, appData: CoffeePlaceDTO): CoffeePlaceFull {
-        // TODO: merge any relevant app data fields such as ratings, review counts and reviews
+        // TODO: merge relevant app data (ratings, review counts, flags, etc.)
         return apiPlace.copy(
-            // keeps api data by default
+            // keep API as source of truth by default; overlay appData fields as needed
         )
     }
 
     private fun mergeLitePlace(apiPlace: CoffeePlaceLite, appData: CoffeePlaceDTO): CoffeePlaceLite {
-        // TODO: merge any relevant app data fields such as ratings and review counts
+        // TODO: merge relevant app data (ratings, review counts, "liked"/"saved" flags, etc.)
         return apiPlace.copy(
-            // keeps api data by default
+            // keep API as source of truth by default; overlay appData fields as needed
         )
     }
 }
