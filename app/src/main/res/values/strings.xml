@@ -48,6 +48,7 @@
 
     <!-- Common Actions -->
     <string name="action_next">Next</string>
+    <string name="directions">Get Directions</string>
     <string name="action_back">Back</string>
 
     <!-- Theme Menu -->
@@ -99,4 +100,9 @@
     <string name="cafe_rating">4.6 (5203)</string>
     <string name="distance">1.2 km away</string>
     <string name="featured_label">FEATURED</string>
+
+    <string name="about">About</string>
+    <string name="opening_hours">Opening Hours</string>
+    <string name="contact">Contact</string>
+    <string name="top_reviews">Top Reviews</string>
 </resources>

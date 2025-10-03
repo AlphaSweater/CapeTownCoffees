@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -24,13 +25,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.FeaturedAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.NearMeAdapter
+import com.synaptix.capetowncoffees.ui.home.adapter.*
+import com.synaptix.capetowncoffees.ui.savedLists.CafeDetailViewModel
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -40,16 +42,21 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
+    @Inject
+    lateinit var placesClient: PlacesClient
+    
+    @Inject
+    lateinit var fusedLocationClient: FusedLocationProviderClient
+    
     private var _binding: FragmentHomeNewBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModels()
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    @Inject
-    lateinit var placesClient: com.google.android.libraries.places.api.net.PlacesClient
+    private val cafeDetailViewModel: CafeDetailViewModel by activityViewModels()
     
     private val categories = listOf(
         Category(1, "All", R.drawable.ic_medal),
+        Category(2, "Popular", R.drawable.ic_star),
         Category(3, "Pet Friendly", R.drawable.baseline_pets_24),
         Category(4, "Nearby", R.drawable.ic_location),
         Category(5, "Dates", R.drawable.ic_heart)
@@ -69,7 +76,7 @@ class HomeFragment : Fragment() {
             currentLocation = null,
             onItemClick = { featuredItem ->
                 // Handle featured item click
-                // navigateToCafeDetails(featuredItem)
+                navigateToCafeDetails(featuredItem)
             }
         )
 
@@ -309,13 +316,17 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToCafeDetails(coffeePlace: CoffeePlaceLite) {
-        val action = HomeFragmentDirections.actionHomeFragmentToCafeDetailFragment(
-            cafeName = coffeePlace.name ?: "Cafe",
-            cafeRating = coffeePlace.rating?.toFloat() ?: 0f,
-            cafeDistance = 0f, // You might want to calculate this
-            cafePriceRange = coffeePlace.priceLevel?.let { "$".repeat(it.coerceAtMost(4)) } ?: "$"
-        )
-        findNavController().navigate(action)
+        try {
+            val bundle = Bundle().apply {
+                putString("placeId", coffeePlace.id)
+            }
+            findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
+        } catch (e: Exception) {
+            Timber.e(e, "Error navigating to cafe detail")
+            if (findNavController().currentDestination?.id == R.id.homeFragment) {
+                findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment)
+            }
+        }
     }
 
     override fun onDestroyView() {

@@ -10,7 +10,10 @@ import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -22,6 +25,9 @@ class HomeViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    
+    private val _selectedCafe = MutableSharedFlow<Pair<CoffeePlaceLite, LatLng?>>(replay = 1)
+    val selectedCafe: SharedFlow<Pair<CoffeePlaceLite, LatLng?>> = _selectedCafe.asSharedFlow()
 
     private var currentLocation: LatLng? = null
     private var allPlaces: List<CoffeePlaceLite> = emptyList()
@@ -82,6 +88,12 @@ class HomeViewModel @Inject constructor(
 
     private fun updateUiWithFilteredPlaces() {
         filterPlaces()
+    }
+    
+    fun setSelectedCafe(cafe: CoffeePlaceLite, location: LatLng?) {
+        viewModelScope.launch {
+            _selectedCafe.emit(cafe to location)
+        }
     }
 
     private fun loadData() {

@@ -13,10 +13,10 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 
-import android.location.Location
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.google.android.gms.maps.model.LatLng
+import com.synaptix.capetowncoffees.util.calculateDistanceTo
 
 class NearMeAdapter(
     private val placesClient: PlacesClient,
@@ -55,25 +55,6 @@ class NearMeAdapter(
         submitList(newItems)
     }
     
-    private fun calculateDistance(latLng: LatLng?): String {
-        if (currentLocation == null || latLng == null) return ""
-        
-        val results = FloatArray(1)
-        Location.distanceBetween(
-            currentLocation!!.latitude,
-            currentLocation!!.longitude,
-            latLng.latitude,
-            latLng.longitude,
-            results
-        )
-        
-        val distanceInKm = results[0] / 1000 // Convert meters to kilometers
-        return if (distanceInKm < 1) {
-            "${String.format("%.0f", results[0])} m away"
-        } else {
-            "${String.format("%.1f", distanceInKm)} km away"
-        }
-    }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val cafe = getItem(position)
@@ -132,8 +113,9 @@ class NearMeAdapter(
         holder.name.text = cafe.name ?: ""
         
         // Set distance
-        val distanceText = calculateDistance(cafe.location)
+        val distanceText = currentLocation?.calculateDistanceTo(cafe.location) ?: ""
         holder.distance.text = distanceText
+        holder.distance.visibility = if (distanceText.isNotEmpty()) View.VISIBLE else View.GONE
         
         // Set rating
         cafe.rating?.let { rating ->
