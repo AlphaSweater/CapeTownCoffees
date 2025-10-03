@@ -1,6 +1,7 @@
 package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import com.synaptix.capetowncoffees.data.model.AppReviewDTO
@@ -9,6 +10,10 @@ import com.synaptix.capetowncoffees.domain.model.toDTO
 import com.synaptix.capetowncoffees.domain.model.toDomain
 import com.synaptix.capetowncoffees.domain.repository.IReviewRepository
 
+/**
+ * Firestore-backed implementation of IReviewRepository for reviews.
+ * Supports CRUD and paginated access for place and user reviews.
+ */
 class ReviewRepository(
     firestore: FirebaseFirestore
 ) : BaseRepository<AppReviewDTO>(
@@ -44,21 +49,14 @@ class ReviewRepository(
         return dtoResult.getOrNull()?.toDomain()
     }
 
-    /**
-     * Gets paginated reviews for a user from all places (collection group query).
-     * @param reviewerId The user ID.
-     * @param pageSize Number of reviews per page.
-     * @param reset If true, resets pagination for this user.
-     * @param orderBy Optional order by field and direction.
-     * @param key Unique key for pagination context (default: "user_" + reviewerId).
-     * @return PaginatedResult<Review> containing reviews and hasMore flag.
-     */
-    suspend fun getReviewsForUserPaginated(
+    // Paginated methods
+
+    override suspend fun getReviewsForUserPaginated(
         reviewerId: String,
         pageSize: Int,
-        reset: Boolean = false,
-        orderBy: Pair<String, com.google.firebase.firestore.Query.Direction>? = null,
-        key: String = "user_$reviewerId"
+        reset: Boolean,
+        orderBy: Pair<String, Query.Direction>?,
+        key: String
     ): PaginatedResult<Review> {
         val query = firestore.collectionGroup("reviews")
             .whereEqualTo("reviewerId", reviewerId)
@@ -76,21 +74,12 @@ class ReviewRepository(
         )
     }
 
-    /**
-     * Gets paginated reviews for a specific place.
-     * @param placeId The place ID.
-     * @param pageSize Number of reviews per page.
-     * @param reset If true, resets pagination for this place.
-     * @param orderBy Optional order by field and direction.
-     * @param key Unique key for pagination context (default: "place_" + placeId).
-     * @return PaginatedResult<Review> containing reviews and hasMore flag.
-     */
-    suspend fun getReviewsForPlacePaginated(
+    override suspend fun getReviewsForPlacePaginated(
         placeId: String,
         pageSize: Int,
-        reset: Boolean = false,
-        orderBy: Pair<String, com.google.firebase.firestore.Query.Direction>? = null,
-        key: String = "place_" + placeId
+        reset: Boolean,
+        orderBy: Pair<String, Query.Direction>?,
+        key: String
     ): PaginatedResult<Review> {
         val query = getCollection(placeId)
         val dtoResult = fetchPage(
