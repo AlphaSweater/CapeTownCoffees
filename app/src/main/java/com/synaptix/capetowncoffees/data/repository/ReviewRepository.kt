@@ -24,6 +24,9 @@ class ReviewRepository(
 
     override fun getType(): Class<AppReviewDTO> = AppReviewDTO::class.java
 
+    // ----------------------------
+    // CRUD
+    // ----------------------------
     override suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<Review>> {
         val dtoResult = getAllByFieldFromCollectionGroup("reviews", "reviewerId", reviewerId, limit)
         return if (dtoResult.isSuccess) {
@@ -65,8 +68,9 @@ class ReviewRepository(
         }
     }
 
-    // Paginated methods
-
+    // ----------------------------
+    // Pagination
+    // ----------------------------
     override suspend fun getReviewsForUserPaginated(
         reviewerId: String,
         pageSize: Int,

@@ -9,6 +9,10 @@ import com.google.firebase.firestore.Query
  * It supports CRUD operations and paginated access for both place and user reviews.
  */
 interface IReviewRepository {
+    // ----------------------------
+    // CRUD
+    // ----------------------------
+
     /**
      * Gets all reviews written by a user across all places.
      * @param reviewerId The user ID.
@@ -48,6 +52,10 @@ interface IReviewRepository {
      * @return Result containing the domain Review object, or null if not found.
      */
     suspend fun getReview(reviewId: String, placeId: String): Result<Review?>
+
+    // ----------------------------
+    // Pagination
+    // ----------------------------
 
     /**
      * Gets paginated reviews for a user from all coffee places.
