@@ -1,6 +1,6 @@
 package com.synaptix.capetowncoffees.domain.repository
 
-import com.synaptix.capetowncoffees.domain.model.Review
+import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import com.google.firebase.firestore.Query
 
@@ -8,7 +8,7 @@ import com.google.firebase.firestore.Query
  * IReviewRepository defines the contract for accessing and managing reviews in the domain layer.
  * It supports CRUD operations and paginated access for both place and user reviews.
  */
-interface IReviewRepository {
+interface ICoffeeReviewRepository {
     // ----------------------------
     // CRUD
     // ----------------------------
@@ -19,7 +19,7 @@ interface IReviewRepository {
      * @param limit Optional max number of reviews to return.
      * @return Result containing a list of domain Review objects.
      */
-    suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<Review>>
+    suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<CoffeeReview>>
 
     /**
      * Gets all reviews for a specific place.
@@ -27,15 +27,15 @@ interface IReviewRepository {
      * @param limit Optional max number of reviews to return.
      * @return Result containing a list of domain Review objects.
      */
-    suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<Review>>
+    suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<CoffeeReview>>
 
     /**
      * Adds a new review for a place. Only IN_APP reviews are allowed.
-     * @param review The domain Review object.
+     * @param coffeeReview The domain Review object.
      * @param placeId The place ID.
      * @return Result containing the Firestore document ID of the new review.
      */
-    suspend fun addReview(review: Review, placeId: String): Result<String>
+    suspend fun addReview(coffeeReview: CoffeeReview, placeId: String): Result<String>
 
     /**
      * Deletes a review for a place by its document ID.
@@ -51,7 +51,7 @@ interface IReviewRepository {
      * @param placeId The place ID.
      * @return Result containing the domain Review object, or null if not found.
      */
-    suspend fun getReview(reviewId: String, placeId: String): Result<Review?>
+    suspend fun getReview(reviewId: String, placeId: String): Result<CoffeeReview?>
 
     // ----------------------------
     // Pagination
@@ -72,7 +72,7 @@ interface IReviewRepository {
         reset: Boolean = false,
         orderBy: Pair<String, Query.Direction>? = null,
         key: String = "user_$reviewerId"
-    ): PaginatedResult<Review>
+    ): PaginatedResult<CoffeeReview>
 
     /**
      * Gets paginated reviews for a specific coffee place.
@@ -89,5 +89,5 @@ interface IReviewRepository {
         reset: Boolean = false,
         orderBy: Pair<String, Query.Direction>? = null,
         key: String = "place_$placeId"
-    ): PaginatedResult<Review>
+    ): PaginatedResult<CoffeeReview>
 }

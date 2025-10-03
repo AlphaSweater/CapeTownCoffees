@@ -5,29 +5,29 @@ import com.google.firebase.firestore.Query
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import com.synaptix.capetowncoffees.data.model.AppReviewDTO
-import com.synaptix.capetowncoffees.domain.model.Review
+import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.model.toDTO
 import com.synaptix.capetowncoffees.domain.model.toDomain
-import com.synaptix.capetowncoffees.domain.repository.IReviewRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeReviewRepository
 
 /**
  * Firestore-backed implementation of IReviewRepository for reviews.
  * Supports CRUD and paginated access for place and user reviews.
  */
-class ReviewRepository(
+class CoffeeReviewRepository(
     firestore: FirebaseFirestore
 ) : BaseRepository<AppReviewDTO>(
     firestore = firestore,
     parentCollection = "coffee_places",
     childCollection = "reviews"
-), IReviewRepository {
+), ICoffeeReviewRepository {
 
     override fun getType(): Class<AppReviewDTO> = AppReviewDTO::class.java
 
     // ----------------------------
     // CRUD
     // ----------------------------
-    override suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<Review>> {
+    override suspend fun getReviewsForUser(reviewerId: String, limit: Int?): Result<List<CoffeeReview>> {
         val dtoResult = getAllByFieldFromCollectionGroup("reviews", "reviewerId", reviewerId, limit)
         return if (dtoResult.isSuccess) {
             Result.success(dtoResult.getOrNull()?.map { it.toDomain() } ?: emptyList())
@@ -36,7 +36,7 @@ class ReviewRepository(
         }
     }
 
-    override suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<Review>> {
+    override suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<CoffeeReview>> {
         val dtoResult = getAll(limit = limit, parentDocId = placeId)
         return if (dtoResult.isSuccess) {
             Result.success(dtoResult.getOrNull()?.map { it.toDomain() } ?: emptyList())
@@ -45,8 +45,8 @@ class ReviewRepository(
         }
     }
 
-    override suspend fun addReview(review: Review, placeId: String): Result<String> {
-        val dto = review.toDTO()
+    override suspend fun addReview(coffeeReview: CoffeeReview, placeId: String): Result<String> {
+        val dto = coffeeReview.toDTO()
         return try {
             requireNotNull(dto) { "Only IN_APP reviews can be added." }
             create(dto, parentDocId = placeId)
@@ -59,7 +59,7 @@ class ReviewRepository(
         return delete(reviewId, parentDocId = placeId)
     }
 
-    override suspend fun getReview(reviewId: String, placeId: String): Result<Review?> {
+    override suspend fun getReview(reviewId: String, placeId: String): Result<CoffeeReview?> {
         val dtoResult = getById(reviewId, parentDocId = placeId)
         return if (dtoResult.isSuccess) {
             Result.success(dtoResult.getOrNull()?.toDomain())
@@ -77,7 +77,7 @@ class ReviewRepository(
         reset: Boolean,
         orderBy: Pair<String, Query.Direction>?,
         key: String
-    ): PaginatedResult<Review> {
+    ): PaginatedResult<CoffeeReview> {
         val query = firestore.collectionGroup("reviews")
             .whereEqualTo("reviewerId", reviewerId)
         val dtoResult = fetchPageFromCollectionGroup(
@@ -100,7 +100,7 @@ class ReviewRepository(
         reset: Boolean,
         orderBy: Pair<String, Query.Direction>?,
         key: String
-    ): PaginatedResult<Review> {
+    ): PaginatedResult<CoffeeReview> {
         val query = getCollection(placeId)
         val dtoResult = fetchPage(
             pageSize = pageSize,
