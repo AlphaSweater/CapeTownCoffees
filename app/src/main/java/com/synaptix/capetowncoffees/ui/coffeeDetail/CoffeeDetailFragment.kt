@@ -76,11 +76,12 @@ class CoffeeDetailFragment : Fragment() {
                 is Effect.Message  -> Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
                 is Effect.Navigate -> when (eff.route) {
                     // External map intent
+                    //TODO: Replace with provided Uri from google in the places model
                     "action_open_external_map" -> {
-                        val lat = eff.args?.getDouble("lat") ?: return@collect
-                        val lng = eff.args.getDouble("lng")
-                        val label = eff.args.getString("label").orEmpty()
-                        openMaps(LatLng(lat, lng), label)
+                        val args = eff.args ?: return@collect
+                        val mapUrl = args.getString("map_url") ?: return@collect
+                        val intent = Intent(Intent.ACTION_VIEW, mapUrl.toUri())
+                        startActivity(intent)
                     }
                     // Dial intent
                     "action_dial_phone" -> {

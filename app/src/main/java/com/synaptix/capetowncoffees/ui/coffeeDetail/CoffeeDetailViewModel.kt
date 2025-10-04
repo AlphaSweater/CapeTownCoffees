@@ -69,10 +69,10 @@ class CafeDetailViewModel @Inject constructor(
         placeId = id
 
         // One-shot fetch of full details (Result-aware)
-        fetchResultInto(place, suspend { getCoffeePlaceDetailsUseCase(placeId!!) }, label = "place")
+        fetchResultInto(place, { getCoffeePlaceDetailsUseCase(placeId!!) }, label = "place")
 
         // One-shot fetch of reviews (Result-aware)
-        fetchResultInto(reviews, suspend { getCoffeeReviewsForPlaceUseCase(placeId!!) }, label = "reviews")
+        fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(placeId!!) }, label = "reviews")
 
         // Whenever 'place' changes to Data, (re)compute Ui
         viewModelScope.launch {
@@ -87,13 +87,13 @@ class CafeDetailViewModel @Inject constructor(
 
     fun refresh() {
         val id = placeId ?: return
-        fetchResultInto(place, suspend { getCoffeePlaceDetailsUseCase(id) }, label = "place-refresh")
-        fetchResultInto(reviews, suspend { getCoffeeReviewsForPlaceUseCase(id) }, label = "reviews-refresh")
+        fetchResultInto(place, { getCoffeePlaceDetailsUseCase(id) }, label = "place-refresh")
+        fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(id) }, label = "reviews-refresh")
     }
 
     fun retryReviews() {
         val id = placeId ?: return
-        fetchResultInto(reviews, suspend { getCoffeeReviewsForPlaceUseCase(id) }, label = "reviews-retry")
+        fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(id) }, label = "reviews-retry")
     }
 
     /** Fragment tells us when it has a device location. */
@@ -104,14 +104,16 @@ class CafeDetailViewModel @Inject constructor(
 
     /** User taps address in the UI. Fragment will perform the Intent using these args. */
     fun onAddressClicked() {
-        val loc = placeLocation ?: return
-        val b = Bundle().apply {
-            putDouble("lat", loc.latitude)
-            putDouble("lng", loc.longitude)
-            putString("label", ui.value.address)
+        val placeData = place.value
+        if (placeData is Loadable.Data) {
+            val mapUrl = placeData.value.googleMapsUrl ?: return
+            val b = Bundle().apply {
+                putString("map_url", mapUrl)
+            }
+            main { send(Effect.Navigate("action_open_external_map", b)) }
         }
-        main { send(Effect.Navigate("action_open_external_map", b)) }
     }
+
 
     /** User taps phone. Fragment will perform the dial Intent using this arg. */
     fun onPhoneClicked() {
