@@ -6,20 +6,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.synaptix.capetowncoffees.databinding.FragmentSavedAddPlacesToListBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class AddPlacesToListFragment : Fragment() {
+class AddPlacesToListBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         private const val ARG_PLACE_ID = "arg_place_id"
-        fun newInstance(placeId: String) = AddPlacesToListFragment().apply {
+        fun new(placeId: String) = AddPlacesToListBottomSheet().apply {
             arguments = bundleOf(ARG_PLACE_ID to placeId)
         }
     }
@@ -31,9 +31,16 @@ class AddPlacesToListFragment : Fragment() {
     private val adapter = AddPlacesToListAdapter { _, _ -> }
     private var fullList: List<com.synaptix.capetowncoffees.domain.model.CoffeeList> = emptyList()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentSavedAddPlacesToListBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onStart() {
+        super.onStart()
+        (dialog as? BottomSheetDialog)?.behavior?.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,30 +59,17 @@ class AddPlacesToListFragment : Fragment() {
 
         binding.btnAdd.setOnClickListener {
             val selected = adapter.getSelected()
-            if (selected.isNotEmpty()) {
-                vm.confirm(placeId, selected)
-            } else {
-                findNavController().navigateUp()
-            }
+            if (selected.isNotEmpty()) vm.confirm(placeId, selected) else dismiss()
         }
 
-        vm.state.observe(viewLifecycleOwner, Observer { st ->
+        vm.state.observe(viewLifecycleOwner) { st ->
             when (st) {
                 is AddListsUiState.Loading -> binding.btnAdd.isEnabled = false
-                is AddListsUiState.Loaded -> {
-                    binding.btnAdd.isEnabled = true
-                    fullList = st.lists
-                    adapter.submitList(fullList)
-                }
-                is AddListsUiState.Error -> {
-                    binding.btnAdd.isEnabled = true
-                    // TODO show a toast/snackbar with st.message if you want
-                }
-                is AddListsUiState.Done -> {
-                    findNavController().navigateUp()
-                }
+                is AddListsUiState.Loaded  -> { binding.btnAdd.isEnabled = true; fullList = st.lists; adapter.submitList(fullList) }
+                is AddListsUiState.Error   -> { binding.btnAdd.isEnabled = true /* show toast/snackbar if you want */ }
+                is AddListsUiState.Done    -> dismiss()
             }
-        })
+        }
 
         vm.load()
     }
@@ -85,3 +79,4 @@ class AddPlacesToListFragment : Fragment() {
         _binding = null
     }
 }
+
