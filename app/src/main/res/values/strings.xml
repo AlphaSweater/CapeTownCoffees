@@ -123,4 +123,7 @@
     <string name="empty_state">Nothing Here</string>
     <string name="retry">Retry</string>
     <string name="addToList">Add place to list</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="cafe_image">Coffee Shop Image</string>
+    <string name="add_to_list">Add to List</string>
 </resources>

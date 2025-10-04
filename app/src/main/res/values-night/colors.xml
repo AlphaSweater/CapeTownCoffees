@@ -44,4 +44,9 @@
     <color name="google_button">#2A2A2A</color>
     <color name="google_button_stroke">#444444</color>
     <color name="google_button_text">#FFFFFF</color>
+
+    <color name="ctc_card_surface">#FF1E1E1E</color>       <!-- near-surface -->
+    <color name="ctc_card_stroke">#30FFFFFF</color>        <!-- ~19% white -->
+    <color name="ctc_icon_chip_bg">#26FFFFFF</color>       <!-- faint white chip -->
+    <color name="ctc_ripple">#22FFFFFF</color>             <!-- 13% white -->
 </resources>

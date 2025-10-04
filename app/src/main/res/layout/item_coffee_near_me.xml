@@ -2,54 +2,76 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Ctc.ElevatedCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
-    app:cardUseCompatPadding="false"
-    app:cardElevation="5dp"
-    app:strokeWidth="0dp"
-    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerExtraLarge">
+    android:foreground="?attr/selectableItemBackground"
+    android:stateListAnimator="@animator/ctc_card_lift">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Hero image -->
+        <!-- Hero image with only top corners rounded -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivImage"
             android:layout_width="0dp"
-            android:layout_height="220dp"
-            android:contentDescription="Image of Cafe"
+            android:layout_height="250dp"
+            android:foreground="?attr/selectableItemBackground"
             android:scaleType="centerCrop"
             android:src="@drawable/featured_placeholder"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/RoundedImage16" />
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.TopRounded16" />
 
-        <!-- Favorite toggle (overlay, top-right) -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnFavorite"
-            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+        <!-- Subtle top scrim over image (helps icons pop) -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:background="@drawable/ctc_top_scrim"
+            app:layout_constraintStart_toStartOf="@id/ivImage"
+            app:layout_constraintEnd_toEndOf="@id/ivImage"
+            app:layout_constraintTop_toTopOf="@id/ivImage"/>
+
+        <FrameLayout
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_gravity="top|start"
             android:layout_margin="12dp"
-            android:checkable="true"
-            android:contentDescription="Add to favorites"
-            android:backgroundTint="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="@id/ivImage"
-            app:layout_constraintTop_toTopOf="@id/ivImage"
-            app:icon="@drawable/ic_ctc_heart"
-            app:iconSize="20dp"
-            app:iconGravity="textStart"
-            app:iconTint="@color/error_red"
-            app:checkedIcon="@drawable/ic_ctc_heart_filled"
-            app:checkedIconTint="@color/error_red"
-            />
+            app:layout_constraintTop_toTopOf="@id/ivImage">
 
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ctc_circle_chip"
+                android:padding="8dp"
+                android:src="@drawable/ic_ctc_heart"
+                android:contentDescription="@string/add_to_list"
+                app:tint="@color/error_red" />
 
-        <!-- Content container under image -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFavorite"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/add_to_favorites"
+                app:backgroundTint="@android:color/transparent"
+                app:rippleColor="@color/coffee_accent_light"
+                app:icon="@null"
+                app:iconGravity="textStart"
+                app:iconSize="0dp"
+                app:iconTint="@android:color/transparent" />
+        </FrameLayout>
+
+        <!-- Content -->
         <LinearLayout
             android:id="@+id/contentContainer"
             android:layout_width="0dp"
@@ -62,52 +84,63 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ivImage">
 
-            <!-- Title + add-to-list on the right -->
+            <!-- Title + right-aligned download chip -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <TextView
                     android:id="@+id/tvCafeName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:maxLines="2"
                     android:ellipsize="end"
-                    android:maxLines="1"
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textColor="@color/text_primary"
-                    android:text="@string/cafe_name" />
+                    tools:text="Truth Coffee Roasting" />
 
-                <com.google.android.material.button.MaterialButton
+                <!-- 40dp touch target with ripple -->
+                <FrameLayout
                     android:id="@+id/btnAddToList"
-                    style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:contentDescription="Add to list"
-                    android:backgroundTint="@color/coffee_accent_light"
-                    app:icon="@drawable/ic_ctc_plus"
-                    app:rippleColor="@color/coffee_accent"
-                    app:iconSize="20dp"
-                    app:iconGravity="textStart"
-                    app:iconTint="@color/button_text" />
-            </LinearLayout>
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:foregroundGravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="@string/add_to_list">
 
-            <!-- Address row -->
+                <!-- 32dp visual chip (circle bg + plus icon) -->
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ctc_circle_chip"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_ctc_plus"
+                    android:contentDescription="@null"
+                    app:tint="@color/text_primary"/>
+            </FrameLayout>
+
+        </LinearLayout>
+
+            <!-- Address -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:contentDescription="@string/location"
                     android:src="@drawable/ic_location"
-                    app:tint="@color/icon_primary" />
+                    android:contentDescription="@string/location"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvCafeAddress"
@@ -115,61 +148,61 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="@string/location"
+                    android:ellipsize="end"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="@color/text_favourite" />
+                    android:textColor="@color/text_secondary"
+                    tools:text="36 Buitenkant St, Cape Town" />
             </LinearLayout>
 
-            <!-- Distance row -->
+            <!-- Distance -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:contentDescription="@string/distance"
                     android:src="@drawable/ic_location"
-                    app:tint="@color/icon_primary" />
+                    android:contentDescription="@string/distance"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvDistance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="@string/distance"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="@color/text_favourite" />
+                    android:textColor="@color/text_secondary"
+                    tools:text="1.2 km" />
             </LinearLayout>
 
-            <!-- Rating row -->
+            <!-- Rating + (optional) price -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:contentDescription="Star rating"
                     android:src="@drawable/ic_star"
-                    app:tint="@color/icon_primary" />
+                    android:contentDescription="@string/cafe_rating"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvCafeRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
-                    android:text="@string/cafe_rating"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="@color/text_favourite" />
+                    android:textColor="@color/text_secondary"
+                    tools:text="4.6 (1.2k)" />
 
                 <View
                     android:layout_width="0dp"
@@ -180,21 +213,9 @@
                     android:id="@+id/tvCafePrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp"
-                    android:text=""
-                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                    android:textColor="@android:color/transparent"
-                    android:background="@null"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    tools:text="R ••" />
             </LinearLayout>
         </LinearLayout>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="8dp"
-            app:layout_constraintTop_toBottomOf="@id/contentContainer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

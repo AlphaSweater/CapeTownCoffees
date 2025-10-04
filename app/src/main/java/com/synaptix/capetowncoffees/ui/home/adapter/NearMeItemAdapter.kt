@@ -14,6 +14,7 @@ import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsU
 import com.synaptix.capetowncoffees.ui.common.recyclerKit.BaseAdapter
 import com.synaptix.capetowncoffees.ui.common.recyclerKit.BaseViewHolder
 import com.synaptix.capetowncoffees.ui.common.recyclerKit.simpleDiff
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -49,7 +50,7 @@ class NearMeItemAdapter @AssistedInject constructor(
         sameContent = { o, n -> o == n },
         payload = { o, n ->
             //TODO: Uncomment when we add a favorite flag to domain model
-            // if (o.isFavorite != n.isFavorite) PAYLOAD_FAV else null
+            if (o.isFavorite != n.isFavorite) PAYLOAD_FAV else null
             null
         }
     ),
@@ -146,8 +147,9 @@ class NearMeItemAdapter @AssistedInject constructor(
                 root.setOnClickListener { onClick(Click.Open(id)) }
                 ivImage.setOnClickListener { onClick(Click.Open(id)) }
                 btnFavorite.setOnClickListener {
-                    val newValue = !btnFavorite.isChecked
+                    val newValue = btnFavorite.isChecked
                     onClick(Click.ToggleFavorite(id, newValue))
+                    item.isFavorite = newValue // update cached value
                     btnFavorite.isChecked = newValue
                 }
                 btnAddToList.setOnClickListener { onClick(Click.AddToList(id)) }
@@ -155,7 +157,7 @@ class NearMeItemAdapter @AssistedInject constructor(
 
             override fun bind(item: CoffeePlaceLite, payloads: List<Any>) {
                 if (payloads.contains(PAYLOAD_FAV)) {
-                    // vb.btnFavorite.isChecked = item.isFavorite
+                    vb.btnFavorite.isChecked = item.isFavorite
                 } else bind(item)
             }
         }
@@ -166,7 +168,7 @@ class NearMeItemAdapter @AssistedInject constructor(
  * ───────────────────────────────────────── */
 
 class DistanceFormatter @Inject constructor(
-    private val locationUtil: com.synaptix.capetowncoffees.util.LocationUtil
+    private val locationUtil: LocationUtil
 ) {
     fun label(user: LatLng?, place: LatLng?): String? {
         val meters = locationUtil.distanceMeters(user, place)

@@ -212,6 +212,7 @@ class HomeFragment : Fragment() {
 
     private fun showAddToListBottomSheet(id: String) {
         // TODO: open your AddPlacesToListBottomSheet here
+        Toast.makeText(requireContext(), "Add to list: $id", Toast.LENGTH_SHORT).show()
     }
 
     private fun navigateToCafeDetailsId(id: String) {
