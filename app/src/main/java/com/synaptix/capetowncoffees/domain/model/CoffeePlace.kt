@@ -97,7 +97,8 @@ data class CoffeePlaceLite(
     val currentOpeningHours: List<String>?,
     val businessStatus: String?,
     val priceLevel: Int? = null,
-    val tags: List<Tag> // Unified tags for UI
+    val tags: List<Tag>, // Unified tags for UI
+    val isFavorite: Boolean = false
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {

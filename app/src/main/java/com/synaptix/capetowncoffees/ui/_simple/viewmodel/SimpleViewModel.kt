@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui._simple
+package com.synaptix.capetowncoffees.ui._simple.viewmodel
 
 import android.os.Bundle
 import androidx.lifecycle.ViewModel

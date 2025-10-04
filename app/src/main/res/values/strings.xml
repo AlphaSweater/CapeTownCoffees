@@ -120,4 +120,7 @@
     <!-- Change Password -->
     <string name="change_password">Change Password</string>
     <string name="change_password_description">To update your password, please enter your current password and create a new one. Make sure your new password is strong and secure.</string>
+    <string name="empty_state">Nothing Here</string>
+    <string name="retry">Retry</string>
+    <string name="addToList">Add place to list</string>
 </resources>

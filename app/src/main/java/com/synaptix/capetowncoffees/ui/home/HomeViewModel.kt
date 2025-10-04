@@ -1,160 +1,144 @@
 package com.synaptix.capetowncoffees.ui.home
 
-import android.location.Location
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.os.Bundle
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.SimpleViewModel
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.fetchResultInto
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.loadableState
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.state
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
+import kotlin.math.max
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val searchNearbyCoffeePlacesUseCase: SearchNearbyCoffeePlacesUseCase
-) : ViewModel() {
+    private val searchNearby: SearchNearbyCoffeePlacesUseCase,     // suspend (params, userLatLng) -> Result<List<CoffeePlaceLite>>
+    private val locationUtil: LocationUtil
+) : SimpleViewModel() {
 
-    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    
-    private val _selectedCafe = MutableSharedFlow<Pair<CoffeePlaceLite, LatLng?>>(replay = 1)
-    val selectedCafe: SharedFlow<Pair<CoffeePlaceLite, LatLng?>> = _selectedCafe.asSharedFlow()
+    /** UI bits the Fragment binds to (kept local). */
+    data class Ui(
+        val categories: List<Category> = DEFAULT_CATEGORIES,
+        val selectedCategory: Category = DEFAULT_CATEGORIES.first(),
+        val currentLocation: LatLng? = null,
+        val isRefreshing: Boolean = false
+    )
 
-    private var currentLocation: LatLng? = null
+    val ui = state(Ui())
+
+    // Sectional/secondary UI: show skeletons & errors independently
+    val nearMe   = loadableState<List<CoffeePlaceLite>>()   // filtered/sorted by category
+    val featured = loadableState<List<CoffeePlaceLite>>()   // top-rated picks
+
+    // Backing cache of last fetch
     private var allPlaces: List<CoffeePlaceLite> = emptyList()
-    private var currentCategory: Category? = null
 
-    fun setCurrentLocation(location: LatLng) {
-        currentLocation = location
-        loadData()
+    override fun start(args: Bundle?) {
+        super.start(args)
+        // Typically we wait for location from Fragment → onUserLocation()
+        // But you could kick a fetch with a fallback zone if you want.
     }
 
-    fun filterByCategory(category: Category) {
-        currentCategory = category
-        filterPlaces()
+    /** Fragment passes device location here once permissions are handled. */
+    fun onUserLocation(loc: LatLng) {
+        ui.update { it.copy(currentLocation = loc) }
+        refresh() // trigger initial load with the new location
     }
 
-    private fun filterPlaces() {
-        try {
-            val filteredPlaces = when (currentCategory?.name?.lowercase()) {
-                "popular" -> allPlaces.sortedByDescending { it.ratingCount ?: 0 }
-                "rated" -> allPlaces.sortedByDescending { it.rating ?: 0.0 }
-                "nearby" -> {
-                    currentLocation?.let { location ->
-                        allPlaces.sortedBy { place ->
-                            try {
-                                val results = FloatArray(1)
-                                Location.distanceBetween(
-                                    location.latitude, location.longitude,
-                                    place.location?.latitude ?: 0.0,
-                                    place.location?.longitude ?: 0.0,
-                                    results
-                                )
-                                results[0]
-                            } catch (e: Exception) {
-                                Timber.e(e, "Error calculating distance")
-                                Float.MAX_VALUE
-                            }
-                        }
-                    } ?: allPlaces
+    fun refresh() {
+        val loc = ui.value.currentLocation ?: run {
+            main { send(Effect.Message("Location not available yet")) }
+            return
+        }
+
+        // Drive both lists from a single search
+        ui.update { it.copy(isRefreshing = true) }
+
+        val params = CoffeeSearchParameters.Builder()
+            .radiusMeters(5_000)
+            .maxResults(32)
+            .build()
+
+        fetchResultInto(
+            target = nearMe, // we’ll fill & then also compute featured
+            call = {
+                searchNearby(params = params, userLatLng = loc).map { places ->
+                    // Side-effect: cache, compute sections; return near-me filtered list
+                    allPlaces = places
+                    computeFeaturedAndNearMe()
+                    // nearMe Loadable will be set in computeFeaturedAndNearMe(), but we must return something;
+                    // return the filtered list for nearMe as well (keeps semantics tight)
+                    filterByCategoryInternal(ui.value.selectedCategory, places, ui.value.currentLocation)
                 }
-                "new" -> allPlaces.sortedByDescending { it.id } // Assuming newer items have higher IDs
-                else -> allPlaces // "All" or unknown category
-            }
+            },
+            label = "home-search"
+        )
 
-            // Always show top 3 highly rated places as featured
-            val featuredPlaces = allPlaces
-                .filter { (it.rating ?: 0.0) >= 4.0 }
-                .take(3)
+        // ensure spinner off after transitions
+        main { ui.update { it.copy(isRefreshing = false) } }
+    }
 
-            _uiState.value = HomeUiState.Success(
-                places = filteredPlaces,
-                featuredPlaces = featuredPlaces
+    fun onCategorySelected(category: Category) {
+        ui.update { it.copy(selectedCategory = category) }
+        if (allPlaces.isNotEmpty()) {
+            // Re-derive lists from cache
+            computeFeaturedAndNearMe()
+        }
+    }
+
+    // ───────────────────────────────── helpers ─────────────────────────────────
+
+    private fun computeFeaturedAndNearMe() {
+        val loc = ui.value.currentLocation
+        val selected = ui.value.selectedCategory
+        val filtered = filterByCategoryInternal(selected, allPlaces, loc)
+
+        // Featured: highest rated first, >= 4.0 (tweak as you like)
+        val featuredList = allPlaces
+            .filter { (it.rating ?: 0.0) >= 4.0 }
+            .sortedWith(
+                compareByDescending<CoffeePlaceLite> { it.rating ?: 0.0 }
+                    .thenByDescending { it.ratingCount ?: 0 }
             )
-        } catch (e: Exception) {
-            Timber.e(e, "Error updating UI with filtered places")
-            _uiState.value = HomeUiState.Error("Error displaying places. Please try again.")
-        }
+            .take( max(3, 0) )
+
+        // Push to Loadables (replace skeletons/errors)
+        nearMe.data(filtered)
+        featured.data(featuredList)
     }
 
-    private fun updateUiWithFilteredPlaces() {
-        filterPlaces()
-    }
-    
-    fun setSelectedCafe(cafe: CoffeePlaceLite, location: LatLng?) {
-        viewModelScope.launch {
-            _selectedCafe.emit(cafe to location)
-        }
-    }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            try {
-                _uiState.value = HomeUiState.Loading
-                val latLng = currentLocation ?: throw IllegalStateException("Location not available")
-                _uiState.value = HomeUiState.Success(
-                    places = emptyList(),
-                    featuredPlaces = emptyList()
-                )
-                val params = CoffeeSearchParameters.Builder()
-                    .radiusMeters(5000)
-                    .maxResults(10)
-                    .build()
-                allPlaces = runCatching {
-                    searchNearbyCoffeePlacesUseCase(
-                        params = params,
-                        userLatLng = latLng
-                    ).getOrThrow()
-                }.fold(
-                    onSuccess = { it },
-                    onFailure = {
-                        _uiState.value = HomeUiState.Error(
-                            it.message ?: "Failed to load coffee places. Please check your internet connection."
-                        )
-                        emptyList()
-                    }
-                )
-                if (allPlaces.isEmpty()) {
-                    _uiState.value = HomeUiState.Error(
-                        "No coffee places found nearby. Try moving to a different location."
-                    )
-                } else {
-                    updateUiWithFilteredPlaces()
+    private fun filterByCategoryInternal(
+        category: Category,
+        source: List<CoffeePlaceLite>,
+        user: LatLng?
+    ): List<CoffeePlaceLite> = when (category.name.lowercase()) {
+        "popular" -> source.sortedByDescending { it.ratingCount ?: 0 }
+        "rated"   -> source.sortedByDescending { it.rating ?: 0.0 }
+        "nearby"  -> {
+            if (user == null) source else {
+                source.sortedBy { place ->
+                    place.location?.let { locationUtil.distanceMeters(user, it).toFloat() } ?: Float.MAX_VALUE
                 }
-            } catch (e: Exception) {
-                Timber.e(e)
-                _uiState.value = HomeUiState.Error(e.message ?: "Unknown error occurred.")
             }
         }
+        "dates"   -> source.sortedByDescending { (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f) }
+        // "all" or unknown
+        else      -> source
     }
 
-    sealed class HomeUiState {
-        object Loading : HomeUiState()
-        data class Error(val message: String) : HomeUiState() {
-            // Helper function to check if the error is due to network issues
-            fun isNetworkError(): Boolean {
-                return message.contains("network", ignoreCase = true) ||
-                        message.contains("internet", ignoreCase = true) ||
-                        message.contains("connection", ignoreCase = true)
-            }
-        }
-
-        data class Success(
-            val places: List<CoffeePlaceLite>,
-            val featuredPlaces: List<CoffeePlaceLite>
-        ) : HomeUiState() {
-            // Helper function to check if we have places to show
-            fun hasPlaces(): Boolean = places.isNotEmpty()
-        }
+    companion object {
+        private val DEFAULT_CATEGORIES = listOf(
+            Category(1, "All",       com.synaptix.capetowncoffees.R.drawable.ic_medal),
+            Category(2, "Popular",   com.synaptix.capetowncoffees.R.drawable.ic_star),
+            Category(3, "Pet Friendly", com.synaptix.capetowncoffees.R.drawable.baseline_pets_24),
+            Category(4, "Nearby",    com.synaptix.capetowncoffees.R.drawable.ic_location),
+            Category(5, "Dates",     com.synaptix.capetowncoffees.R.drawable.ic_heart)
+        )
     }
 }

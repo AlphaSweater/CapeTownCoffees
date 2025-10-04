@@ -94,7 +94,7 @@ dependencies {
     // --- Material Design ---
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3.android)
-    implementation("com.google.android.material:material:1.8.0")
+
 
     // --- Kotlin Coroutines ---
     implementation(libs.kotlinx.coroutines.core)

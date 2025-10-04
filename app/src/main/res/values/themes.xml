@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.CapeTownCoffees" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.CapeTownCoffees" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/coffee_medium</item>
         <item name="colorPrimaryVariant">@color/coffee_dark</item>
