@@ -1,4 +1,3 @@
-// File: com/synaptix/capetowncoffees/ui/coffeeDetail/CoffeeDetailFragment.kt
 package com.synaptix.capetowncoffees.ui.coffeeDetail
 
 import android.Manifest
@@ -17,13 +16,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.net.FetchPhotoRequest
-import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentCoffeeDetailBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
 import com.synaptix.capetowncoffees.ui._simple.Effect
 import com.synaptix.capetowncoffees.ui._simple.Loadable
 import com.synaptix.capetowncoffees.ui._simple.collect
@@ -31,22 +30,17 @@ import com.synaptix.capetowncoffees.ui._simple.collectLoadable
 import com.synaptix.capetowncoffees.ui._simple.start
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
-import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class CoffeeDetailFragment : Fragment() {
-
-    @Inject lateinit var placesClient: PlacesClient
-
+    @Inject lateinit var locationUtil: LocationUtil
+    @Inject lateinit var coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase
     private val vm: CafeDetailViewModel by viewModels()
-
     private var _binding: FragmentCoffeeDetailBinding? = null
     private val binding get() = _binding!!
-
-    private var currentLocation: LatLng? = null
-    private var currentCafe: CoffeePlaceFull? = null
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -68,50 +62,111 @@ class CoffeeDetailFragment : Fragment() {
         setupUiListeners()
         setupCollectors()
 
-        // Kick distance once we have user location (then update when place loads)
+        // Ask for user location to enable distance once available
         getCurrentLocation()
     }
 
+    // ───────────────────────── UI listeners (platform only) ─────────────────────────
+
     private fun setupUiListeners() = with(binding) {
         btnBack.setOnClickListener { findNavController().navigateUp() }
-        btnHeart.setOnClickListener {
-            // Example: you could emit an Effect or call a use case-backed VM method
-            // vm.onToggleFavourite()
-            Toast.makeText(requireContext(), "Favorites not implemented yet", Toast.LENGTH_SHORT).show()
-        }
-        tvDistance.setOnClickListener { getCurrentLocation() }
-        //TODO: Add swipe to refresh
-        // swipeRefresh.setOnRefreshListener { vm.refresh() } // if you have SwipeRefreshLayout
+        tvDistance.setOnClickListener { getCurrentLocation() } // user can tap to refresh distance
+        // Phone/address clicks are delegated to VM via collectors (only when available)
     }
 
+    // ─────────────────────────────── Collectors ───────────────────────────────
+
     private fun setupCollectors() {
-        // Effects (snackbar/nav)
+        // One-shot effects: do Android things here (intents/nav)
         collect(vm.effects) { eff ->
             when (eff) {
                 is Effect.Message  -> Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
-                is Effect.Navigate -> findNavController().navigate(eff.route.toUri())
+                is Effect.Navigate -> when (eff.route) {
+                    // External map intent
+                    "action_open_external_map" -> {
+                        val lat = eff.args?.getDouble("lat") ?: return@collect
+                        val lng = eff.args.getDouble("lng")
+                        val label = eff.args.getString("label").orEmpty()
+                        openMaps(LatLng(lat, lng), label)
+                    }
+                    // Dial intent
+                    "action_dial_phone" -> {
+                        val phone = eff.args?.getString("phone") ?: return@collect
+                        val dial = Intent(Intent.ACTION_DIAL,
+                            "tel:${phone.filter { it.isDigit() }}".toUri())
+                        startActivity(dial)
+                    }
+                    // Fallback: use NavController if route is a nav graph destination
+                    else -> {
+                        when (eff.route) {
+                            else -> findNavController().navigate(eff.route.toUri(), null)
+                        }
+                    }
+                }
             }
         }
 
-        // Place (Loadable)
+        // Loadable place: VM owns derivation, Fragment binds image + loading
         collectLoadable(vm.place) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized -> showLoading(false)
                 Loadable.Loading -> showLoading(true)
                 is Loadable.Data -> {
                     showLoading(false)
-                    updateUI(loadable.value)
-                    currentLocation?.let { updateDistance(loadable.value) } ?: getCurrentLocation()
+                    updateImage(loadable.value) // Places SDK bitmap stays here
                 }
                 is Loadable.Error -> {
                     showLoading(false)
-                    Timber.e("Error loading cafe details: ${loadable.error.message}")
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
+                    Timber.e("Place load error: ${loadable.error.message}")
                 }
             }
         }
 
-        // Reviews (Loadable) — render as you like (skeleton/error per Loadable)
+        // UI-ready state: just bind values (no logic here)
+        collect(vm.ui.flow) { ui ->
+            binding.tvCafeName.text = ui.name
+
+            // Address text + click decoration
+            binding.tvCafeAddress.text = ui.address
+            binding.tvCafeAddress.paintFlags = if (ui.addressClickable)
+                binding.tvCafeAddress.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+            else
+                binding.tvCafeAddress.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+            binding.tvCafeAddress.isClickable = ui.addressClickable
+            binding.tvCafeAddress.setOnClickListener(
+                if (ui.addressClickable) View.OnClickListener { vm.onAddressClicked() } else null
+            )
+
+            // Opening hours (already formatted)
+            binding.tvOpeningHours.text = if (ui.hasOpeningHours)
+                ui.openingHoursText
+            else
+                getString(R.string.no_opening_hours_available)
+
+            // Phone
+            binding.tvPhone.visibility = if (ui.phoneNumber != null) View.VISIBLE else View.GONE
+            binding.tvPhone.text = ui.phoneNumber.orEmpty()
+            binding.tvPhone.setOnClickListener(
+                if (ui.phoneNumber != null) View.OnClickListener { vm.onPhoneClicked() } else null
+            )
+
+            // Rating
+            binding.ratingBar.visibility = if (ui.showRating) View.VISIBLE else View.GONE
+            binding.tvRating.visibility = if (ui.showRating) View.VISIBLE else View.GONE
+            if (ui.showRating) {
+                binding.ratingBar.rating = ui.ratingText?.toFloatOrNull() ?: 0f
+                // Prefer count badge if present, else numeric rating
+                binding.tvRating.text = ui.ratingCountText ?: ui.ratingText.orEmpty()
+            }
+
+            // Distance (computed in VM when both locations known)
+            binding.tvDistance.visibility = if (ui.showDistance) View.VISIBLE else View.GONE
+            binding.ivPin.visibility = if (ui.showDistance) View.VISIBLE else View.GONE
+            binding.tvDistance.text = ui.distanceText.orEmpty()
+        }
+
+        // Reviews remain a Loadable; render as you like
         collectLoadable(vm.reviews) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> showReviewsSkeleton()
@@ -119,121 +174,53 @@ class CoffeeDetailFragment : Fragment() {
                 is Loadable.Error -> showReviewsError(loadable.error.message) { vm.retryReviews() }
             }
         }
-
-        // Selected location (if you later expose map interactions)
-        collect(vm.selectedLocation.flow) { /* react if needed */ }
     }
 
+    // ───────────────────────────── Render helpers ─────────────────────────────
+
     private fun renderReviews(list: List<CoffeeReview>) {
-        // TODO: bind to RecyclerView
-        //binding.reviewsEmpty.isVisible = list.isEmpty()
-        // binding.recycler.adapter.submitList(list)
+        // TODO: bind to RecyclerView adapter
+        // binding.reviewsEmpty.isVisible = list.isEmpty()
+        // adapter.submitList(list)
     }
 
     private fun showReviewsSkeleton() {
-        // TODO: show shimmer/skeleton container
-        //binding.reviewsEmpty.isVisible = false
+        // TODO: shimmer/skeleton
+        // binding.reviewsEmpty.isVisible = false
     }
 
     private fun showReviewsError(msg: String, retry: () -> Unit) {
-        // TODO: your error UI with retry callback
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         // binding.reviewsError.retryButton.setOnClickListener { retry() }
     }
 
-    private fun updateUI(cafe: CoffeePlaceFull) {
-        Timber.d("Updating UI for cafe: ${cafe.name}")
-        Timber.d("Phone number fields - national: '${cafe.nationalPhoneNumber}', international: '${cafe.internationalPhoneNumber}'")
-
-        currentCafe = cafe
-
-        binding.apply {
-            // Photo via Places SDK if present
-            cafe.images?.firstOrNull()?.let { photoMetadata ->
-                val req = FetchPhotoRequest.builder(photoMetadata).setMaxWidth(1000).build()
-                placesClient.fetchPhoto(req)
-                    .addOnSuccessListener { resp -> ivImage.setImageBitmap(resp.bitmap) }
-                    .addOnFailureListener { ex ->
-                        Timber.e("Error loading image: ${ex.message}")
-                        ivImage.setImageResource(R.drawable.featured_placeholder)
-                    }
-            } ?: ivImage.setImageResource(R.drawable.featured_placeholder)
-
-            // Name
-            tvCafeName.text = cafe.name.orEmpty()
-
-            // Address + open map
-            val addressText = cafe.address.orEmpty()
-            tvCafeAddress.text = addressText
-            if (cafe.location != null) {
-                tvCafeAddress.paintFlags = tvCafeAddress.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-                tvCafeAddress.setOnClickListener { openMaps(cafe.location, addressText) }
-            } else {
-                tvCafeAddress.paintFlags = tvCafeAddress.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
-                tvCafeAddress.setOnClickListener(null)
-            }
-
-            // Opening hours (grouped)
-            cafe.currentOpeningHours?.let { hours ->
-                tvOpeningHours.text = if (hours.isNotEmpty()) formatOpeningHours(hours)
-                else getString(R.string.no_opening_hours_available)
-            } ?: run {
-                tvOpeningHours.text = getString(R.string.no_opening_hours_available)
-            }
-
-            // Phone
-            val phoneNumber = cafe.nationalPhoneNumber ?: cafe.internationalPhoneNumber
-            if (!phoneNumber.isNullOrBlank()) {
-                tvPhone.visibility = View.VISIBLE
-                tvPhone.text = phoneNumber
-                tvPhone.setOnClickListener {
-                    val dial = Intent(Intent.ACTION_DIAL).apply {
-                        data = "tel:${phoneNumber.filter { it.isDigit() }}".toUri()
-                    }
-                    startActivity(dial)
+    private fun updateImage(cafe: CoffeePlaceFull) {
+        val imageView = binding.ivImage
+        val placeholderRes = R.drawable.featured_placeholder
+        cafe.images?.firstOrNull()?.let { meta ->
+            lifecycleScope.launch {
+                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(meta, maxWidthDp = 1000)
+                if (uri != null) {
+                    Glide.with(imageView.context)
+                        .load(uri)
+                        .placeholder(placeholderRes)
+                        .into(imageView)
+                } else {
+                    imageView.setImageResource(placeholderRes)
                 }
-            } else {
-                tvPhone.visibility = View.GONE
             }
-
-            // Rating + Distance
-            val rating = cafe.rating
-            val ratingCount = cafe.ratingCount
-            if (rating != null) {
-                tvRating.text = String.format("%.1f", rating)
-                ratingBar.rating = rating.toFloat()
-                ratingBar.visibility = View.VISIBLE
-                tvRating.visibility = View.VISIBLE
-
-                currentLocation?.let { user ->
-                    cafe.location?.let { cafeLoc ->
-                        tvDistance.text = LocationUtil.getFormattedDistance(user, cafeLoc)
-                        tvDistance.visibility = View.VISIBLE
-                        ivPin.visibility = View.VISIBLE
-                    } ?: hideDistance()
-                } ?: hideDistance()
-            } else {
-                ratingBar.visibility = View.GONE
-                tvRating.visibility = View.GONE
-                hideDistance()
-            }
-
-            // If you prefer ratingCount as badge:
-            ratingCount?.let {
-                tvRating.text = "($it)"
-                tvRating.visibility = View.VISIBLE
-            }
-        }
+        } ?: imageView.setImageResource(placeholderRes)
     }
 
-    private fun hideDistance() {
-        binding.tvDistance.visibility = View.GONE
-        binding.ivPin.visibility = View.GONE
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        // If you add SwipeRefreshLayout, also stop it here
+        // binding.swipeRefresh.isRefreshing = false
     }
+
+    // ───────────────────────────── Location plumbing ─────────────────────────────
 
     private fun getCurrentLocation() {
-        Timber.d("getCurrentLocation called")
-
         val fineGranted = ContextCompat.checkSelfPermission(
             requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
@@ -242,7 +229,6 @@ class CoffeeDetailFragment : Fragment() {
         ) == PackageManager.PERMISSION_GRANTED
 
         if (!fineGranted || !coarseGranted) {
-            Timber.d("Location permissions not granted, requesting…")
             requestPermissions(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -253,33 +239,16 @@ class CoffeeDetailFragment : Fragment() {
             return
         }
 
-        Timber.d("Location permissions granted, fetching location…")
+        // Fetch and let the VM compute distance text
         lifecycleScope.launch {
-            runCatching {
-                currentLocation = LocationUtil.getCurrentLocation(requireContext())
-            }.onSuccess {
-                Timber.d("Current location set to: $currentLocation")
-                (vm.place.value as? Loadable.Data)?.value?.let { cafe ->
-                    updateDistance(cafe)
+            runCatching { locationUtil.getCurrentLatLng().getOrNull() }
+                .onSuccess { location ->
+                    location?.let { vm.onUserLocation(it) }
                 }
-            }.onFailure { e ->
-                Timber.e(e, "Error getting location")
-                hideDistance()
-            }
-        }
-    }
-
-    private fun updateDistance(cafe: CoffeePlaceFull) {
-        val cafeLocation = cafe.location
-        val userLocation = currentLocation
-        if (cafeLocation == null || userLocation == null) {
-            hideDistance(); return
-        }
-        val distanceText = LocationUtil.getFormattedDistance(userLocation, cafeLocation)
-        view?.post {
-            binding.tvDistance.text = distanceText
-            binding.tvDistance.visibility = View.VISIBLE
-            binding.ivPin.visibility = View.VISIBLE
+                .onFailure {
+                    Timber.e(it, "Failed to get current location")
+                    // VM will hide distance when it can't compute it next tick
+                }
         }
     }
 
@@ -294,39 +263,11 @@ class CoffeeDetailFragment : Fragment() {
             val granted = grantResults.size >= 2 &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                     grantResults[1] == PackageManager.PERMISSION_GRANTED
-            if (granted) getCurrentLocation() else hideDistance()
+            if (granted) getCurrentLocation()
         }
     }
 
-    private fun formatOpeningHours(hours: List<String>): String {
-        if (hours.isEmpty()) return getString(R.string.no_opening_hours_available)
-        val dayAbbrev = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        val hoursByDay = hours.mapIndexed { index, full ->
-            val timePart = full.substringAfter(": ", full)
-            dayAbbrev[index] to timePart
-        }
-        val result = mutableListOf<String>()
-        var currentRange = mutableListOf<String>()
-        var currentHours = ""
-        for ((day, hour) in hoursByDay) {
-            if (currentHours != hour) {
-                if (currentRange.isNotEmpty()) {
-                    result.add(formatDayRange(currentRange, currentHours))
-                    currentRange.clear()
-                }
-                currentHours = hour
-            }
-            currentRange.add(day)
-        }
-        if (currentRange.isNotEmpty()) result.add(formatDayRange(currentRange, currentHours))
-        return result.joinToString("\n")
-    }
-
-    private fun formatDayRange(days: List<String>, hours: String): String = when (days.size) {
-        1 -> "${days[0]}: $hours"
-        2 -> "${days[0]} & ${days[1]}: $hours"
-        else -> "${days.first()} - ${days.last()}: $hours"
-    }
+    // ───────────────────────────── Intents ─────────────────────────────
 
     private fun openMaps(location: LatLng, address: String) {
         val gmmIntentUri =
@@ -345,14 +286,11 @@ class CoffeeDetailFragment : Fragment() {
         }
     }
 
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        //binding.swipeRefresh.isRefreshing = false
-    }
+    // ───────────────────────────── Lifecycle ─────────────────────────────
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        // ✅ Do NOT wipe VM state here; let SimpleVM persist across config changes
+        // Don’t clear VM state; SimpleVM persists across config changes.
     }
 }

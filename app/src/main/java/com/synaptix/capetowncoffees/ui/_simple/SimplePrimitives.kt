@@ -226,10 +226,10 @@ suspend fun <R> SimpleViewModel.runResult(
  * Bridge for legacy Result-based one-shot into a [LoadableVar].
  * Wraps `fetchInto(target)` but understands Kotlin [Result].
  *
- * Example:
+ * Example 1:
  * ```kotlin
  * val profile = loadableState<User>()
- * fetchResultInto(profile) { getUserResultUseCase(id) }
+ * fetchResultInto(profile, suspend { getUserResultUseCase(id) })
  * ```
  */
 fun <R> SimpleViewModel.fetchResultInto(
