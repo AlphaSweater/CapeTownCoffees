@@ -8,9 +8,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-// Consolidated Fragment helpers (from FragmentCollectors.kt + FragmentStart.kt)
-// - collect() / collectLoadable()
-// - start(vm)
+/* ──────────────────────────────────────────────────────────────────────────────
+ * SIMPLE Fragment Extensions
+ * ────────────────────────────────────────────────────────────────────────────── */
 
 inline fun <T> Fragment.collect(
     flow: Flow<T>,

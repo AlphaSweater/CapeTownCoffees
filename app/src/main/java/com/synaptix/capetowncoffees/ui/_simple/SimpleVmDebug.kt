@@ -2,6 +2,10 @@ package com.synaptix.capetowncoffees.ui._simple
 
 import timber.log.Timber
 
+/* ──────────────────────────────────────────────────────────────────────────────
+ * SIMPLE VM Debug
+ * ────────────────────────────────────────────────────────────────────────────── */
+
 /**
  * Toggleable debug utilities for SimpleViewModel.
  * Enable in debug builds to get rich logs & misuse hints.

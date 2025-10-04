@@ -34,9 +34,16 @@ object AppModule {
 
     // =================== END FIREBASE SERVICES ===================
 
+    // ===================== APP CONTEXT ===========================
+    @Provides
+    @Singleton
+    fun provideAppContext(@ApplicationContext context: Context): Context = context
+
     // Example: SharedPreferences
 //    @Provides
 //    @Singleton
 //    fun provideSharedPreferences(@ApplicationContext context: Context) =
 //        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
+    // =================== END APP CONTEXT =========================
 }

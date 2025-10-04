@@ -86,9 +86,9 @@
 
     <fragment
         android:id="@+id/cafeDetailFragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.CafeDetailFragment"
+        android:name="com.synaptix.capetowncoffees.ui.coffeeDetail.CoffeeDetailFragment"
         android:label="Cafe Details"
-        tools:layout="@layout/fragment_cafe_detail">
+        tools:layout="@layout/fragment_coffee_detail">
         <argument
             android:name="placeId"
             android:defaultValue=""

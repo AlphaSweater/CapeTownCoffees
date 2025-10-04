@@ -29,10 +29,9 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
-import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.ui.home.adapter.*
-import com.synaptix.capetowncoffees.ui.savedLists.CafeDetailViewModel
+import com.synaptix.capetowncoffees.ui.coffeeDetail.CafeDetailViewModel
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch

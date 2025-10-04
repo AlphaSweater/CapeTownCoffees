@@ -6,8 +6,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
-// Consolidated primitives (from Core.kt, StateVars.kt, UseCaseAdapters.kt)
-// Keep this small & stable. If something grows complex, move it out before adding complexity here.
+/* ──────────────────────────────────────────────────────────────────────────────
+ * SIMPLE Primitives
+ * ────────────────────────────────────────────────────────────────────────────── */
 
 // ---------------- Errors ----------------
 

@@ -11,10 +11,10 @@ import javax.inject.Inject
 /**
  * Use case for editing the current user's profile.
  *
- * @property userRepository The repository for user-related operations.
+ * @property coffeeUserRepository The repository for user-related operations.
  */
 class UpdateUserProfileUseCase @Inject constructor(
-    private val userRepository: ICoffeeUserRepository
+    private val coffeeUserRepository: ICoffeeUserRepository
 ) {
     /**
      * Data class for update profile parameters.
@@ -34,7 +34,7 @@ class UpdateUserProfileUseCase @Inject constructor(
      * @return Result<Unit> indicating success or failure.
      */
     suspend fun execute(params: Params): Result<Unit> {
-        val currentUser = userRepository.getCurrentUserProfile().getOrElse {
+        val currentUser = coffeeUserRepository.getCurrentUserProfile().getOrElse {
             return Result.failure(it)
         } ?: return Result.failure(IllegalStateException("No current user profile found"))
 
@@ -45,12 +45,12 @@ class UpdateUserProfileUseCase @Inject constructor(
             }
 
             // Re-authenticate user
-            userRepository.loginUser(currentUser.email, params.currentPassword).onFailure {
+            coffeeUserRepository.loginUser(currentUser.email, params.currentPassword).onFailure {
                 return Result.failure(IllegalArgumentException("Current password is incorrect"))
             }
 
             // Update the user's password using Firebase's built-in method
-            val firebaseUser = userRepository.getCurrentUser()
+            val firebaseUser = coffeeUserRepository.getCurrentUser()
             try {
                 firebaseUser?.updatePassword(params.newPassword)?.await()
             } catch (e: Exception) {
@@ -87,6 +87,6 @@ class UpdateUserProfileUseCase @Inject constructor(
         }
 
         // Update user profile data
-        return userRepository.updateUserProfile(currentUser.id, userToUpdate)
+        return coffeeUserRepository.updateUserProfile(currentUser.id, userToUpdate)
     }
 }
