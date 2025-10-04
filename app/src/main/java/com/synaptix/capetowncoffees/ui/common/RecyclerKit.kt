@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.common.recyclerKit
+package com.synaptix.capetowncoffees.ui.common
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -19,7 +19,7 @@ abstract class BaseViewHolder<T, VB : ViewBinding>(val vb: VB) : RecyclerView.Vi
 abstract class BaseAdapter<T : Any, VB : ViewBinding>(
     diff: DiffUtil.ItemCallback<T>,
     private val idProvider: ((T) -> Long)? = null,
-) : ListAdapter<T, BaseViewHolder<T, VB>>(diff) {
+) : androidx.recyclerview.widget.ListAdapter<T, BaseViewHolder<T, VB>>(diff) {
 
 
     init { setHasStableIds(idProvider != null) }

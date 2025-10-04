@@ -117,10 +117,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="0dp"
-                    android:layout_marginStart="0dp"
-                    android:layout_marginEnd="0dp">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvFeaturedTitle"
@@ -145,7 +142,7 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- Overlay stack: RV + Shimmer -->
+                <!-- Overlay stack: RV (under) + Shimmer (over) -->
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
@@ -154,6 +151,7 @@
                         android:id="@+id/rvFeatured"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
                         android:clipToPadding="false"
                         android:paddingStart="0dp"
                         android:paddingEnd="0dp"
@@ -165,11 +163,7 @@
                         android:id="@+id/shimmerFeatured"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone">
-
-                        <!-- 1:1 skeleton matching your item -->
-                        <include layout="@layout/item_place_skeleton"/>
-                    </com.facebook.shimmer.ShimmerFrameLayout>
+                        android:visibility="gone"/>
                 </FrameLayout>
             </LinearLayout>
 
@@ -186,10 +180,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="0dp"
-                    android:layout_marginStart="0dp"
-                    android:layout_marginEnd="0dp">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvCafeName"
@@ -214,7 +205,7 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- Overlay stack: RV + Shimmer -->
+                <!-- Overlay stack: RV (under) + Shimmer (over) -->
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
@@ -223,6 +214,7 @@
                         android:id="@+id/rvNearMe"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
                         android:orientation="vertical"
                         android:paddingStart="0dp"
                         android:paddingEnd="0dp"
@@ -235,10 +227,7 @@
                         android:id="@+id/shimmerNear"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone">
-
-                        <include layout="@layout/item_place_skeleton"/>
-                    </com.facebook.shimmer.ShimmerFrameLayout>
+                        android:visibility="gone"/>
                 </FrameLayout>
             </LinearLayout>
         </LinearLayout>

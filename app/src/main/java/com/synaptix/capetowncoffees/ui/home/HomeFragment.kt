@@ -22,6 +22,7 @@ import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.collect
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.collectLoadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.start
+import com.synaptix.capetowncoffees.ui.common.SkeletonAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.FeaturedAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.NearMeItemAdapter
@@ -43,6 +44,9 @@ class HomeFragment : Fragment() {
 
     @Inject lateinit var nearMeAdapterFactory: NearMeItemAdapter.Factory
     private lateinit var nearMeAdapter: NearMeItemAdapter
+
+    private lateinit var featuredSkeletonAdapter: SkeletonAdapter
+    private lateinit var nearSkeletonAdapter:   SkeletonAdapter
 
     // Permissions launcher
     private val requestPerms = registerForActivityResult(
@@ -68,7 +72,30 @@ class HomeFragment : Fragment() {
         setupClicks()
 
         ensureLocation()
+
+        (binding.rvFeatured.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)
+            ?.supportsChangeAnimations = false
+        (binding.rvNearMe.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)
+            ?.supportsChangeAnimations = false
     }
+
+    override fun onResume() {
+        super.onResume()
+        val comingBack = (featuredAdapter.itemCount > 0 || nearMeAdapter.itemCount > 0)
+        if (comingBack) {
+            if (binding.rvFeatured.adapter !== featuredSkeletonAdapter) {
+                binding.rvFeatured.adapter = featuredSkeletonAdapter
+            }
+            if (binding.rvNearMe.adapter !== nearSkeletonAdapter) {
+                binding.rvNearMe.adapter = nearSkeletonAdapter
+            }
+            showFeaturedSkeleton(show = true, hideContent = false) // content is skeleton list
+            showNearMeSkeleton(show = true, hideContent = false)
+            // vm.refreshIfStale(maxAgeMs = 30_000) // optional
+        }
+    }
+
+
 
     private fun initAdapters() {
         categoryAdapter = CategoryAdapter { category: Category ->
@@ -83,6 +110,15 @@ class HomeFragment : Fragment() {
             currentLocation = null,
             coroutineScope = viewLifecycleOwner.lifecycleScope,
             onClick = ::onNearMeClick
+        )
+
+        featuredSkeletonAdapter = SkeletonAdapter(
+            count = 5,
+            layoutResId = R.layout.item_place_skeleton
+        )
+        nearSkeletonAdapter = SkeletonAdapter(
+            count = 5,
+            layoutResId = R.layout.item_place_skeleton
         )
     }
 
@@ -102,9 +138,6 @@ class HomeFragment : Fragment() {
             setHasFixedSize(true)
         }
 
-        // 🔧 Prevent RV animations fighting the shimmer crossfade
-        rvFeatured.itemAnimator = null
-        rvNearMe.itemAnimator = null
     }
 
     private fun setupClicks() = with(binding) {
@@ -129,30 +162,54 @@ class HomeFragment : Fragment() {
             binding.progressBar.visibility = View.GONE
         }
 
-        // Featured section
+        // Featured
         collectLoadable(vm.featured) { loadable ->
             when (loadable) {
-                Loadable.Uninitialized, Loadable.Loading -> showFeaturedSkeleton(true)
+                Loadable.Uninitialized, Loadable.Loading -> {
+                    if (binding.rvFeatured.adapter !== featuredSkeletonAdapter) {
+                        binding.rvFeatured.adapter = featuredSkeletonAdapter
+                    }
+                    showFeaturedSkeleton(true, hideContent = false)
+                }
                 is Loadable.Data -> {
+                    // swap back to real adapter before hiding shimmer
+                    if (binding.rvFeatured.adapter !== featuredAdapter) {
+                        binding.rvFeatured.adapter = featuredAdapter
+                    }
                     featuredAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     showFeaturedSkeleton(false)
                 }
                 is Loadable.Error -> {
+                    // still swap back so user sees last good data / empty state
+                    if (binding.rvFeatured.adapter !== featuredAdapter) {
+                        binding.rvFeatured.adapter = featuredAdapter
+                    }
                     showFeaturedSkeleton(false)
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        // Near-me list
+// Near Me
         collectLoadable(vm.nearMe) { loadable ->
             when (loadable) {
-                Loadable.Uninitialized, Loadable.Loading -> showNearMeSkeleton(true)
+                Loadable.Uninitialized, Loadable.Loading -> {
+                    if (binding.rvNearMe.adapter !== nearSkeletonAdapter) {
+                        binding.rvNearMe.adapter = nearSkeletonAdapter
+                    }
+                    showNearMeSkeleton(true, hideContent = false)
+                }
                 is Loadable.Data -> {
+                    if (binding.rvNearMe.adapter !== nearMeAdapter) {
+                        binding.rvNearMe.adapter = nearMeAdapter
+                    }
                     nearMeAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     showNearMeSkeleton(false)
                 }
                 is Loadable.Error -> {
+                    if (binding.rvNearMe.adapter !== nearMeAdapter) {
+                        binding.rvNearMe.adapter = nearMeAdapter
+                    }
                     showNearMeSkeleton(false)
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                 }
@@ -161,13 +218,14 @@ class HomeFragment : Fragment() {
     }
 
     // ───────── collectors call these ─────────
-    private fun showFeaturedSkeleton(show: Boolean) = with(binding) {
+    private fun showFeaturedSkeleton(show: Boolean, hideContent: Boolean = false) = with(binding) {
         if (show) {
             crossfadeInShimmer(
                 shimmer = shimmerFeatured,
                 content = rvFeatured,
                 minContainer = featuredContainer,
-                peekDimen = R.dimen.home_featured_peek_height
+                peekDimen = R.dimen.home_featured_peek_height,
+                hideContent = hideContent
             )
         } else {
             crossfadeOutShimmer(
@@ -178,13 +236,14 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showNearMeSkeleton(show: Boolean) = with(binding) {
+    private fun showNearMeSkeleton(show: Boolean, hideContent: Boolean = false) = with(binding) {
         if (show) {
             crossfadeInShimmer(
                 shimmer = shimmerNear,
                 content = rvNearMe,
                 minContainer = nearContainer,
-                peekDimen = R.dimen.home_near_peek_height
+                peekDimen = R.dimen.home_near_peek_height,
+                hideContent = hideContent
             )
         } else {
             crossfadeOutShimmer(
@@ -192,6 +251,60 @@ class HomeFragment : Fragment() {
                 content = rvNearMe,
                 minContainer = nearContainer
             )
+        }
+    }
+
+    private val crossFadeDuration = 220L
+
+    private fun crossfadeInShimmer(
+        shimmer: View,
+        content: View,
+        minContainer: ViewGroup,
+        peekDimen: Int,
+        hideContent: Boolean
+    ) {
+        // if true, fully hide content while shimmer runs; else dim it (peek)
+        content.alpha = if (hideContent) 0f else 0.3f
+        content.visibility = View.VISIBLE
+
+        minContainer.minimumHeight = resources.getDimensionPixelSize(peekDimen)
+
+        shimmer.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate().cancel()
+            animate()
+                .alpha(1f)
+                .setDuration(crossFadeDuration)
+                .withStartAction { if (this is com.facebook.shimmer.ShimmerFrameLayout) startShimmer() }
+                .start()
+        }
+    }
+
+    private fun crossfadeOutShimmer(
+        shimmer: View,
+        content: View,
+        minContainer: ViewGroup
+    ) {
+        content.post {
+            shimmer.animate().cancel()
+            shimmer.animate()
+                .alpha(0f)
+                .setDuration(crossFadeDuration)
+                .withEndAction {
+                    if (shimmer is com.facebook.shimmer.ShimmerFrameLayout) shimmer.stopShimmer()
+                    shimmer.visibility = View.GONE
+                    shimmer.alpha = 1f
+
+                    content.animate().cancel()
+                    content.animate()
+                        .alpha(1f)
+                        .setDuration(160L)
+                        .start()
+
+                    minContainer.minimumHeight = 0
+                }
+                .start()
         }
     }
 
@@ -247,52 +360,6 @@ class HomeFragment : Fragment() {
         val bundle = Bundle().apply { putString("placeId", id) }
         findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
     }
-
-    // ─────────────────────────── Helpers ───────────────────────────
-    private val crossFadeDuration = 220L
-
-    private fun crossfadeInShimmer(shimmer: View, content: View, minContainer: ViewGroup, peekDimen: Int) {
-        // keep content visible but dimmed under the shimmer
-        content.alpha = 0.3f
-        content.visibility = View.VISIBLE
-
-        minContainer.minimumHeight = resources.getDimensionPixelSize(peekDimen)
-
-        shimmer.apply {
-            alpha = 0f
-            visibility = View.VISIBLE
-            animate().cancel()
-            animate()
-                .alpha(1f)
-                .setDuration(crossFadeDuration)
-                .withStartAction { if (this is com.facebook.shimmer.ShimmerFrameLayout) startShimmer() }
-                .start()
-        }
-    }
-
-    private fun crossfadeOutShimmer(shimmer: View, content: View, minContainer: ViewGroup) {
-        // make sure content is fully drawn before we fade out shimmer
-        content.post {
-            shimmer.animate().cancel()
-            shimmer.animate()
-                .alpha(0f)
-                .setDuration(crossFadeDuration)
-                .withEndAction {
-                    if (shimmer is com.facebook.shimmer.ShimmerFrameLayout) shimmer.stopShimmer()
-                    shimmer.visibility = View.GONE
-                    shimmer.alpha = 1f
-                    // let the real content pop to full opacity
-                    content.animate().cancel()
-                    content.animate()
-                        .alpha(1f)
-                        .setDuration(160L)
-                        .start()
-                    minContainer.minimumHeight = 0
-                }
-                .start()
-        }
-    }
-
 
     // ─────────────────────────── Lifecycle ───────────────────────────
 

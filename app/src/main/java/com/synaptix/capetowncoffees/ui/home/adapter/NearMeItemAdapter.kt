@@ -3,6 +3,7 @@ package com.synaptix.capetowncoffees.ui.home.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
@@ -11,9 +12,9 @@ import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.ItemCoffeeNearMeBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
-import com.synaptix.capetowncoffees.ui.common.recyclerKit.BaseAdapter
-import com.synaptix.capetowncoffees.ui.common.recyclerKit.BaseViewHolder
-import com.synaptix.capetowncoffees.ui.common.recyclerKit.simpleDiff
+import com.synaptix.capetowncoffees.ui.common.BaseAdapter
+import com.synaptix.capetowncoffees.ui.common.BaseViewHolder
+import com.synaptix.capetowncoffees.ui.common.simpleDiff
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -141,23 +142,24 @@ class NearMeItemAdapter @AssistedInject constructor(
 
                 // --- Favorite
                 // btnFavorite.isChecked = item.isFavorite  // TODO: enable when domain adds it
-                btnFavorite.isChecked = false
+                // btnFavorite.isChecked = false
 
                 // --- Clicks
                 root.setOnClickListener { onClick(Click.Open(id)) }
                 ivImage.setOnClickListener { onClick(Click.Open(id)) }
                 btnFavorite.setOnClickListener {
-                    val newValue = btnFavorite.isChecked
-                    onClick(Click.ToggleFavorite(id, newValue))
-                    item.isFavorite = newValue // update cached value
-                    btnFavorite.isChecked = newValue
+//                    val newValue = btnFavorite.isChecked
+//                    onClick(Click.ToggleFavorite(id, newValue))
+//                    item.isFavorite = newValue // update cached value
+//                    btnFavorite.isChecked = newValue
+                    Toast.makeText(root.context, "Not implemented", Toast.LENGTH_SHORT).show()
                 }
                 btnAddToList.setOnClickListener { onClick(Click.AddToList(id)) }
             }
 
             override fun bind(item: CoffeePlaceLite, payloads: List<Any>) {
                 if (payloads.contains(PAYLOAD_FAV)) {
-                    vb.btnFavorite.isChecked = item.isFavorite
+                    // vb.btnFavorite.isChecked = item.isFavorite
                 } else bind(item)
             }
         }
