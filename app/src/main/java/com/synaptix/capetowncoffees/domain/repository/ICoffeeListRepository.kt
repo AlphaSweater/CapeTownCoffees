@@ -1,20 +1,83 @@
 package com.synaptix.capetowncoffees.domain.repository
 
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
+import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import kotlinx.coroutines.flow.Flow
+import com.google.firebase.firestore.Query
 
 interface ICoffeeListRepository {
-    suspend fun createList(newCoffeeList: CoffeeList): String
+    // ----------------------------
+    // CRUD
+    // ----------------------------
 
-    // Observe all saved lists for the current user in real-time
-    fun observeLists(): Flow<List<CoffeeList>>
+    /**
+     * Creates a new coffee list for the current user.
+     * @param newCoffeeList The CoffeeList to create.
+     * @return Result containing the new list's ID on success, or an error.
+     */
+    suspend fun createList(newCoffeeList: CoffeeList): Result<String>
 
-    // Observe a single list by ID
-    fun observeList(id: String): Flow<CoffeeList?>
+    /**
+     * Deletes a coffee list by its ID for the current user.
+     * @param id The ID of the list to delete.
+     * @return Result indicating success or failure.
+     */
+    suspend fun deleteList(id: String): Result<Unit>
 
-    // Delete a list by ID
-    suspend fun deleteList(id: String)
+    /**
+     * Updates a coffee list by its ID for the current user.
+     * @param id The ID of the list to update.
+     * @param updatedCoffeeList The updated CoffeeList data.
+     * @return Result indicating success or failure.
+     */
+    suspend fun updateList(id: String, updatedCoffeeList: CoffeeList): Result<Unit>
 
-    // Fetch all saved lists once
-    suspend fun getLists(): List<CoffeeList>
+    /**
+     * Fetches all saved coffee lists for the current user.
+     * @return Result containing a list of CoffeeList objects, or an error.
+     */
+    suspend fun getLists(): Result<List<CoffeeList>>
+
+    /**
+     * Fetches a single coffee list by its ID for the current user.
+     * @param id The ID of the list to fetch.
+     * @return Result containing the CoffeeList if found, or null if not.
+     */
+    suspend fun getListById(id: String): Result<CoffeeList?>
+
+    // ----------------------------
+    // Pagination
+    // ----------------------------
+
+    /**
+     * Fetches paginated coffee lists for the current user.
+     * @param pageSize Number of items per page.
+     * @param reset Whether to reset pagination.
+     * @param orderBy Optional field and direction to order by.
+     * @return PaginatedResult containing CoffeeList data and hasMore flag.
+     */
+    suspend fun getListsPaginated(
+        pageSize: Int,
+        reset: Boolean = false,
+        orderBy: Pair<String, Query.Direction>? = null
+    ): PaginatedResult<CoffeeList>
+
+    // ----------------------------
+    // Observables
+    // ----------------------------
+
+    /**
+     * Observes all saved coffee lists for a given user in real-time.
+     * @param parentDocId The parent document ID (user ID).
+     * @return Flow emitting the list of CoffeeList objects.
+     */
+    fun observeLists(parentDocId: String): Flow<List<CoffeeList>>
+
+    /**
+     * Observes a single coffee list by its ID for a given user in real-time.
+     * @param id The ID of the list to observe.
+     * @param parentDocId The parent document ID (user ID).
+     * @return Flow emitting the CoffeeList if found, or null if not.
+     */
+    fun observeList(id: String, parentDocId: String): Flow<CoffeeList?>
 }

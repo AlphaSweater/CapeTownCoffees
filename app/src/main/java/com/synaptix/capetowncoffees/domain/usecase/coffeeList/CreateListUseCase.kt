@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.domain.usecase.savedLists
+package com.synaptix.capetowncoffees.domain.usecase.coffeeList
 
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
@@ -15,7 +15,8 @@ class CreateListUseCase @Inject constructor(
     suspend operator fun invoke(
         newCoffeeList: CoffeeList
     ): CreateListResult = try {
-        val id = repo.createList(newCoffeeList)
+        val result = repo.createList(newCoffeeList)
+        val id = result.getOrThrow()
         CreateListResult.Success(id)
     } catch (e: Exception) {
         CreateListResult.Error(e.localizedMessage ?: "Failed to create list")

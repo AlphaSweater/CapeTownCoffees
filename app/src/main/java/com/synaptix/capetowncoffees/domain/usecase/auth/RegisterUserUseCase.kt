@@ -1,7 +1,6 @@
 package com.synaptix.capetowncoffees.domain.usecase.auth
 
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import javax.inject.Inject
 import timber.log.Timber
 
@@ -17,13 +16,13 @@ sealed class RegistrationResult {
 
 // Use case class for registering a new user
 class RegisterUserUseCase @Inject constructor(
-    private val IUserRepository: IUserRepository
+    private val ICoffeeUserRepository: ICoffeeUserRepository
 ) {
     suspend operator fun invoke(email: String, password: String, fullName: String): RegistrationResult {
         Timber.d("RegisterUserUseCase invoked: email=%s, fullName=%s", email, fullName)
         return try {
             Timber.d("Checking if email exists: %s", email)
-            IUserRepository.emailExists(email)
+            ICoffeeUserRepository.emailExists(email)
                 .onSuccess { exists ->
                     Timber.d("Email exists result: %s", exists)
                     if (exists) {
@@ -37,7 +36,7 @@ class RegisterUserUseCase @Inject constructor(
                 }
 
             Timber.d("Registering user: %s", fullName)
-            IUserRepository.registerUser(email, password, fullName)
+            ICoffeeUserRepository.registerUser(email, password, fullName)
                 .onSuccess {
                     Timber.d("User registered successfully: %s", email)
                     return RegistrationResult.Success

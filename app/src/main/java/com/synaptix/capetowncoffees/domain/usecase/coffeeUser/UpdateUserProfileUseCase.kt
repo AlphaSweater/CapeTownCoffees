@@ -1,10 +1,10 @@
-package com.synaptix.capetowncoffees.domain.usecase.user
+package com.synaptix.capetowncoffees.domain.usecase.coffeeUser
 
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -14,13 +14,13 @@ import javax.inject.Inject
  * @property userRepository The repository for user-related operations.
  */
 class UpdateUserProfileUseCase @Inject constructor(
-    private val userRepository: IUserRepository
+    private val userRepository: ICoffeeUserRepository
 ) {
     /**
      * Data class for update profile parameters.
      */
     data class Params(
-        val updatedUser: User,
+        val updatedUser: CoffeeUser,
         val profilePictureUri: Uri? = null,
         val currentPassword: String? = null,
         val newPassword: String? = null,
@@ -34,7 +34,6 @@ class UpdateUserProfileUseCase @Inject constructor(
      * @return Result<Unit> indicating success or failure.
      */
     suspend fun execute(params: Params): Result<Unit> {
-        // Get the current user profile
         val currentUser = userRepository.getCurrentUserProfile().getOrElse {
             return Result.failure(it)
         } ?: return Result.failure(IllegalStateException("No current user profile found"))
@@ -63,7 +62,7 @@ class UpdateUserProfileUseCase @Inject constructor(
         var userToUpdate = params.updatedUser.copy(
             updatedAt = System.currentTimeMillis()
         )
-        
+
         if (params.profilePictureUri != null && params.context != null) {
             val inputStream = params.context.contentResolver.openInputStream(params.profilePictureUri)
             val bytes = inputStream?.readBytes()

@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.domain.usecase.user
+package com.synaptix.capetowncoffees.domain.usecase.coffeeUser
 
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth

@@ -8,7 +8,7 @@ import com.synaptix.capetowncoffees.domain.model.TagExtractor
 
 object CoffeePlaceMapper {
     fun toFull(place: Place): CoffeePlaceFull = CoffeePlaceFull(
-        id = place.id,
+        id = place.id ?: "",
         name = place.displayName,
         address = place.formattedAddress,
         location = place.location,
@@ -23,13 +23,11 @@ object CoffeePlaceMapper {
         nationalPhoneNumber = place.nationalPhoneNumber,
         internationalPhoneNumber = place.internationalPhoneNumber,
         websiteUrl = place.websiteUri?.toString(),
-        tags = TagExtractor.extract(place),
-        reviews = place.reviews?.take(10)?.map { ReviewMapper.fromGoogleReview(it, place.id!!) },
-        priceLevel = place.priceLevel
+        tags = TagExtractor.extract(place)
     )
 
     fun toLite(place: Place): CoffeePlaceLite = CoffeePlaceLite(
-        id = place.id,
+        id = place.id ?: "",
         name = place.displayName,
         address = place.formattedAddress,
         location = place.location,
@@ -40,12 +38,11 @@ object CoffeePlaceMapper {
         images = place.photoMetadatas,
         currentOpeningHours = place.currentOpeningHours?.weekdayText,
         businessStatus = place.businessStatus?.name,
-        priceLevel = place.priceLevel,
         tags = TagExtractor.extract(place)
     )
 
     fun toSuggestion(place: Place): CoffeePlaceSuggestion = CoffeePlaceSuggestion(
-        id = place.id,
+        id = place.id ?: "",
         name = place.displayName
     )
 }
