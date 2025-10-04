@@ -8,7 +8,7 @@ import javax.inject.Inject
  * Use case for retrieving a user profile.
  */
 class GetUserProfileUseCase @Inject constructor(
-    private val userRepository: ICoffeeUserRepository
+    private val coffeeUserRepository: ICoffeeUserRepository
 ) {
     /**
      * Retrieves a user profile.
@@ -16,10 +16,10 @@ class GetUserProfileUseCase @Inject constructor(
      * @param userId The ID of the user to fetch. If null, fetches the current user.
      */
     suspend operator fun invoke(userId: String? = null): Result<CoffeeUser> {
-        val id = userId ?: userRepository.getCurrentUserId()
+        val id = userId ?: coffeeUserRepository.getCurrentUserId()
         ?: return Result.failure(IllegalStateException("No authenticated user"))
 
-        val user = userRepository.getUserProfile(id).getOrElse {
+        val user = coffeeUserRepository.getUserProfile(id).getOrElse {
             return Result.failure(it)
         }
 

@@ -16,13 +16,13 @@ sealed class RegistrationResult {
 
 // Use case class for registering a new user
 class RegisterUserUseCase @Inject constructor(
-    private val ICoffeeUserRepository: ICoffeeUserRepository
+    private val coffeeUserRepository: ICoffeeUserRepository
 ) {
     suspend operator fun invoke(email: String, password: String, fullName: String): RegistrationResult {
         Timber.d("RegisterUserUseCase invoked: email=%s, fullName=%s", email, fullName)
         return try {
             Timber.d("Checking if email exists: %s", email)
-            ICoffeeUserRepository.emailExists(email)
+            coffeeUserRepository.emailExists(email)
                 .onSuccess { exists ->
                     Timber.d("Email exists result: %s", exists)
                     if (exists) {
@@ -36,7 +36,7 @@ class RegisterUserUseCase @Inject constructor(
                 }
 
             Timber.d("Registering user: %s", fullName)
-            ICoffeeUserRepository.registerUser(email, password, fullName)
+            coffeeUserRepository.registerUser(email, password, fullName)
                 .onSuccess {
                     Timber.d("User registered successfully: %s", email)
                     return RegistrationResult.Success

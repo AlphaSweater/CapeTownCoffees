@@ -16,7 +16,7 @@ sealed class LoginResult {
 
 // UseCase class for handling user login logic
 class LoginUserUseCase @Inject constructor(
-    private val ICoffeeUserRepository: ICoffeeUserRepository
+    private val coffeeUserRepository: ICoffeeUserRepository
 ) {
     // Invokes the login process with email and password parameters
     // Returns a LoginResult indicating the outcome
@@ -24,7 +24,7 @@ class LoginUserUseCase @Inject constructor(
         Timber.d("LoginUserUseCase invoked: email=%s", email)
         return try {
             Timber.d("Attempting login for email: %s", email)
-            ICoffeeUserRepository.loginUser(email, password)
+            coffeeUserRepository.loginUser(email, password)
                 .onSuccess {
                     Timber.d("Login successful for email: %s", email)
                     return LoginResult.Success

@@ -8,7 +8,7 @@ class AuthManager @Inject constructor(
     private val loginUserUseCase: LoginUserUseCase,
     private val registerUserUseCase: RegisterUserUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
-    private val ICoffeeUserRepository: ICoffeeUserRepository // Inject UserRepository for auth state observation
+    private val coffeeUserRepository: ICoffeeUserRepository // Inject UserRepository for auth state observation
 ) {
     suspend fun login(email: String, password: String): LoginResult {
         return loginUserUseCase(email, password)
@@ -23,12 +23,12 @@ class AuthManager @Inject constructor(
     }
 
     fun observeAuthState(): Flow<Boolean> {
-        return ICoffeeUserRepository.observeAuthState()
+        return coffeeUserRepository.observeAuthState()
     }
 
     suspend fun deleteAccount(): Result<Unit> {
         return try {
-            ICoffeeUserRepository.deleteUserAccount()
+            coffeeUserRepository.deleteUserAccount()
         } catch (e: Exception) {
             Result.failure(e)
         }

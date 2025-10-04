@@ -4,26 +4,39 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RatingBar
 import android.widget.TextView
-import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.google.android.libraries.places.api.net.PlacesClient
-import com.synaptix.capetowncoffees.R
-import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-
-import android.location.Location
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.gms.maps.model.LatLng
-import com.synaptix.capetowncoffees.util.calculateDistanceTo
+import com.synaptix.capetowncoffees.R
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.util.LocationUtil
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
-class NearMeAdapter(
-    private val placesClient: PlacesClient,
-    private var currentLocation: LatLng? = null,
-    private val onItemClick: (CoffeePlaceLite) -> Unit = {}
+class NearMeAdapter @AssistedInject constructor(
+    @Assisted private var currentLocation: LatLng? = null,
+    @Assisted private val coroutineScope: CoroutineScope,
+    @Assisted private val onItemClick: (CoffeePlaceLite) -> Unit = {},
+    private val coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase,
+    private val locationUtil: LocationUtil,
 ) : ListAdapter<CoffeePlaceLite, NearMeAdapter.ViewHolder>(DiffCallback()) {
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            currentLocation: LatLng?,
+            coroutineScope: CoroutineScope,
+            onItemClick: (CoffeePlaceLite) -> Unit
+        ): NearMeAdapter
+    }
     
     private class DiffCallback : DiffUtil.ItemCallback<CoffeePlaceLite>() {
         override fun areItemsTheSame(oldItem: CoffeePlaceLite, newItem: CoffeePlaceLite): Boolean {
@@ -59,62 +72,25 @@ class NearMeAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val cafe = getItem(position)
-        
-        // Debug logging for Signature Cafe
-        val isSignatureCafe = cafe.name?.contains("Signature Cafe", ignoreCase = true) == true
-        if (isSignatureCafe) {
-            android.util.Log.d("NearMeAdapter", "Processing Signature Cafe - Images: ${cafe.images?.size ?: 0}")
-            cafe.images?.forEachIndexed { index, photo ->
-                android.util.Log.d("NearMeAdapter", "Signature Cafe Image $index: $photo")
-            }
-        }
-
-        // Load image using Places API with detailed error handling
+        holder.image.setImageResource(R.drawable.cafe_placeholder)
         cafe.images?.firstOrNull()?.let { photoMetadata ->
-            try {
-                if (isSignatureCafe) {
-                    android.util.Log.d("NearMeAdapter", "Attempting to load image for Signature Cafe: $photoMetadata")
-                }
-                
-                val photoRequest = com.google.android.libraries.places.api.net.FetchPhotoRequest.builder(photoMetadata)
-                    .setMaxWidth(500)
-                    .build()
-                
-                if (isSignatureCafe) {
-                    android.util.Log.d("NearMeAdapter", "Created photo request for Signature Cafe")
-                }
-                
-                placesClient.fetchPhoto(photoRequest).addOnSuccessListener { fetchPhotoResponse ->
-                    if (fetchPhotoResponse.bitmap != null) {
-                        if (isSignatureCafe) {
-                            android.util.Log.d("NearMeAdapter", "Successfully loaded bitmap for Signature Cafe")
-                        }
-                        holder.image.setImageBitmap(fetchPhotoResponse.bitmap)
-                        android.util.Log.d("NearMeAdapter", "Successfully loaded image for ${cafe.name}")
-                    } else {
-                        val errorMsg = if (isSignatureCafe) "Received null bitmap for Signature Cafe" else "Received null bitmap for ${cafe.name}"
-                        android.util.Log.e("NearMeAdapter", errorMsg)
-                        holder.image.setImageResource(R.drawable.cafe_placeholder)
-                    }
-                }.addOnFailureListener { exception ->
-                    val errorMsg = if (isSignatureCafe) "Failed to load image for Signature Cafe" else "Failed to load image for ${cafe.name}"
-                    android.util.Log.e("NearMeAdapter", "$errorMsg: ${exception.message}", exception)
+            coroutineScope.launch {
+                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(photoMetadata, maxWidthDp = 500)
+                if (uri != null) {
+                    Glide.with(holder.image.context)
+                        .load(uri)
+                        .placeholder(R.drawable.cafe_placeholder)
+                        .into(holder.image)
+                } else {
                     holder.image.setImageResource(R.drawable.cafe_placeholder)
                 }
-            } catch (e: Exception) {
-                val errorMsg = if (isSignatureCafe) "Error creating photo request for Signature Cafe" else "Error creating photo request for ${cafe.name}"
-                android.util.Log.e("NearMeAdapter", "$errorMsg: ${e.message}", e)
-                holder.image.setImageResource(R.drawable.cafe_placeholder)
             }
-        } ?: run {
-            android.util.Log.w("NearMeAdapter", "No photo metadata available for ${cafe.name}")
-            holder.image.setImageResource(R.drawable.cafe_placeholder)
-        }
-        
+        } ?: holder.image.setImageResource(R.drawable.cafe_placeholder)
         holder.name.text = cafe.name ?: ""
         
         // Set distance
-        val distanceText = currentLocation?.calculateDistanceTo(cafe.location) ?: ""
+        val distance = locationUtil.distanceMeters(currentLocation, cafe.location)
+        val distanceText = locationUtil.distanceAndEtaLabel(distance)
         holder.distance.text = distanceText
         holder.distance.visibility = if (distanceText.isNotEmpty()) View.VISIBLE else View.GONE
 

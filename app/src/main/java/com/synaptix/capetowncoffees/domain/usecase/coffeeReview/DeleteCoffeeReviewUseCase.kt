@@ -13,7 +13,7 @@ import javax.inject.Inject
  * ```
  */
 class DeleteCoffeeReviewUseCase @Inject constructor(
-    private val repository: ICoffeeReviewRepository
+    private val coffeeReviewRepository: ICoffeeReviewRepository
 ) {
     /**
      * Delete a review from a place.
@@ -27,6 +27,6 @@ class DeleteCoffeeReviewUseCase @Inject constructor(
      * ```
      */
     suspend operator fun invoke(reviewId: String, placeId: String): Result<Unit> {
-        return repository.deleteReview(reviewId, placeId)
+        return coffeeReviewRepository.deleteReview(reviewId, placeId)
     }
 }

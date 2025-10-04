@@ -1,17 +1,27 @@
 package com.synaptix.capetowncoffees.domain.usecase.coffeePlace
 
+import android.content.Context
+import android.net.Uri
+import com.google.android.libraries.places.api.model.PhotoMetadata
+import com.google.android.libraries.places.api.net.FetchResolvedPhotoUriRequest
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.nowSeconds
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.parseTimeToLocalTime
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.toLocalDate
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils.toLocalTime
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class CoffeePlaceUtilsUseCase @Inject constructor(
+    private val context: Context,
+    private val placesClient: PlacesClient,
     private val coffeePlaceRepository: ICoffeePlaceRepository
 ) {
 
@@ -83,4 +93,31 @@ class CoffeePlaceUtilsUseCase @Inject constructor(
             .replace('\u00A0', ' ')
             .replace('\u202F', ' ')
             .trim()
+
+    /**
+     * Helper: Retrieves the photo URI for a given PhotoMetadata using PlacesClient.
+     * Converts dp to pixels for maxHeight/maxWidth.
+     * @param photoMetadata The PhotoMetadata object from Google Places API.
+     * @param maxWidthDp Optional max width in dp.
+     * @param maxHeightDp Optional max height in dp.
+     * @return The Uri of the photo, or null if failed.
+     */
+    suspend fun getPhotoUriFromMetadata(
+        photoMetadata: PhotoMetadata,
+        maxWidthDp: Int? = null,
+        maxHeightDp: Int? = null
+    ): Uri? = suspendCancellableCoroutine { cont ->
+        val density = context.resources.displayMetrics.density
+        val builder = FetchResolvedPhotoUriRequest.builder(photoMetadata)
+        maxWidthDp?.let { builder.setMaxWidth((it * density).toInt()) }
+        maxHeightDp?.let { builder.setMaxHeight((it * density).toInt()) }
+        val request = builder.build()
+        placesClient.fetchResolvedPhotoUri(request)
+            .addOnSuccessListener { response ->
+                cont.resume(response.uri)
+            }
+            .addOnFailureListener { exception ->
+                cont.resume(null)
+            }
+    }
 }

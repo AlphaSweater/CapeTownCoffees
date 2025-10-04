@@ -6,8 +6,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 
-// Consolidated primitives (from Core.kt, StateVars.kt, UseCaseAdapters.kt)
-// Keep this small & stable. If something grows complex, move it out before adding complexity here.
+/* ──────────────────────────────────────────────────────────────────────────────
+ * SIMPLE Primitives
+ * ────────────────────────────────────────────────────────────────────────────── */
 
 // ---------------- Errors ----------------
 
@@ -225,10 +226,10 @@ suspend fun <R> SimpleViewModel.runResult(
  * Bridge for legacy Result-based one-shot into a [LoadableVar].
  * Wraps `fetchInto(target)` but understands Kotlin [Result].
  *
- * Example:
+ * Example 1:
  * ```kotlin
  * val profile = loadableState<User>()
- * fetchResultInto(profile) { getUserResultUseCase(id) }
+ * fetchResultInto(profile, suspend { getUserResultUseCase(id) })
  * ```
  */
 fun <R> SimpleViewModel.fetchResultInto(
