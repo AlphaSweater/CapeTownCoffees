@@ -30,7 +30,7 @@
         android:textColorHint="@color/text_secondary"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list_item"
+        android:id="@+id/recyclerSavePlaceToList"
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_marginTop="12dp"/>

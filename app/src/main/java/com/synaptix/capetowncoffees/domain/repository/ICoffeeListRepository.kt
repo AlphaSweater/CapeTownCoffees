@@ -80,4 +80,6 @@ interface ICoffeeListRepository {
      * @return Flow emitting the CoffeeList if found, or null if not.
      */
     fun observeList(id: String, parentDocId: String): Flow<CoffeeList?>
+
+    suspend fun addPlaceToLists(listIds: List<String>, placeId: String): Result<Unit>
 }
