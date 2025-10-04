@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Ctc.ElevatedCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/ctc_card_margin_h"
+    android:layout_marginVertical="@dimen/ctc_card_margin_v"
+    android:foreground="?attr/selectableItemBackground"
+    android:stateListAnimator="@animator/ctc_card_lift">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Hero image (top corners rounded) -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/sk_ivImage"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/ctc_item_hero_height"
+            android:scaleType="centerCrop"
+            android:background="@drawable/bg_skeleton_rounded_top16"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.TopRounded16"
+            tools:ignore="ContentDescription" />
+
+        <!-- Top scrim placeholder -->
+        <View
+            android:id="@+id/sk_topScrim"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:background="@drawable/ctc_top_scrim"
+            app:layout_constraintStart_toStartOf="@id/sk_ivImage"
+            app:layout_constraintEnd_toEndOf="@id/sk_ivImage"
+            app:layout_constraintTop_toTopOf="@id/sk_ivImage" />
+
+        <!-- Favorite chip placeholder (40dp touch / 32dp visual) -->
+        <FrameLayout
+            android:id="@+id/sk_favContainer"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="@dimen/ctc_chip_margin"
+            app:layout_constraintTop_toTopOf="@id/sk_ivImage"
+            app:layout_constraintEnd_toEndOf="@id/sk_ivImage">
+
+            <View
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_skeleton_circle" />
+        </FrameLayout>
+
+        <!-- Content -->
+        <LinearLayout
+            android:id="@+id/sk_contentContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/ctc_content_padding_h"
+            android:paddingTop="@dimen/ctc_content_padding_t"
+            android:paddingBottom="@dimen/ctc_content_padding_b"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sk_ivImage">
+
+            <!-- Title row + add-to-list chip -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Title block (2 lines) -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="200dp"
+                        android:layout_height="20dp"
+                        android:background="@drawable/bg_skeleton_soft" />
+
+                    <View
+                        android:layout_width="200dp"
+                        android:layout_height="16dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_skeleton_soft" />
+                </LinearLayout>
+
+                <!-- Add-to-list chip placeholder (40dp / 32dp visual) -->
+                <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:foregroundGravity="center"
+                    android:layout_marginStart="8dp">
+
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_skeleton_circle" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Address row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/bg_skeleton_circle_small" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="14dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+            </LinearLayout>
+
+            <!-- Distance row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/bg_skeleton_circle_small" />
+
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+            </LinearLayout>
+
+            <!-- Rating + price row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/bg_skeleton_circle_small" />
+
+                <View
+                    android:layout_width="110dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Optional price stub -->
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

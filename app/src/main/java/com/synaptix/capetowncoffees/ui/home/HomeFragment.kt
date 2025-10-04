@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,8 +17,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
-import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.ui._simple.*
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.collect
@@ -37,7 +35,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeNewBinding? = null
     private val binding get() = _binding!!
 
-    private val vm: HomeViewModel by viewModels()
+    private val vm: HomeViewModel by activityViewModels()
 
     private lateinit var categoryAdapter: CategoryAdapter
     @Inject lateinit var featuredAdapterFactory: FeaturedAdapter.Factory
@@ -103,6 +101,10 @@ class HomeFragment : Fragment() {
             adapter = nearMeAdapter
             setHasFixedSize(true)
         }
+
+        // 🔧 Prevent RV animations fighting the shimmer crossfade
+        rvFeatured.itemAnimator = null
+        rvNearMe.itemAnimator = null
     }
 
     private fun setupClicks() = with(binding) {
@@ -123,7 +125,8 @@ class HomeFragment : Fragment() {
         // Bind UI (categories, selection, current location, refreshing)
         collect(vm.ui.flow) { ui ->
             categoryAdapter.updateCategories(ui.categories)
-            binding.progressBar.visibility = if (ui.isRefreshing) View.VISIBLE else View.GONE
+            // Do NOT toggle the center spinner here; let section shimmers show instead.
+            binding.progressBar.visibility = View.GONE
         }
 
         // Featured section
@@ -131,14 +134,12 @@ class HomeFragment : Fragment() {
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> showFeaturedSkeleton(true)
                 is Loadable.Data -> {
-                    showFeaturedSkeleton(false)
                     featuredAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
-                    binding.rvFeatured.visibility = if (loadable.value.isEmpty()) View.GONE else View.VISIBLE
+                    showFeaturedSkeleton(false)
                 }
                 is Loadable.Error -> {
                     showFeaturedSkeleton(false)
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
-                    binding.rvFeatured.visibility = View.GONE
                 }
             }
         }
@@ -148,9 +149,8 @@ class HomeFragment : Fragment() {
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> showNearMeSkeleton(true)
                 is Loadable.Data -> {
-                    showNearMeSkeleton(false)
                     nearMeAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
-                    binding.rvNearMe.visibility = if (loadable.value.isEmpty()) View.GONE else View.VISIBLE
+                    showNearMeSkeleton(false)
                 }
                 is Loadable.Error -> {
                     showNearMeSkeleton(false)
@@ -160,14 +160,41 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showFeaturedSkeleton(show: Boolean) {
-        // TODO: show/hide shimmer container for featured
-        binding.rvFeatured.visibility = if (show) View.VISIBLE else binding.rvFeatured.visibility
+    // ───────── collectors call these ─────────
+    private fun showFeaturedSkeleton(show: Boolean) = with(binding) {
+        if (show) {
+            crossfadeInShimmer(
+                shimmer = shimmerFeatured,
+                content = rvFeatured,
+                minContainer = featuredContainer,
+                peekDimen = R.dimen.home_featured_peek_height
+            )
+        } else {
+            crossfadeOutShimmer(
+                shimmer = shimmerFeatured,
+                content = rvFeatured,
+                minContainer = featuredContainer
+            )
+        }
     }
 
-    private fun showNearMeSkeleton(show: Boolean) {
-        // TODO: show/hide shimmer container for near-me
+    private fun showNearMeSkeleton(show: Boolean) = with(binding) {
+        if (show) {
+            crossfadeInShimmer(
+                shimmer = shimmerNear,
+                content = rvNearMe,
+                minContainer = nearContainer,
+                peekDimen = R.dimen.home_near_peek_height
+            )
+        } else {
+            crossfadeOutShimmer(
+                shimmer = shimmerNear,
+                content = rvNearMe,
+                minContainer = nearContainer
+            )
+        }
     }
+
 
     // ───────────────────── Location permissions & fetch ─────────────────────
 
@@ -220,6 +247,52 @@ class HomeFragment : Fragment() {
         val bundle = Bundle().apply { putString("placeId", id) }
         findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
     }
+
+    // ─────────────────────────── Helpers ───────────────────────────
+    private val crossFadeDuration = 220L
+
+    private fun crossfadeInShimmer(shimmer: View, content: View, minContainer: ViewGroup, peekDimen: Int) {
+        // keep content visible but dimmed under the shimmer
+        content.alpha = 0.3f
+        content.visibility = View.VISIBLE
+
+        minContainer.minimumHeight = resources.getDimensionPixelSize(peekDimen)
+
+        shimmer.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate().cancel()
+            animate()
+                .alpha(1f)
+                .setDuration(crossFadeDuration)
+                .withStartAction { if (this is com.facebook.shimmer.ShimmerFrameLayout) startShimmer() }
+                .start()
+        }
+    }
+
+    private fun crossfadeOutShimmer(shimmer: View, content: View, minContainer: ViewGroup) {
+        // make sure content is fully drawn before we fade out shimmer
+        content.post {
+            shimmer.animate().cancel()
+            shimmer.animate()
+                .alpha(0f)
+                .setDuration(crossFadeDuration)
+                .withEndAction {
+                    if (shimmer is com.facebook.shimmer.ShimmerFrameLayout) shimmer.stopShimmer()
+                    shimmer.visibility = View.GONE
+                    shimmer.alpha = 1f
+                    // let the real content pop to full opacity
+                    content.animate().cancel()
+                    content.animate()
+                        .alpha(1f)
+                        .setDuration(160L)
+                        .start()
+                    minContainer.minimumHeight = 0
+                }
+                .start()
+        }
+    }
+
 
     // ─────────────────────────── Lifecycle ───────────────────────────
 

@@ -124,6 +124,9 @@ dependencies {
     // --- Optional helpers ---
     implementation("de.hdodenhof:circleimageview:3.1.0") // Circle Image View
 
+    //Facebook shimmer
+    implementation(libs.shimmer)
+
     // --- Image loading ---
     implementation("com.github.bumptech.glide:glide:4.16.0")
     kapt("com.github.bumptech.glide:compiler:4.16.0")

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Card outer spacing -->
+    <dimen name="ctc_card_margin_h">16dp</dimen>
+    <dimen name="ctc_card_margin_v">8dp</dimen>
+
+    <!-- Hero image height matches your real item -->
+    <dimen name="ctc_item_hero_height">250dp</dimen>
+
+    <!-- Content paddings to mirror your item -->
+    <dimen name="ctc_content_padding_h">12dp</dimen>
+    <dimen name="ctc_content_padding_t">12dp</dimen>
+    <dimen name="ctc_content_padding_b">12dp</dimen>
+
+    <!-- Chip margin (fav top-right) -->
+    <dimen name="ctc_chip_margin">12dp</dimen>
+
+    <!-- Skeleton visuals -->
+    <dimen name="ctc_skeleton_radius">8dp</dimen>
+
+    <!-- Section peek heights (used by containers while loading) -->
+    <dimen name="home_featured_peek_height">160dp</dimen>
+    <dimen name="home_near_peek_height">90dp</dimen>
+</resources>

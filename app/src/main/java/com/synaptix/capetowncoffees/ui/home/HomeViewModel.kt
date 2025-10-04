@@ -2,27 +2,30 @@ package com.synaptix.capetowncoffees.ui.home
 
 import android.os.Bundle
 import com.google.android.gms.maps.model.LatLng
+import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.SimpleViewModel
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.fetchResultInto
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.loadableState
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.state
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.toUiError
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import javax.inject.Inject
 import kotlin.math.max
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val searchNearby: SearchNearbyCoffeePlacesUseCase,     // suspend (params, userLatLng) -> Result<List<CoffeePlaceLite>>
+    private val searchNearby: SearchNearbyCoffeePlacesUseCase,
     private val locationUtil: LocationUtil
 ) : SimpleViewModel() {
 
-    /** UI bits the Fragment binds to (kept local). */
     data class Ui(
         val categories: List<Category> = DEFAULT_CATEGORIES,
         val selectedCategory: Category = DEFAULT_CATEGORIES.first(),
@@ -32,23 +35,23 @@ class HomeViewModel @Inject constructor(
 
     val ui = state(Ui())
 
-    // Sectional/secondary UI: show skeletons & errors independently
-    val nearMe   = loadableState<List<CoffeePlaceLite>>()   // filtered/sorted by category
-    val featured = loadableState<List<CoffeePlaceLite>>()   // top-rated picks
+    // Exposed to Fragment
+    val nearMe   = loadableState<List<CoffeePlaceLite>>()   // vertical list
+    val featured = loadableState<List<CoffeePlaceLite>>()   // horizontal carousel
 
-    // Backing cache of last fetch
-    private var allPlaces: List<CoffeePlaceLite> = emptyList()
-
-    override fun start(args: Bundle?) {
-        super.start(args)
-        // Typically we wait for location from Fragment → onUserLocation()
-        // But you could kick a fetch with a fallback zone if you want.
-    }
-
-    /** Fragment passes device location here once permissions are handled. */
     fun onUserLocation(loc: LatLng) {
         ui.update { it.copy(currentLocation = loc) }
-        refresh() // trigger initial load with the new location
+        refresh()
+    }
+
+    fun onCategorySelected(category: Category) {
+        ui.update { it.copy(selectedCategory = category) }
+        // If data already present, just re-sort/trim without refetch:
+        val current = (nearMe.value as? Loadable.Data)?.value
+        val loc = ui.value.currentLocation
+        if (current != null && loc != null) {
+            nearMe.data(filterByCategoryInternal(category, current, loc))
+        }
     }
 
     fun refresh() {
@@ -57,60 +60,48 @@ class HomeViewModel @Inject constructor(
             return
         }
 
-        // Drive both lists from a single search
-        ui.update { it.copy(isRefreshing = true) }
+        // retire global spinner usage, or leave it but DON'T bind it in the fragment
+        ui.update { it.copy(isRefreshing = false) }
 
-        val params = CoffeeSearchParameters.Builder()
-            .radiusMeters(5_000)
-            .maxResults(32)
-            .build()
+        // 1) tell UI to draw skeletons right away
+        nearMe.loading()
+        featured.loading()
 
-        fetchResultInto(
-            target = nearMe, // we’ll fill & then also compute featured
-            call = {
-                searchNearby(params = params, userLatLng = loc).map { places ->
-                    // Side-effect: cache, compute sections; return near-me filtered list
-                    allPlaces = places
-                    computeFeaturedAndNearMe()
-                    // nearMe Loadable will be set in computeFeaturedAndNearMe(), but we must return something;
-                    // return the filtered list for nearMe as well (keeps semantics tight)
-                    filterByCategoryInternal(ui.value.selectedCategory, places, ui.value.currentLocation)
-                }
-            },
-            label = "home-search"
-        )
+        // Run **two network calls in parallel** (fastest wins first paint)
+        io {
+            val nearbyParams = CoffeeSearchParameters.Builder()
+                .radiusMeters(5000)
+                .maxResults(32)
+                .build()
 
-        // ensure spinner off after transitions
-        main { ui.update { it.copy(isRefreshing = false) } }
-    }
+            val nearDeferred = async {
+                searchNearby(params = nearbyParams, userLatLng = loc)
+                    .map { list ->
+                        filterByCategoryInternal(ui.value.selectedCategory, list, loc)
+                    }
+            }
 
-    fun onCategorySelected(category: Category) {
-        ui.update { it.copy(selectedCategory = category) }
-        if (allPlaces.isNotEmpty()) {
-            // Re-derive lists from cache
-            computeFeaturedAndNearMe()
+            val featuredParams = CoffeeSearchParameters.Builder()
+                .radiusMeters(5000)
+                .maxResults(5)
+                .sortByDistance(false)
+                .build()
+
+            val featuredDeferred = async {
+                searchNearby(params = featuredParams, userLatLng = loc)
+            }
+
+            // publish results independently
+            nearDeferred.await()
+                .onSuccess { nearMe.data(it) }
+                .onFailure { nearMe.error(it.toUiError("Couldn't load nearby")) }
+
+            featuredDeferred.await()
+                .onSuccess { featured.data(it) }
+                .onFailure { featured.error(it.toUiError("Couldn't load featured")) }
+
+            main { ui.update { it.copy(isRefreshing = false) } }
         }
-    }
-
-    // ───────────────────────────────── helpers ─────────────────────────────────
-
-    private fun computeFeaturedAndNearMe() {
-        val loc = ui.value.currentLocation
-        val selected = ui.value.selectedCategory
-        val filtered = filterByCategoryInternal(selected, allPlaces, loc)
-
-        // Featured: highest rated first, >= 4.0 (tweak as you like)
-        val featuredList = allPlaces
-            .filter { (it.rating ?: 0.0) >= 4.0 }
-            .sortedWith(
-                compareByDescending<CoffeePlaceLite> { it.rating ?: 0.0 }
-                    .thenByDescending { it.ratingCount ?: 0 }
-            )
-            .take( max(3, 0) )
-
-        // Push to Loadables (replace skeletons/errors)
-        nearMe.data(filtered)
-        featured.data(featuredList)
     }
 
     private fun filterByCategoryInternal(
@@ -120,25 +111,20 @@ class HomeViewModel @Inject constructor(
     ): List<CoffeePlaceLite> = when (category.name.lowercase()) {
         "popular" -> source.sortedByDescending { it.ratingCount ?: 0 }
         "rated"   -> source.sortedByDescending { it.rating ?: 0.0 }
-        "nearby"  -> {
-            if (user == null) source else {
-                source.sortedBy { place ->
-                    place.location?.let { locationUtil.distanceMeters(user, it).toFloat() } ?: Float.MAX_VALUE
-                }
-            }
+        "nearby"  -> if (user == null) source else source.sortedBy {
+            it.location?.let { ll -> locationUtil.distanceMeters(user, ll).toFloat() } ?: Float.MAX_VALUE
         }
         "dates"   -> source.sortedByDescending { (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f) }
-        // "all" or unknown
         else      -> source
     }
 
     companion object {
         private val DEFAULT_CATEGORIES = listOf(
-            Category(1, "All",       com.synaptix.capetowncoffees.R.drawable.ic_medal),
-            Category(2, "Popular",   com.synaptix.capetowncoffees.R.drawable.ic_star),
-            Category(3, "Pet Friendly", com.synaptix.capetowncoffees.R.drawable.baseline_pets_24),
-            Category(4, "Nearby",    com.synaptix.capetowncoffees.R.drawable.ic_location),
-            Category(5, "Dates",     com.synaptix.capetowncoffees.R.drawable.ic_heart)
+            Category(1, "All", R.drawable.ic_medal),
+            Category(2, "Popular", R.drawable.ic_star),
+            Category(3, "Pet Friendly", R.drawable.baseline_pets_24),
+            Category(4, "Nearby", R.drawable.ic_location),
+            Category(5, "Dates", R.drawable.ic_heart)
         )
     }
 }
