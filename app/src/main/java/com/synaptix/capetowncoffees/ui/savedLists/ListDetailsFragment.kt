@@ -50,17 +50,23 @@ class ListDetailsFragment : Fragment() {
             return
         }
 
-        // Observe list details
-        viewModel.observeList(listId).observe(viewLifecycleOwner) { list ->
-            if (list == null) {
-                Timber.d("List not found; finishing")
-                findNavController().navigateUp()
-                return@observe
+        // Observe userId first, then observe list
+        viewModel.userId.observe(viewLifecycleOwner) { uid ->
+            if (uid != null) {
+                viewModel.observeList(listId).observe(viewLifecycleOwner) { list ->
+                    if (list == null) {
+                        Timber.d("List not found; finishing")
+                        findNavController().navigateUp()
+                        return@observe
+                    }
+                    tvTitle.text = list.name
+                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_explore else R.drawable.ic_lock)
+                    // Load places
+                    viewModel.loadPlacesForIds(list.placeIds)
+                }
+            } else {
+                Timber.d("Waiting for userId to load...")
             }
-            tvTitle.text = list.name
-            ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_explore else R.drawable.ic_lock)
-            // Load places
-            viewModel.loadPlacesForIds(list.placeIds)
         }
 
         // Observe places
