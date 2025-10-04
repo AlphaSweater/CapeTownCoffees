@@ -10,45 +10,76 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 
+/* ──────────────────────────────────────────────────────────────────────────────
+ * SIMPLE VIEWMODEL — TEAM GUIDE (READ ME)
+ * ────────────────────────────────────────────────────────────────────────────── */
+
 /**
- * Simple, no-ceremony ViewModel base.
+ * Lightweight ViewModel base with the helpers your screen code needs:
  *
- * You only:
- * 1) Declare fields with `state()/loadableState()/booleanState()`
- * 2) Override [start] and kick off `fetchInto`/`observeInto`
+ * • [start] – your entry point from the Fragment (read args, kick off work)
+ * • [fetchInto] – run a suspend call and push the result into state
+ * • [observeInto] – collect a Flow into state (with built-in loading/error for Loadable)
+ * • [effects]/[send] – one-shot UI events (snackbar, navigation)
  *
- * Built-ins:
- * - Effects for one-shot messages (snackbar/nav)
- * - IO/Main launch helpers with error mapping
- * - Timber logs for fetch/observe/effects (debug-friendly)
+ * You almost never need to touch anything else here.
  */
 abstract class SimpleViewModel : ViewModel() {
 
-    // Effects (one-shot)
+    /* ──────────────────────────────────────────────────────────────────────────
+     * EFFECTS (ONE-SHOT UI SIGNALS)
+     * ────────────────────────────────────────────────────────────────────────── */
+
     private val _effects = Channel<Effect>(Channel.BUFFERED)
-    /** Observe from the view to handle nav/snackbar, etc. */
+
+    /**
+     * One-shot UI events (snackbar, navigation).
+     *
+     * In your Fragment:
+     * ```
+     * collect(vm.effects) { eff ->
+     *   when (eff) {
+     *     is Effect.Message  -> snackbar(eff.text)
+     *     is Effect.Navigate -> findNavController().navigate(R.id.placeDetailsFragment, eff.args)
+     *   }
+     * }
+     * ```
+     */
     val effects: Flow<Effect> = _effects.receiveAsFlow()
 
-    // Debug state
+    /** Internal debug: tracks whether start() ran and last error. */
     internal val _debugState = VmDebugState()
 
-    /** Send a one-shot effect. */
+    /**
+     * Emit a one-shot [Effect].
+     *
+     * Use inside `main { … }` or any suspend block in your VM:
+     * ```
+     * main { send(Effect.Message("Saved")) }
+     * ```
+     */
     suspend fun send(effect: Effect) {
         SimpleVmDebug.logD(this) { "sendEffect: $effect" }
         _effects.send(effect)
     }
 
     /**
-     * Entry point — call from Fragment (prefer `start(vm)` helper).
-     * Parse args, then kick off fetch/observe work.
+     * Entry point from the UI — **always call this** in your Fragment:
+     * ```
+     * start(vm) // or vm.start(arguments)
+     * ```
+     * Read arguments and kick off your initial `fetchInto` / `observeInto` calls.
      */
     open fun start(args: Bundle?) {
         _debugMarkStarted()
         SimpleVmDebug.logD(this) { "start(args=${args?.keySet()?.joinToString() ?: "none"})" }
     }
 
-    // ------- Coroutine helpers -------
+    /* ──────────────────────────────────────────────────────────────────────────
+     * COROUTINE HELPERS (YOU RARELY NEED THESE DIRECTLY)
+     * ────────────────────────────────────────────────────────────────────────── */
 
+    /** Run work on IO with unified error handling. Prefer [fetchInto]/[observeInto]. */
     fun io(
         onError: (UiError) -> Unit = {},
         block: suspend CoroutineScope.() -> Unit
@@ -67,6 +98,7 @@ abstract class SimpleViewModel : ViewModel() {
         }
     }
 
+    /** Run work on Main with unified error handling. Prefer [fetchInto]/[observeInto]. */
     fun main(
         onError: (UiError) -> Unit = {},
         block: suspend CoroutineScope.() -> Unit
@@ -85,18 +117,24 @@ abstract class SimpleViewModel : ViewModel() {
         }
     }
 
-    // ------- Fetch (suspend -> state) -------
+    /* ──────────────────────────────────────────────────────────────────────────
+     * FETCH (SUSPEND → STATE)
+     * ────────────────────────────────────────────────────────────────────────── */
 
     /**
-     * Run suspend [task] and write result into a plain [StateVar].
+     * One-shot load into a plain [StateVar].
      *
-     * @param showLoading Optional boolean flag to toggle during the call.
-     * @param label Optional log label (e.g., "place", "title")
+     * Use this for primary/atomic data (title, profile, main DTO, etc.).
      *
-     * ### Example
      * ```
-     * fetchInto(title, showLoading = isLoading, label = "title") { repo.getTitle() }
+     * val isLoading = booleanState()
+     * val place = state<Place?>(null)
+     * fetchInto(place, showLoading = isLoading, label = "place") { getPlace(id) }
      * ```
+     *
+     * - Automatically toggles [showLoading]
+     * - Writes state on Main
+     * - On error: logs + `Effect.Message(errorText)`
      */
     fun <T> fetchInto(
         target: StateVar<T>,
@@ -105,7 +143,10 @@ abstract class SimpleViewModel : ViewModel() {
         label: String? = null
     ) = io(onError = { err ->
         showLoading?.set(false)
-        SimpleVmDebug.logE(this, { "fetchInto(StateVar) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" })
+        SimpleVmDebug.logE(
+            this,
+            { "fetchInto(StateVar) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" }
+        )
         main { send(Effect.Message(err.message)) }
     }) {
         withContext(Dispatchers.Main) {
@@ -121,15 +162,18 @@ abstract class SimpleViewModel : ViewModel() {
     }
 
     /**
-     * Run suspend [task] and write result into a [LoadableVar] (Loading/Data/Error).
+     * One-shot load into a [LoadableVar] with Loading/Data/Error transitions.
      *
-     * @param keepOldOnError Preserve previous Data on error (UI stability).
-     * @param label Optional log label (e.g., "reviews", "stats")
+     * Use this for **sub-data** (lists/sections that appear after the main content).
      *
-     * ### Example
      * ```
+     * val reviews = loadableState<List<Review>>()
      * fetchInto(reviews, label = "reviews") { repo.getReviews(id) }
      * ```
+     *
+     * - Starts at `Loading`
+     * - On success → `Data(value)`
+     * - On failure → either `Error(...)` OR keep old data if [keepOldOnError] is true
      */
     fun <T> fetchInto(
         target: LoadableVar<T>,
@@ -139,11 +183,17 @@ abstract class SimpleViewModel : ViewModel() {
     ) = io(onError = { err ->
         val current = target.value
         if (keepOldOnError && current is Loadable.Data) {
-            SimpleVmDebug.logE(this, { "fetchInto(Loadable) ERROR keepOld${label?.let { " [$it]" } ?: ""}: ${err.message}" })
+            SimpleVmDebug.logE(
+                this,
+                { "fetchInto(Loadable) ERROR keepOld${label?.let { " [$it]" } ?: ""}: ${err.message}" }
+            )
             main { send(Effect.Message(err.message)) }
         } else {
             target.error(err)
-            SimpleVmDebug.logE(this, { "fetchInto(Loadable) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" })
+            SimpleVmDebug.logE(
+                this,
+                { "fetchInto(Loadable) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" }
+            )
         }
     }) {
         withContext(Dispatchers.Main) {
@@ -157,15 +207,21 @@ abstract class SimpleViewModel : ViewModel() {
         }
     }
 
-    // ------- Observe (Flow -> state) -------
+    /* ──────────────────────────────────────────────────────────────────────────
+     * OBSERVE (FLOW → STATE)
+     * ────────────────────────────────────────────────────────────────────────── */
 
     /**
-     * Collect a Flow into a [StateVar]. Optionally toggles a loading flag.
+     * Collect a **Flow** into a **plain state**.
      *
-     * ### Example
+     * Use for streams where you don’t need Loading/Error UI (e.g., counters, small flags).
+     *
      * ```
      * observeInto(count, repo.observeCount(), showLoading = isLoading, label = "count")
      * ```
+     *
+     * - Sets [showLoading]=true on subscribe, false on each value/error
+     * - On error: logs + `Effect.Message(errorText)`
      */
     fun <T> observeInto(
         target: StateVar<T>,
@@ -180,7 +236,11 @@ abstract class SimpleViewModel : ViewModel() {
                 showLoading?.set(false)
                 val err = e.toUiError()
                 _debugState.lastError = err
-                SimpleVmDebug.logE(this@SimpleViewModel, { "observeInto(StateVar) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" }, e)
+                SimpleVmDebug.logE(
+                    this@SimpleViewModel,
+                    { "observeInto(StateVar) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" },
+                    e
+                )
                 send(Effect.Message(err.message))
             }
             .collect { v ->
@@ -190,9 +250,10 @@ abstract class SimpleViewModel : ViewModel() {
     }
 
     /**
-     * Collect a Flow into a [LoadableVar] with Loading/Data/Error handling.
+     * Collect a **Flow** into a **Loadable** (built-in Loading/Data/Error).
      *
-     * ### Example
+     * Use when the UI needs a skeleton/progress per emission (lists, charts, etc.).
+     *
      * ```
      * observeInto(stats, repo.observeStats(id), label = "stats")
      * ```
@@ -209,13 +270,19 @@ abstract class SimpleViewModel : ViewModel() {
                 val err = e.toUiError()
                 _debugState.lastError = err
                 target.error(err)
-                SimpleVmDebug.logE(this@SimpleViewModel, { "observeInto(Loadable) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" }, e)
+                SimpleVmDebug.logE(
+                    this@SimpleViewModel,
+                    { "observeInto(Loadable) FAILED${label?.let { " [$it]" } ?: ""}: ${err.message}" },
+                    e
+                )
             }
             .collect { v -> target.data(v) }
     }
 
-    // ------- Debug support -------
+    /* ──────────────────────────────────────────────────────────────────────────
+     * DEBUG SUPPORT (auto; no action needed)
+     * ────────────────────────────────────────────────────────────────────────── */
 
-    /** Mark VM as started. Called internally & by Fragment.start(vm). */
+    /** Marks VM as started (used by logs/guardrails). Called internally & by Fragment.start(vm). */
     internal fun _debugMarkStarted() { _debugState.startInvoked = true }
 }
