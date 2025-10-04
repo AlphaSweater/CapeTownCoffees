@@ -1,6 +1,7 @@
 package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.synaptix.capetowncoffees.data.common.BaseRepository
@@ -12,6 +13,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -90,4 +92,20 @@ class CoffeeListRepository @Inject constructor(
     // Helpers
     // ----------------------------
     private fun currentUidOrNull(): String? = auth.currentUser?.uid
+    override suspend fun addPlaceToLists(listIds: List<String>, placeId: String): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(IllegalStateException("No user logged in"))
+        if (listIds.isEmpty()) return Result.success(Unit)
+
+        return try {
+            val batch = firestore.batch()
+            val col = firestore.collection("users").document(uid).collection("saved_lists")
+            listIds.forEach { id ->
+                batch.update(col.document(id), "placeIds", FieldValue.arrayUnion(placeId))
+            }
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
