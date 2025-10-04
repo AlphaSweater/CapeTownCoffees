@@ -20,15 +20,13 @@ Core goals:
 8. Choosing StateVar vs LoadableVar
 9. Naming & Labeling Conventions
 10. Concurrency & Cancellation
-11. Migration (from pre‑consolidation)
-12. Troubleshooting / FAQ
-13. API Key Setup (existing section)
-14. Future Extensions (ideas)
+11. Troubleshooting / FAQ
+12. Future Extensions (ideas)
 
 ---
 ## 1. TL;DR Quick Start
 Minimal screen setup:
-```kotlin
+``` kotlin
 @HiltViewModel
 class CoffeeDetailsViewModel @Inject constructor(
     private val getCoffee: GetCoffee,              // suspend (id) -> Coffee
@@ -51,7 +49,7 @@ class CoffeeDetailsViewModel @Inject constructor(
 }
 ```
 Fragment usage:
-```kotlin
+``` kotlin
 class CoffeeDetailsFragment : Fragment(R.layout.fragment_coffee_details) {
     private val vm: CoffeeDetailsViewModel by viewModels()
 
@@ -76,20 +74,20 @@ class CoffeeDetailsFragment : Fragment(R.layout.fragment_coffee_details) {
 All architecture code lives under:
 `app/src/main/java/.../ui/_simple/`
 
-| File | Purpose |
-|------|---------|
-| `SimplePrimitives.kt` | UiError, Loadable, Effect, StateVar/ListStateVar/LoadableVar, factory helpers, result adapters |
-| `SimpleViewModel.kt`  | Base VM with fetchInto / observeInto / effect channel |
-| `FragmentExtensions.kt` | Fragment helpers: collect(), collectLoadable(), start() |
-| `ScreenArgs.kt` | Central keys / helpers for Bundle arguments |
-| `SimpleVmDebug.kt` | Logging, guard rails (warn before start, last error tracking) |
-| (Deprecated stubs) | `Core.kt`, `StateVars.kt`, `UseCaseAdapters.kt`, `FragmentCollectors.kt`, `FragmentStart.kt` – safe to delete once merged |
+| File                    | Purpose                                                                                                                   |
+|-------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `SimplePrimitives.kt`   | UiError, Loadable, Effect, StateVar/ListStateVar/LoadableVar, factory helpers, result adapters                            |
+| `SimpleViewModel.kt`    | Base VM with fetchInto / observeInto / effect channel                                                                     |
+| `FragmentExtensions.kt` | Fragment helpers: collect(), collectLoadable(), start()                                                                   |
+| `ScreenArgs.kt`         | Central keys / helpers for Bundle arguments                                                                               |
+| `SimpleVmDebug.kt`      | Logging, guard rails (warn before start, last error tracking)                                                             |
+| (Deprecated stubs)      | `Core.kt`, `StateVars.kt`, `UseCaseAdapters.kt`, `FragmentCollectors.kt`, `FragmentStart.kt` – safe to delete once merged |
 
 ---
 ## 3. Core Primitives
 ### UiError
 A normalized UI-friendly error wrapper.
-```kotlin
+``` kotlin
 data class UiError(val message: String, val cause: Throwable? = null, val recoverable: Boolean = true)
 fun Throwable.toUiError(defaultMsg: String = "Something went wrong"): UiError
 ```
@@ -101,16 +99,16 @@ States: Uninitialized, Loading, Data(value), Error(uiError)
 
 ### Effect
 One-shot events (snackbar, navigation). Collected separately from continuous state.
-```kotlin
+``` kotlin
 sealed class Effect { data class Message(val text: String) : Effect(); data class Navigate(val route: String, val args: Bundle? = null) : Effect() }
 ```
 
 ### State Holders
-| Type | Use For | UI Concern | Notes |
-|------|---------|------------|-------|
-| `StateVar<T>` | Main/simple state (entity, form) | No internal loading/error | MutableStateFlow wrapper |
-| `ListStateVar<T>` | Mutable list patterns | Convenience add/remove | Avoid for paged lists (use paging lib) |
-| `LoadableVar<T>` | Secondary loads (lists, subsections) | Built-in Loading/Error | Great for showing skeletons |
+| Type              | Use For                              | UI Concern                | Notes                                  |
+|-------------------|--------------------------------------|---------------------------|----------------------------------------|
+| `StateVar<T>`     | Main/simple state (entity, form)     | No internal loading/error | MutableStateFlow wrapper               |
+| `ListStateVar<T>` | Mutable list patterns                | Convenience add/remove    | Avoid for paged lists (use paging lib) |
+| `LoadableVar<T>`  | Secondary loads (lists, subsections) | Built-in Loading/Error    | Great for showing skeletons            |
 
 Factories: `state(initial)`, `booleanState()`, `listState()`, `loadableState()`
 
@@ -126,7 +124,7 @@ Primary helpers:
 - `send(Effect)` (in a `main {}` block most commonly)
 
 Recommended layout inside a VM:
-```kotlin
+``` kotlin
 class ExampleVm(...) : SimpleViewModel() {
     // 1. State declarations
     val isLoading = booleanState()
@@ -154,14 +152,14 @@ Label tips: Keep them short; they appear in debug logs. Prefer `entity`, `entity
 ---
 ## 5. Fragment Patterns
 ALWAYS call `start(vm)` in `onViewCreated` (before collecting if possible). Use provided helpers:
-```kotlin
+``` kotlin
 start(vm)
 collect(vm.effects) { ... }
 collect(stateVar.flow) { ... }
 collectLoadable(loadableVar) { ... }
 ```
 Rendering a Loadable:
-```kotlin
+``` kotlin
 fun renderReviews(loadable: Loadable<List<Review>>) = when (loadable) {
     Loadable.Uninitialized, Loadable.Loading -> showSkeleton()
     is Loadable.Data -> showList(loadable.value)
@@ -171,19 +169,19 @@ fun renderReviews(loadable: Loadable<List<Review>>) = when (loadable) {
 
 ---
 ## 6. Loading & Error Strategy
-| Scenario | Tool | UI | Error Path |
-|----------|------|----|------------|
-| Single important resource | `fetchInto(StateVar, showLoading)` | Central spinner | Snackbar via Effect.Message |
-| Secondary / list | `fetchInto(LoadableVar)` | Per-section skeleton | Loadable.Error + Effect.Message (if not keepOld) |
-| Live stream (no skeleton wanted) | `observeInto(StateVar)` | Optional global spinner | Snackbar via Effect.Message |
-| Live stream w/ skeleton | `observeInto(LoadableVar)` | Section skeleton | Loadable.Error |
+| Scenario                         | Tool                               | UI                      | Error Path                                       |
+|----------------------------------|------------------------------------|-------------------------|--------------------------------------------------|
+| Single important resource        | `fetchInto(StateVar, showLoading)` | Central spinner         | Snackbar via Effect.Message                      |
+| Secondary / list                 | `fetchInto(LoadableVar)`           | Per-section skeleton    | Loadable.Error + Effect.Message (if not keepOld) |
+| Live stream (no skeleton wanted) | `observeInto(StateVar)`            | Optional global spinner | Snackbar via Effect.Message                      |
+| Live stream w/ skeleton          | `observeInto(LoadableVar)`         | Section skeleton        | Loadable.Error                                   |
 
 `keepOldOnError=true` (default) prevents jarring UI regressions; old Data remains visible.
 
 ---
 ## 7. Effects (One‑shot UI Events)
 Pattern:
-```kotlin
+``` kotlin
 main { send(Effect.Message("Saved")) }
 collect(vm.effects) { eff -> /* when(eff) { ... } */ }
 ```
@@ -191,12 +189,12 @@ Add your own sealed subclasses (e.g., `Effect.OpenUrl(url)`) inside `SimplePrimi
 
 ---
 ## 8. Choosing StateVar vs LoadableVar
-| Ask Yourself | If YES | Use |
-|--------------|--------|-----|
-| Do I need explicit Loading state on screen? | For this piece only | LoadableVar |
-| Is it the root/primary entity for the screen? | Usually | StateVar (+ separate isLoading) |
-| Will prior data remain on refresh during brief loads? | Desirable | StateVar + isLoading OR LoadableVar (choose UX) |
-| Need to show per-item shimmer skeleton? | Yes | LoadableVar |
+| Ask Yourself                                          | If YES              | Use                                             |
+|-------------------------------------------------------|---------------------|-------------------------------------------------|
+| Do I need explicit Loading state on screen?           | For this piece only | LoadableVar                                     |
+| Is it the root/primary entity for the screen?         | Usually             | StateVar (+ separate isLoading)                 |
+| Will prior data remain on refresh during brief loads? | Desirable           | StateVar + isLoading OR LoadableVar (choose UX) |
+| Need to show per-item shimmer skeleton?               | Yes                 | LoadableVar                                     |
 
 Rule of thumb: Start simple with StateVar; upgrade to LoadableVar when you add a sectional skeleton or error placeholder.
 
@@ -215,30 +213,13 @@ Rule of thumb: Start simple with StateVar; upgrade to LoadableVar when you add a
 - Avoid launching raw coroutines; prefer provided helpers for consistent error handling.
 
 Optional custom cancellation pattern:
-```kotlin
+``` kotlin
 private var refreshJob: Job? = null
 fun refresh() {
     refreshJob?.cancel()
     refreshJob = fetchInto(item, showLoading = isLoading, label = "item-refresh") { repo.getItem(id, true) }
 }
 ```
-
----
-## 11. Migration (from pre‑consolidation)
-Old files | New home
-:--|:--
-`Core.kt` | `SimplePrimitives.kt`
-`StateVars.kt` | `SimplePrimitives.kt`
-`UseCaseAdapters.kt` | `SimplePrimitives.kt`
-`FragmentCollectors.kt` | `FragmentExtensions.kt`
-`FragmentStart.kt` | `FragmentExtensions.kt`
-
-Checklist to migrate a legacy screen:
-1. Replace manual MutableStateFlow with `state()/loadableState()`.
-2. Replace ad-hoc coroutine launches with `fetchInto` / `observeInto`.
-3. Move snackbar/navigation events to `Effect`.
-4. Use `start(vm)` in Fragment instead of manual `vm.start(args)` if preferred.
-5. Delete old file imports (optimize imports in IDE).
 
 ---
 ## 12. Troubleshooting / FAQ
@@ -258,22 +239,7 @@ Q: Can I test this easily?
 A: Inject fake use cases returning test Flows; assert state Flow emits expected sequence (Loadable.Loading → Data(...)). Effects can be collected from `effects` Flow.
 
 ---
-## 13. API Key Setup
-This project uses the Google Places API key for app functionality.
-
-How to set up:
-1. In `gradle.properties`, set `PLACES_API_KEY`.
-2. Build config exposes it as `BuildConfig.PLACES_API_KEY`.
-3. Rotate/change by editing `gradle.properties`.
-
-Example:
-```
-PLACES_API_KEY=your_api_key_here
-```
-Note: For a production key, restrict by SHA1 / domain.
-
----
-## 14. Future Extensions (Ideas)
+## 13. Future Extensions (Ideas)
 - Paging integration helper: `observePagedInto(loadable)`.
 - Retry policy wrapper (exponential backoff on fetchInto).
 - Unified analytics hook inside `SimpleViewModel`.
@@ -290,3 +256,4 @@ You now have a minimal set of predictable tools:
 Keep ViewModels readable: declare state, wire in `start`, add user actions. Nothing more unless necessary.
 
 Happy coding – keep it simple.
+
