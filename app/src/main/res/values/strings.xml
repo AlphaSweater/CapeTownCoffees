@@ -111,4 +111,13 @@
     <string name="description">
         Description of the coffee place.
     </string>
+
+    <!-- Profile -->
+    <string name="account_security">Account Security</string>
+    <string name="change">Change</string>
+    <string name="loading">Loading</string>
+    
+    <!-- Change Password -->
+    <string name="change_password">Change Password</string>
+    <string name="change_password_description">To update your password, please enter your current password and create a new one. Make sure your new password is strong and secure.</string>
 </resources>

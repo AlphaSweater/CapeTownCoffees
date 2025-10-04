@@ -1,86 +1,93 @@
 package com.synaptix.capetowncoffees.ui.profile.editProfile
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeeUser
-import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.UpdateUserProfileUseCase
-import com.synaptix.capetowncoffees.util.Resource
-import com.synaptix.capetowncoffees.util.errorOf
-import com.synaptix.capetowncoffees.util.loadingResource
-import com.synaptix.capetowncoffees.util.successOf
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.usecase.user.UpdateUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
-import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.UpdateAuthCredentialsUseCase
-import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
+import com.synaptix.capetowncoffees.domain.usecase.user.GetUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.usecase.user.UpdateAuthCredentialsUseCase
+import com.synaptix.capetowncoffees.util.TimeUtils
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
-    private val updateProfileUseCase: UpdateUserProfileUseCase,
-    private val updateAuthCredentialsUseCase: UpdateAuthCredentialsUseCase
+    private val updateProfileUseCase: UpdateUserProfileUseCase
 ) : ViewModel() {
 
-    private val _email = MutableStateFlow("")
-    val email: StateFlow<String> = _email.asStateFlow()
-
-    private val _photoBase64 = MutableStateFlow<String?>(null)
-    val photoBase64: StateFlow<String?> = _photoBase64.asStateFlow()
-
-    private val _uiState = MutableStateFlow<Resource<Boolean>>(loadingResource())
-    val uiState: StateFlow<Resource<Boolean>> = _uiState.asStateFlow()
-
-    private val _updateState = MutableStateFlow<Resource<String>>(loadingResource())
-    val updateState: StateFlow<Resource<String>> = _updateState.asStateFlow()
-
-    private val _fullName = MutableStateFlow("")
-    val fullName: StateFlow<String> = _fullName.asStateFlow()
+    private val _uiState = MutableStateFlow<EditProfileUiState>(EditProfileUiState.Loading)
+    val uiState: StateFlow<EditProfileUiState> = _uiState.asStateFlow()
 
     private var currentUser: CoffeeUser? = null
-
     private var profilePictureUri: Uri? = null
+
+    fun setProfilePictureUri(uri: Uri) {
+        profilePictureUri = uri
+        updateUiState()
+    }
+
+    private var currentPassword = ""
+    private var newPassword = ""
+    private var confirmPassword = ""
 
     init {
         loadUserProfile()
     }
 
-    /**
-     * Call this from your UI when the user selects a new profile picture.
-     */
-    fun setProfilePictureUri(uri: Uri?) {
-        profilePictureUri = uri
+    fun setFullName(name: String) {
+        currentUser = currentUser?.copy(fullName = name)
+        updateUiState()
     }
 
-    fun loadUserProfile() {
+    fun setCurrentPassword(password: String) {
+        currentPassword = password
+        updateUiState()
+    }
+
+    fun setNewPassword(password: String) {
+        newPassword = password
+        updateUiState()
+    }
+
+    fun setConfirmPassword(password: String) {
+        confirmPassword = password
+        updateUiState()
+    }
+
+    private fun loadUserProfile() {
         viewModelScope.launch {
-            _uiState.value = loadingResource()
-            getUserProfileUseCase()
-                .onSuccess { user ->
+            _uiState.value = EditProfileUiState.Loading
+            try {
+                val result = getUserProfileUseCase()
+                result.onSuccess { user ->
                     currentUser = user
-                    _fullName.value = user.fullName
-                    _email.value = user.email
-                    _photoBase64.value = user.photoBase64
-                    _uiState.value = successOf(true)
+                    _uiState.value = EditProfileUiState.Success(
+                        user = user,
+                        isFormValid = isFormValid()
+                    )
+                }.onFailure { exception ->
+                    _uiState.value = EditProfileUiState.Error("Failed to load profile: ${exception.message}")
                 }
-                .onFailure { e -> _uiState.value = errorOf(e.message ?: "Failed to load profile") }
+            } catch (e: Exception) {
+                _uiState.value = EditProfileUiState.Error("An unexpected error occurred")
+            }
         }
     }
 
-    fun updateProfile(
-        currentPassword: String?,
-        newPassword: String?,
-        context: Context? = null
-    ) {
+    fun updateProfile(context: android.content.Context) {
         viewModelScope.launch {
             _updateState.value = loadingResource()
             val updatedUser = currentUser?.copy(
                 fullName = _fullName.value.ifEmpty { null } ?: currentUser!!.fullName,
                 email = _email.value.ifEmpty { null } ?: currentUser!!.email,
-                updatedAt = CoffeeTimeUtils.nowSeconds()
+                updatedAt = TimeUtils.nowSeconds()
             ) ?: return@launch
 
             val safeEmail = _email.value
@@ -95,16 +102,64 @@ class EditProfileViewModel @Inject constructor(
                 return@launch
             }
 
-            updateProfileUseCase.execute(updatedUser, profilePictureUri, context)
-                .onSuccess {
-                    currentUser = updatedUser.copy(photoBase64 = if (profilePictureUri != null && context != null) currentUser?.photoBase64 else updatedUser.photoBase64)
-                    _updateState.value = successOf("Profile updated successfully")
+            _uiState.value = EditProfileUiState.Loading
+
+            try {
+                // Create the Params object with all required parameters
+                val params = UpdateUserProfileUseCase.Params(
+                    updatedUser = user.copy(
+                        fullName = user.fullName, // This should be the new full name from the UI
+                        // Add any other fields that can be updated
+                    ),
+                    profilePictureUri = profilePictureUri,
+                    currentPassword = if (newPassword.isNotBlank()) currentPassword else null,
+                    newPassword = if (newPassword.isNotBlank()) newPassword else null,
+                    context = context // Pass the context for file operations
+                )
+
+                // Execute the use case with the Params object
+                updateProfileUseCase.execute(params).onSuccess {
+                    // Clear password fields on success
+                    currentPassword = ""
+                    newPassword = ""
+                    confirmPassword = ""
+
+                    _uiState.value = EditProfileUiState.Success(
+                        user = user,
+                        isFormValid = true,
+                        successMessage = "Profile updated successfully"
+                    )
+                }.onFailure { exception ->
+                    _uiState.value = EditProfileUiState.Error("Failed to update profile: ${exception.message}")
                 }
-                .onFailure { e -> _updateState.value = errorOf(e.message ?: "Failed to update profile") }
+            } catch (e: Exception) {
+                _uiState.value = EditProfileUiState.Error("An error occurred: ${e.message}")
+            }
         }
     }
 
-    fun resetUpdateState() {
-        _updateState.value = loadingResource()
+    private fun isFormValid(): Boolean {
+        // Add your validation logic here
+        return currentUser?.fullName?.isNotBlank() == true
     }
+
+    private fun updateUiState() {
+        val currentState = _uiState.value
+        if (currentState is EditProfileUiState.Success) {
+            _uiState.value = currentState.copy(
+                user = currentUser ?: return,
+                isFormValid = isFormValid()
+            )
+        }
+    }
+}
+
+sealed class EditProfileUiState {
+    object Loading : EditProfileUiState()
+    data class Success(
+        val user: User,
+        val isFormValid: Boolean = false,
+        val successMessage: String? = null
+    ) : EditProfileUiState()
+    data class Error(val message: String) : EditProfileUiState()
 }
