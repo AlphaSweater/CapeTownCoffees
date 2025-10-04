@@ -1,8 +1,6 @@
 package com.synaptix.capetowncoffees.ui.coffeeDetail
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
@@ -10,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -41,10 +38,6 @@ class CoffeeDetailFragment : Fragment() {
     private val vm: CafeDetailViewModel by viewModels()
     private var _binding: FragmentCoffeeDetailBinding? = null
     private val binding get() = _binding!!
-
-    companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -113,7 +106,7 @@ class CoffeeDetailFragment : Fragment() {
                 Loadable.Loading -> showLoading(true)
                 is Loadable.Data -> {
                     showLoading(false)
-                    updateImage(loadable.value) // Places SDK bitmap stays here
+                    updateImage(loadable.value)
                 }
                 is Loadable.Error -> {
                     showLoading(false)
@@ -221,26 +214,9 @@ class CoffeeDetailFragment : Fragment() {
     // ───────────────────────────── Location plumbing ─────────────────────────────
 
     private fun getCurrentLocation() {
-        val fineGranted = ContextCompat.checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val coarseGranted = ContextCompat.checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (!fineGranted || !coarseGranted) {
-            requestPermissions(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
-            return
-        }
-
         // Fetch and let the VM compute distance text
         lifecycleScope.launch {
+            @Suppress("MissingPermission")
             runCatching { locationUtil.getCurrentLatLng().getOrNull() }
                 .onSuccess { location ->
                     location?.let { vm.onUserLocation(it) }
@@ -249,21 +225,6 @@ class CoffeeDetailFragment : Fragment() {
                     Timber.e(it, "Failed to get current location")
                     // VM will hide distance when it can't compute it next tick
                 }
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            val granted = grantResults.size >= 2 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[1] == PackageManager.PERMISSION_GRANTED
-            if (granted) getCurrentLocation()
         }
     }
 
