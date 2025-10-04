@@ -7,8 +7,10 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -16,9 +18,22 @@ import timber.log.Timber
 
 @HiltViewModel
 class ListDetailsViewModel @Inject constructor(
+    private val getUserProfileUseCase: GetUserProfileUseCase,
     private val savedRepo: ICoffeeListRepository,
     private val placesRepo: IPlacesApiRepository
 ) : ViewModel() {
+
+    private val _userId = MutableLiveData<String?>()
+    val userId: LiveData<String?> get() = _userId
+
+    init {
+        viewModelScope.launch {
+            val result = getUserProfileUseCase()
+            val user = result.getOrNull()
+            _userId.postValue(user?.id)
+        }
+    }
+
 
     private val _listId = MutableLiveData<String>()
     val listId: LiveData<String> get() = _listId
@@ -28,12 +43,19 @@ class ListDetailsViewModel @Inject constructor(
         _listId.value = id
     }
 
-    fun observeList(id: String): LiveData<CoffeeList?> = savedRepo.observeList(id).asLiveData()
+    fun observeList(id: String): LiveData<CoffeeList?> {
+        val uid = userId.value
+        return if (uid != null) {
+            savedRepo.observeList(id, uid).asLiveData()
+        } else {
+            MutableLiveData(null)
+        }
+    }
 
     private val _places = MutableLiveData<kotlin.collections.List<CoffeePlaceFull>>()
     val places: LiveData<kotlin.collections.List<CoffeePlaceFull>> get() = _places
 
-    fun loadPlacesForIds(ids: kotlin.collections.List<String>) {
+    fun loadPlacesForIds(ids: List<String>) {
         if (ids.isEmpty()) {
             _places.value = emptyList()
             return
@@ -50,6 +72,8 @@ class ListDetailsViewModel @Inject constructor(
             Timber.d("Loaded ${results.size} place details")
         }
     }
+
+
 
     fun deleteListAndReturn(id: String, onDone: () -> Unit, onError: (Throwable) -> Unit) {
         viewModelScope.launch {

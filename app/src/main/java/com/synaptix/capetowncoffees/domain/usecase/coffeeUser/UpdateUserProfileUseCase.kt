@@ -3,8 +3,9 @@ package com.synaptix.capetowncoffees.domain.usecase.coffeeUser
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
-import com.synaptix.capetowncoffees.domain.model.User
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.model.CoffeeUser
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 /**
@@ -19,7 +20,7 @@ class UpdateUserProfileUseCase @Inject constructor(
      * Data class for update profile parameters.
      */
     data class Params(
-        val updatedUser: User,
+        val updatedUser: CoffeeUser,
         val profilePictureUri: Uri? = null,
         val currentPassword: String? = null,
         val newPassword: String? = null,
@@ -32,11 +33,7 @@ class UpdateUserProfileUseCase @Inject constructor(
      * @param params The parameters for the update operation.
      * @return Result<Unit> indicating success or failure.
      */
-    suspend fun execute(
-        updatedUser: User,
-        profilePictureUri: Uri? = null,
-        context: Context? = null
-    ): Result<Unit> {
+    suspend fun execute(params: Params): Result<Unit> {
         val currentUser = userRepository.getCurrentUserProfile().getOrElse {
             return Result.failure(it)
         } ?: return Result.failure(IllegalStateException("No current user profile found"))

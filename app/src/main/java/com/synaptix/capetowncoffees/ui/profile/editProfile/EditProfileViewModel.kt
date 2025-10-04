@@ -5,21 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeeUser
 import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
-import com.synaptix.capetowncoffees.domain.usecase.user.UpdateUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.UpdateAuthCredentialsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.UpdateUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.synaptix.capetowncoffees.domain.usecase.user.GetUserProfileUseCase
-import com.synaptix.capetowncoffees.domain.usecase.user.UpdateAuthCredentialsUseCase
-import com.synaptix.capetowncoffees.util.TimeUtils
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
-    private val updateProfileUseCase: UpdateUserProfileUseCase
+    private val updateProfileUseCase: UpdateUserProfileUseCase,
+    private val updateAuthCredentialsUseCase: UpdateAuthCredentialsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<EditProfileUiState>(EditProfileUiState.Loading)
@@ -27,18 +27,17 @@ class EditProfileViewModel @Inject constructor(
 
     private var currentUser: CoffeeUser? = null
     private var profilePictureUri: Uri? = null
-
-    fun setProfilePictureUri(uri: Uri) {
-        profilePictureUri = uri
-        updateUiState()
-    }
-
     private var currentPassword = ""
     private var newPassword = ""
     private var confirmPassword = ""
 
     init {
         loadUserProfile()
+    }
+
+    fun setProfilePictureUri(uri: Uri) {
+        profilePictureUri = uri
+        updateUiState()
     }
 
     fun setFullName(name: String) {
@@ -83,49 +82,35 @@ class EditProfileViewModel @Inject constructor(
 
     fun updateProfile(context: android.content.Context) {
         viewModelScope.launch {
-            _updateState.value = loadingResource()
-            val updatedUser = currentUser?.copy(
-                fullName = _fullName.value.ifEmpty { null } ?: currentUser!!.fullName,
-                email = _email.value.ifEmpty { null } ?: currentUser!!.email,
-                updatedAt = TimeUtils.nowSeconds()
-            ) ?: return@launch
-
-            val safeEmail = _email.value
-            val safeNewPassword = newPassword ?: ""
-
-            val authChanges = if (!currentPassword.isNullOrBlank() && (safeEmail.isNotBlank() || safeNewPassword.isNotBlank())) {
-                updateAuthCredentialsUseCase(currentPassword, safeEmail, safeNewPassword)
-            } else Result.success(Unit)
-
-            if (authChanges.isFailure) {
-                _updateState.value = errorOf(authChanges.exceptionOrNull()?.message ?: "Auth update failed")
-                return@launch
-            }
-
             _uiState.value = EditProfileUiState.Loading
-
+            val user = currentUser ?: return@launch
+            val updatedUser = user.copy(
+                fullName = user.fullName,
+                updatedAt = CoffeeTimeUtils.nowSeconds()
+            )
+            // Update auth credentials if needed
+            if (currentPassword.isNotBlank() && (user.email.isNotBlank() || newPassword.isNotBlank())) {
+                val authResult = updateAuthCredentialsUseCase(currentPassword,
+                    user.email, newPassword)
+                if (authResult.isFailure) {
+                    _uiState.value = EditProfileUiState.Error(authResult.exceptionOrNull()?.message ?: "Auth update failed")
+                    return@launch
+                }
+            }
             try {
-                // Create the Params object with all required parameters
                 val params = UpdateUserProfileUseCase.Params(
-                    updatedUser = user.copy(
-                        fullName = user.fullName, // This should be the new full name from the UI
-                        // Add any other fields that can be updated
-                    ),
+                    updatedUser = updatedUser,
                     profilePictureUri = profilePictureUri,
                     currentPassword = if (newPassword.isNotBlank()) currentPassword else null,
-                    newPassword = if (newPassword.isNotBlank()) newPassword else null,
-                    context = context // Pass the context for file operations
+                    newPassword = newPassword.ifBlank { null },
+                    context = context
                 )
-
-                // Execute the use case with the Params object
                 updateProfileUseCase.execute(params).onSuccess {
-                    // Clear password fields on success
                     currentPassword = ""
                     newPassword = ""
                     confirmPassword = ""
-
                     _uiState.value = EditProfileUiState.Success(
-                        user = user,
+                        user = updatedUser,
                         isFormValid = true,
                         successMessage = "Profile updated successfully"
                     )
@@ -139,7 +124,6 @@ class EditProfileViewModel @Inject constructor(
     }
 
     private fun isFormValid(): Boolean {
-        // Add your validation logic here
         return currentUser?.fullName?.isNotBlank() == true
     }
 
@@ -157,7 +141,7 @@ class EditProfileViewModel @Inject constructor(
 sealed class EditProfileUiState {
     object Loading : EditProfileUiState()
     data class Success(
-        val user: User,
+        val user: CoffeeUser,
         val isFormValid: Boolean = false,
         val successMessage: String? = null
     ) : EditProfileUiState()
