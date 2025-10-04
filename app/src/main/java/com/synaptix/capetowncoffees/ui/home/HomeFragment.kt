@@ -27,6 +27,7 @@ import com.synaptix.capetowncoffees.ui._simple.viewmodel.start
 import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.FeaturedAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.NearMeItemAdapter
+import com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList.AddPlacesToListBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -211,8 +212,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun showAddToListBottomSheet(id: String) {
-        // TODO: open your AddPlacesToListBottomSheet here
-        Toast.makeText(requireContext(), "Add to list: $id", Toast.LENGTH_SHORT).show()
+        val bottomSheet = AddPlacesToListBottomSheet.new(id)
+        bottomSheet.show(childFragmentManager, "AddPlacesToListBottomSheet")
     }
 
     private fun navigateToCafeDetailsId(id: String) {

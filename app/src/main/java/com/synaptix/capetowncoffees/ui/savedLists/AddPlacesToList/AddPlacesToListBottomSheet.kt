@@ -12,6 +12,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.synaptix.capetowncoffees.databinding.FragmentSavedAddPlacesToListBinding
+import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,7 +30,7 @@ class AddPlacesToListBottomSheet : BottomSheetDialogFragment() {
     private val vm: AddPlacesToListViewModel by viewModels()
 
     private val adapter = AddPlacesToListAdapter { _, _ -> }
-    private var fullList: List<com.synaptix.capetowncoffees.domain.model.CoffeeList> = emptyList()
+    private var fullList: List<CoffeeList> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?

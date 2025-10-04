@@ -40,7 +40,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:background="@drawable/bg_pill_dark"
+        android:backgroundTint="@color/button_primary"
         android:text="Add"
         android:textColor="@color/white"
         android:textStyle="bold" />
