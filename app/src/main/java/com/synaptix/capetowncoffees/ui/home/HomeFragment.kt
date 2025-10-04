@@ -1,9 +1,7 @@
 package com.synaptix.capetowncoffees.ui.home
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
@@ -11,9 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresPermission
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -22,16 +17,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.ui.home.adapter.*
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
 import com.synaptix.capetowncoffees.ui.coffeeDetail.CafeDetailViewModel
+import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
+import com.synaptix.capetowncoffees.ui.home.adapter.FeaturedAdapter
+import com.synaptix.capetowncoffees.ui.home.adapter.NearMeAdapter
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -40,13 +35,9 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
+    @Inject lateinit var locationUtil: LocationUtil
+    @Inject lateinit var coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase
 
-    @Inject
-    lateinit var placesClient: PlacesClient
-    
-    @Inject
-    lateinit var fusedLocationClient: FusedLocationProviderClient
-    
     private var _binding: FragmentHomeNewBinding? = null
     private val binding get() = _binding!!
 
@@ -61,32 +52,13 @@ class HomeFragment : Fragment() {
         Category(5, "Dates", R.drawable.ic_heart)
     )
 
+    private var currentLocation: LatLng? = null
     private lateinit var categoryAdapter: CategoryAdapter
+
+    @Inject lateinit var featuredAdapterFactory: FeaturedAdapter.Factory
     private lateinit var featuredAdapter: FeaturedAdapter
+    @Inject lateinit var nearbyAdapterFactory: NearMeAdapter.Factory
     private lateinit var nearMeAdapter: NearMeAdapter
-    
-    private fun initAdapters() {
-        categoryAdapter = CategoryAdapter { category ->
-            viewModel.filterByCategory(category)
-        }
-
-        featuredAdapter = FeaturedAdapter(
-            placesClient = placesClient,
-            currentLocation = null,
-            onItemClick = { featuredItem ->
-                // Handle featured item click
-                navigateToCafeDetails(featuredItem)
-            }
-        )
-
-        nearMeAdapter = NearMeAdapter(
-            placesClient = placesClient,
-            currentLocation = null, // Will be updated when location is available
-            onItemClick = { cafe ->
-                navigateToCafeDetails(cafe)
-            }
-        )
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -97,77 +69,57 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-    }
-
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    private val locationPermissionRequest = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        when {
-            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-                    permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                // Precise location access granted
-                requestLocation()
-            }
-            else -> {
-                // No location access granted
-                showError("Location permission is required to show nearby coffee places")
-            }
-        }
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // Initialize adapters after view is created and PlacesClient is injected
-        initAdapters()
-        setupUI()
-        setupObservers()
-        
-        loadData()
+        fetchLocationAndInitUI()
     }
-    
-    override fun onResume() {
-        super.onResume()
-        // Refresh data when returning to this fragment
-        loadData()
-    }
-    
-    private fun loadData() {
-        if (checkLocationPermission()) {
-            requestLocation()
-        } else {
-            requestLocationPermission()
+
+    @SuppressLint("MissingPermission")
+    private fun fetchLocationAndInitUI() {
+        lifecycleScope.launch {
+            showLoading(true)
+            val result = locationUtil.getCurrentLatLng()
+            showLoading(false)
+            result.onSuccess { location ->
+                currentLocation = location
+                viewModel.setCurrentLocation(location)
+                initAdapters(location)
+                setupUI()
+                setupObservers()
+            }.onFailure { error ->
+                showError("Could not get current location: ${error.message ?: "Unknown error"}")
+                // Optionally, initialize UI with fallback (no location)
+                initAdapters(null)
+                setupUI()
+                setupObservers()
+            }
         }
     }
-    
+
+    private fun initAdapters(location: LatLng?) {
+        categoryAdapter = CategoryAdapter { category ->
+            viewModel.filterByCategory(category)
+        }
+        featuredAdapter = featuredAdapterFactory.create(
+            currentLocation = location,
+            coroutineScope = viewLifecycleOwner.lifecycleScope,
+            onItemClick = { featuredItem -> navigateToCafeDetails(featuredItem) }
+        )
+        nearMeAdapter = nearbyAdapterFactory.create(
+            currentLocation = location,
+            coroutineScope = viewLifecycleOwner.lifecycleScope,
+            onItemClick = { cafe ->
+                navigateToCafeDetails(cafe)
+            }
+        )
+    }
+
+
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork ?: return false
         val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
         return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
-    
-    private fun checkLocationPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-    
-    private fun requestLocationPermission() {
-        locationPermissionRequest.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
     }
     
     private fun setupUI() {
@@ -212,66 +164,6 @@ class HomeFragment : Fragment() {
                         }
                     }
                 }
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private var currentLocation: LatLng? = null
-    
-    private fun requestLocation() {
-        if (!checkLocationPermission()) {
-            showError("Location permission not granted")
-            return
-        }
-        
-        if (!isNetworkAvailable()) {
-            showError("No internet connection")
-            return
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        // Convert Location to LatLng
-                        val latLng = com.google.android.gms.maps.model.LatLng(
-                            location.latitude,
-                            location.longitude
-                        )
-                        currentLocation = latLng
-                        viewModel.setCurrentLocation(latLng)
-                        // The UI will be updated automatically through the uiState flow in updateUI()
-                    } else {
-                        // Last location is null, request a new one using the suspend function
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            try {
-                                if (!checkLocationPermission()) {
-                                    showError("Location permission not granted")
-                                    return@launch
-                                }
-                                
-                                val newLocation = LocationUtil.getCurrentLocation(requireContext())
-                                newLocation?.let {
-                                    val newLatLng = com.google.android.gms.maps.model.LatLng(
-                                        it.latitude,
-                                        it.longitude
-                                    )
-                                    viewModel.setCurrentLocation(newLatLng)
-                                } ?: showError("Could not get current location")
-                            } catch (e: Exception) {
-                                Timber.e(e, "Error getting current location")
-                                showError("Could not get current location: ${e.message}")
-                            }
-                        }
-                    }
-                }.addOnFailureListener { e ->
-                    Timber.e(e, "Error getting last location")
-                    showError("Error getting location: ${e.message}")
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Error in requestLocation")
-                showError("Error: ${e.message}")
             }
         }
     }
