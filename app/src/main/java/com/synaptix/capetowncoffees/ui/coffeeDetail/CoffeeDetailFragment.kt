@@ -149,9 +149,9 @@ class CoffeeDetailFragment : Fragment() {
             binding.ratingBar.visibility = if (ui.showRating) View.VISIBLE else View.GONE
             binding.tvRating.visibility = if (ui.showRating) View.VISIBLE else View.GONE
             if (ui.showRating) {
-                binding.ratingBar.rating = ui.ratingText?.toFloatOrNull() ?: 0f
+                binding.ratingBar.rating = ui.rating?.toFloat() ?: 0f
                 // Prefer count badge if present, else numeric rating
-                binding.tvRating.text = ui.ratingCountText ?: ui.ratingText.orEmpty()
+                binding.tvRating.text = ui.ratingCountText ?: ui.rating?.toString() ?: ""
             }
 
             // Distance (computed in VM when both locations known)

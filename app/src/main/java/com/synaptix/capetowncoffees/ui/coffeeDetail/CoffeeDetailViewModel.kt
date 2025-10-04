@@ -1,5 +1,6 @@
 package com.synaptix.capetowncoffees.ui.coffeeDetail
 
+import android.content.Context
 import android.os.Bundle
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
@@ -13,9 +14,14 @@ import com.synaptix.capetowncoffees.ui._simple.SimpleViewModel
 import com.synaptix.capetowncoffees.ui._simple.fetchResultInto
 import com.synaptix.capetowncoffees.ui._simple.loadableState
 import com.synaptix.capetowncoffees.ui._simple.state
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,8 +41,8 @@ class CafeDetailViewModel @Inject constructor(
         val openingHoursText: String = "",
         val hasOpeningHours: Boolean = false,
         val phoneNumber: String? = null,
-        val ratingText: String? = null,        // "4.6"
-        val ratingCountText: String? = null,   // "(123)"
+        val rating: Double? = null,
+        val ratingCountText: String? = null,
         val showRating: Boolean = false,
         val showDistance: Boolean = false,
         val distanceText: String? = null,
@@ -127,7 +133,7 @@ class CafeDetailViewModel @Inject constructor(
     private fun updateUiFrom(place: CoffeePlaceFull) {
         placeLocation = place.location
 
-        val ratingText = place.rating?.let { String.format("%.1f", it) }
+        val rating = place.rating
         val ratingCountText = place.ratingCount?.let { "(${it})" }
         val phone = place.nationalPhoneNumber ?: place.internationalPhoneNumber
         val hours = formatOpeningHours(place.currentOpeningHours)
@@ -141,11 +147,10 @@ class CafeDetailViewModel @Inject constructor(
                 openingHoursText = hours ?: "",
                 hasOpeningHours = hours != null,
                 phoneNumber = phone,
-                ratingText = ratingText,
+                rating = rating,
                 ratingCountText = ratingCountText,
-                showRating = ratingText != null,
+                showRating = rating != null,
                 imageAvailable = imageAvailable,
-                // distance gets filled by maybeUpdateDistance()
                 showDistance = false,
                 distanceText = null
             )
@@ -165,38 +170,60 @@ class CafeDetailViewModel @Inject constructor(
         }
     }
 
-    /** Pure formatter moved from Fragment. Returns null if nothing meaningful. */
-    private fun formatOpeningHours(hours: List<String>?): String? {
-        hours ?: return null
-        if (hours.isEmpty()) return null
+    /**
+     * Formats weekly opening hours (Mon..Sun). Input examples per line:
+     *  - "Mon: 07:00-17:00", "Monday: 7:00 am – 5:00 pm", "Tue: Closed"
+     * Supports multiple intervals: "08:00–12:00, 13:00–17:00".
+     */
+    fun formatOpeningHours(
+        hours: List<String>?,
+        prefs: CoffeeTimeUtils.DisplayPrefs = CoffeeTimeUtils.defaultPrefsProvider(),
+        context: Context? = null
+    ): String? {
+        if (hours.isNullOrEmpty()) return null
 
-        val dayAbbrev = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        val hoursByDay = hours.mapIndexed { index, full ->
-            val timePart = full.substringAfter(": ", full)
-            dayAbbrev[index] to timePart
-        }
+        val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        val zone: ZoneId = prefs.zone
+        val anchor: (LocalTime) -> Long = { LocalDate.now(zone).atTime(it).atZone(zone).toEpochSecond() }
+        val fmt: (LocalTime) -> String = { CoffeeTimeUtils.formatShortTime(anchor(it), prefs, context) }
 
-        val result = mutableListOf<String>()
-        val currentRange = mutableListOf<String>()
-        var currentHours = ""
+        // Parse & normalize each day's line → "Closed" or "hh:mm–hh:mm[, hh:mm–hh:mm]"
+        val normalized = days.zip(hours.map { raw ->
+            val cleaned = raw
+                .replace('\u202F', ' ') // narrow no-break space
+                .replace('\u00A0', ' ') // no-break space
+                .replace('—', '-')      // em dash
+                .replace('–', '-')      // en dash
+                .replace('.', ':')      // "7.00 am" → "7:00 am"
+                .replace("\\s+".toRegex(), " ")
+                .trim()
 
-        for ((day, hour) in hoursByDay) {
-            if (currentHours != hour) {
-                if (currentRange.isNotEmpty()) {
-                    result.add(formatDayRange(currentRange, currentHours))
-                    currentRange.clear()
+            val content = cleaned.substringAfter(':', missingDelimiterValue = "").trim()
+            if (content.equals("closed", true) || content.isEmpty()) "Closed" else {
+                val ranges = content.split(Regex("\\s*,\\s*|\\s*;\\s*|\\s*[、，]\\s*")) // commas, semicolons, CJK commas
+                val formatted = ranges.mapNotNull { r ->
+                    val (a, b) = r.split('-', limit = 2).map { it.trim() }.let { if (it.size == 2) it[0] to it[1] else null } ?: return@mapNotNull null
+                    val t1 = CoffeeTimeUtils.parseTimeToLocalTime(a)
+                    val t2 = CoffeeTimeUtils.parseTimeToLocalTime(b)
+                    if (t1 != null && t2 != null) "${fmt(t1)} – ${fmt(t2)}" else null
                 }
-                currentHours = hour
+                if (formatted.isEmpty()) "Closed" else formatted.joinToString(", ")
             }
-            currentRange.add(day)
-        }
-        if (currentRange.isNotEmpty()) result.add(formatDayRange(currentRange, currentHours))
-        return result.joinToString("\n")
-    }
+        })
 
-    private fun formatDayRange(days: List<String>, hours: String): String = when (days.size) {
-        1 -> "${days[0]}: $hours"
-        2 -> "${days[0]} & ${days[1]}: $hours"
-        else -> "${days.first()} - ${days.last()}: $hours"
+        // Group consecutive days with identical hours
+        val out = mutableListOf<String>()
+        var start = 0
+        var cur = normalized[0].second
+        for (i in normalized.indices) {
+            val last = i == normalized.lastIndex
+            val sameNext = !last && normalized[i + 1].second == cur
+            if (!sameNext) {
+                val label = if (start == i) days[i] else "${days[start]} – ${days[i]}"
+                out += "$label: $cur"
+                if (!last) { start = i + 1; cur = normalized[i + 1].second }
+            }
+        }
+        return out.joinToString("\n")
     }
 }
