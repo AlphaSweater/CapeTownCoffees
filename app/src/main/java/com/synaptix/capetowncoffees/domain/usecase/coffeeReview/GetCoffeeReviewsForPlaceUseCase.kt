@@ -58,8 +58,8 @@ import javax.inject.Inject
  * }
  * ```
  */
-class GetPlaceReviewsUseCase @Inject constructor(
-    private val repository: ICoffeeReviewRepository
+class GetCoffeeReviewsForPlaceUseCase @Inject constructor(
+    private val coffeeReviewRepository: ICoffeeReviewRepository
 ) {
 
     /**
@@ -70,7 +70,7 @@ class GetPlaceReviewsUseCase @Inject constructor(
      * @return `Result<List<CoffeeReview>>` (errors are wrapped; success may be empty).
      */
     suspend operator fun invoke(placeId: String, limit: Int? = null): Result<List<CoffeeReview>> {
-        return repository.getReviewsForPlace(placeId, limit)
+        return coffeeReviewRepository.getReviewsForPlace(placeId, limit)
     }
 
     /**
@@ -100,6 +100,6 @@ class GetPlaceReviewsUseCase @Inject constructor(
         orderBy: Pair<String, Query.Direction>? = null,
         key: String = ""
     ): PaginatedResult<CoffeeReview> {
-        return repository.getReviewsForPlacePaginated(placeId, pageSize, reset, orderBy, key)
+        return coffeeReviewRepository.getReviewsForPlacePaginated(placeId, pageSize, reset, orderBy, key)
     }
 }

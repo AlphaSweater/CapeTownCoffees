@@ -10,12 +10,12 @@ sealed class CreateListResult {
 }
 
 class CreateListUseCase @Inject constructor(
-    private val repo: ICoffeeListRepository
+    private val coffeeListRepository: ICoffeeListRepository
 ) {
     suspend operator fun invoke(
         newCoffeeList: CoffeeList
     ): CreateListResult = try {
-        val result = repo.createList(newCoffeeList)
+        val result = coffeeListRepository.createList(newCoffeeList)
         val id = result.getOrThrow()
         CreateListResult.Success(id)
     } catch (e: Exception) {

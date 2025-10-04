@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 
 /* ──────────────────────────────────────────────────────────────────────────────
- * SIMPLE VIEWMODEL — TEAM GUIDE (READ ME)
+ * SIMPLE VIEWMODEL — TEAM GUIDE
  * ────────────────────────────────────────────────────────────────────────────── */
 
 /**

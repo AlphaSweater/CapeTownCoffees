@@ -1,6 +1,5 @@
 package com.synaptix.capetowncoffees.domain.usecase.coffeeReview
 
-import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeReviewRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CreateCoffeePlaceUseCase
@@ -18,7 +17,7 @@ import javax.inject.Inject
  * ```
  */
 class CreateCoffeeReviewUseCase @Inject constructor(
-    private val repository: ICoffeeReviewRepository,
+    private val coffeeReviewRepository: ICoffeeReviewRepository,
     private val coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase,
     private val createCoffeePlaceUseCase: CreateCoffeePlaceUseCase
 ) {
@@ -42,6 +41,6 @@ class CreateCoffeeReviewUseCase @Inject constructor(
                 return Result.failure(placeResult.exceptionOrNull() ?: Exception("Failed to create place"))
             }
         }
-        return repository.addReview(coffeeReview, placeId)
+        return coffeeReviewRepository.addReview(coffeeReview, placeId)
     }
 }

@@ -14,7 +14,7 @@ import javax.inject.Inject
  * ```
  */
 class GetCoffeeReviewUseCase @Inject constructor(
-    private val repository: ICoffeeReviewRepository
+    private val coffeeReviewRepository: ICoffeeReviewRepository
 ) {
     /**
      * Fetch a single review for a place.
@@ -28,6 +28,6 @@ class GetCoffeeReviewUseCase @Inject constructor(
      * ```
      */
     suspend operator fun invoke(reviewId: String, placeId: String): Result<CoffeeReview?> {
-        return repository.getReview(reviewId, placeId)
+        return coffeeReviewRepository.getReview(reviewId, placeId)
     }
 }

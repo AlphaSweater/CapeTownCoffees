@@ -11,13 +11,13 @@ sealed class LogoutResult {
 }
 
 class LogoutUserUseCase @Inject constructor(
-    private val ICoffeeUserRepository: ICoffeeUserRepository
+    private val coffeeUserRepository: ICoffeeUserRepository
 ) {
     suspend operator fun invoke(): LogoutResult {
         Timber.d("LogoutUserUseCase invoked")
         return try {
             Timber.d("Attempting logout")
-            ICoffeeUserRepository.logoutUser()
+            coffeeUserRepository.logoutUser()
                 .onSuccess {
                     Timber.d("Logout successful")
                     return LogoutResult.Success

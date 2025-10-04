@@ -3,6 +3,10 @@ package com.synaptix.capetowncoffees.ui._simple
 import android.os.Bundle
 import androidx.core.os.bundleOf
 
+/* ──────────────────────────────────────────────────────────────────────────────
+ * SIMPLE Screen Args
+ * ────────────────────────────────────────────────────────────────────────────── */
+
 /**
  * Central place for navigation argument keys + Bundle builders.
  * Avoids hard-coded string keys across the app.

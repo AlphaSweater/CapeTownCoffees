@@ -10,16 +10,31 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.util.calculateDistanceTo
-
-class FeaturedAdapter(
-    private val placesClient: PlacesClient,
-    private var currentLocation: LatLng? = null,
-    private val onItemClick: (CoffeePlaceLite) -> Unit = {}
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.util.LocationUtil
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+class FeaturedAdapter @AssistedInject constructor(
+    @Assisted private var currentLocation: LatLng? = null,
+    @Assisted private val coroutineScope: CoroutineScope,
+    @Assisted private val onItemClick: (CoffeePlaceLite) -> Unit = {},
+    private val coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase,
+    private val locationUtil: LocationUtil
 ) : ListAdapter<CoffeePlaceLite, FeaturedAdapter.ViewHolder>(DiffCallback()) {
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            currentLocation: LatLng?,
+            coroutineScope: CoroutineScope,
+            onItemClick: (CoffeePlaceLite) -> Unit
+        ): FeaturedAdapter
+    }
 
     private class DiffCallback : DiffUtil.ItemCallback<CoffeePlaceLite>() {
         override fun areItemsTheSame(oldItem: CoffeePlaceLite, newItem: CoffeePlaceLite): Boolean {
@@ -46,24 +61,22 @@ class FeaturedAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
-        
-        // Load image using Places API
+        holder.image.setImageResource(R.drawable.cafe_placeholder)
         item.images?.firstOrNull()?.let { photoMetadata ->
-            val photoRequest = com.google.android.libraries.places.api.net.FetchPhotoRequest.builder(photoMetadata)
-                .setMaxWidth(500)
-                .build()
-                
-            placesClient.fetchPhoto(photoRequest).addOnSuccessListener { fetchPhotoResponse ->
-                holder.image.setImageBitmap(fetchPhotoResponse.bitmap)
-            }.addOnFailureListener {
-                holder.image.setImageResource(R.drawable.cafe_placeholder)
+            coroutineScope.launch {
+                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(photoMetadata, maxWidthDp = 250)
+                if (uri != null) {
+                    Glide.with(holder.image.context)
+                        .load(uri)
+                        .placeholder(R.drawable.cafe_placeholder)
+                        .into(holder.image)
+                } else {
+                    holder.image.setImageResource(R.drawable.cafe_placeholder)
+                }
             }
-        } ?: run {
-            holder.image.setImageResource(R.drawable.cafe_placeholder)
         }
-        
         holder.title.text = item.name ?: ""
-        
+
         // Set rating
         item.rating?.let { rating ->
             val ratingText = String.format("%.1f (%d)", rating, item.ratingCount ?: 0)
@@ -72,16 +85,17 @@ class FeaturedAdapter(
         } ?: run {
             holder.rating.visibility = View.GONE
         }
-        
+
         // Set distance
-        val distanceText = currentLocation?.calculateDistanceTo(item.location) ?: ""
+        val distance = locationUtil.distanceMeters(currentLocation, item.location)
+        val distanceText = locationUtil.distanceAndEtaLabel(distance)
         if (distanceText.isNotEmpty()) {
             holder.distance.text = distanceText
             holder.distance.visibility = View.VISIBLE
         } else {
             holder.distance.visibility = View.GONE
         }
-        
+
         holder.itemView.setOnClickListener {
             onItemClick(item)
         }
@@ -93,7 +107,4 @@ class FeaturedAdapter(
         }
         submitList(newItems)
     }
-    
-
-    // getItemCount is provided by ListAdapter
 }
