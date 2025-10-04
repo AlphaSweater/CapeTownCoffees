@@ -15,7 +15,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
  * ────────────────────────────────────────────────────────────────────────────── */
 
 /**
- * Lightweight ViewModel base with the helpers your screen code needs:
+ * Lightweight ViewModel base with the helpers your screen code needs.
+ *
+ * Prefer injecting focused USE CASES (GetCoffee, ObserveReviews, SaveFavorite, etc.)
+ * rather than calling repositories directly inside the ViewModel. This keeps orchestration
+ * separate from domain/data access and simplifies testing.
  *
  * • [start] – your entry point from the Fragment (read args, kick off work)
  * • [fetchInto] – run a suspend call and push the result into state
@@ -126,11 +130,13 @@ abstract class SimpleViewModel : ViewModel() {
      *
      * Use this for primary/atomic data (title, profile, main DTO, etc.).
      *
-     * ```
+     * Example (using a suspend use case):
+     * ```kotlin
      * val isLoading = booleanState()
      * val place = state<Place?>(null)
      * fetchInto(place, showLoading = isLoading, label = "place") { getPlace(id) }
      * ```
+     * (where `getPlace: GetPlace` is injected use case)
      *
      * - Automatically toggles [showLoading]
      * - Writes state on Main
@@ -166,10 +172,12 @@ abstract class SimpleViewModel : ViewModel() {
      *
      * Use this for **sub-data** (lists/sections that appear after the main content).
      *
-     * ```
+     * Example (using a suspend use case):
+     * ```kotlin
      * val reviews = loadableState<List<Review>>()
-     * fetchInto(reviews, label = "reviews") { repo.getReviews(id) }
+     * fetchInto(reviews, label = "reviews") { getReviews(id) }
      * ```
+     * (where `getReviews: GetReviews` is injected use case)
      *
      * - Starts at `Loading`
      * - On success → `Data(value)`
@@ -216,9 +224,11 @@ abstract class SimpleViewModel : ViewModel() {
      *
      * Use for streams where you don’t need Loading/Error UI (e.g., counters, small flags).
      *
+     * Example (using a Flow use case):
+     * ```kotlin
+     * observeInto(count, observeCount(), showLoading = isLoading, label = "count")
      * ```
-     * observeInto(count, repo.observeCount(), showLoading = isLoading, label = "count")
-     * ```
+     * (where `observeCount: ObserveCount` is injected and returns Flow<Int>)
      *
      * - Sets [showLoading]=true on subscribe, false on each value/error
      * - On error: logs + `Effect.Message(errorText)`
@@ -254,9 +264,11 @@ abstract class SimpleViewModel : ViewModel() {
      *
      * Use when the UI needs a skeleton/progress per emission (lists, charts, etc.).
      *
+     * Example (using a Flow use case):
+     * ```kotlin
+     * observeInto(stats, observeStats(id), label = "stats")
      * ```
-     * observeInto(stats, repo.observeStats(id), label = "stats")
-     * ```
+     * (where `observeStats: ObserveStats` is injected and returns Flow<Stats>)
      */
     fun <T> observeInto(
         target: LoadableVar<T>,
@@ -279,7 +291,7 @@ abstract class SimpleViewModel : ViewModel() {
             .collect { v -> target.data(v) }
     }
 
-    /* ──────────────────────────────────────────────────────────────────────────
+    /* ────────────────────────────────────────────────────────────────────────────
      * DEBUG SUPPORT (auto; no action needed)
      * ────────────────────────────────────────────────────────────────────────── */
 

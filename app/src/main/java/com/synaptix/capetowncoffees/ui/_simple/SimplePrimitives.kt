@@ -16,10 +16,10 @@ import kotlinx.coroutines.withContext
  *
  * Why not expose raw Throwable? We normalize message + optionally mark recoverability.
  *
- * Typical usage:
+ * Typical usage (NOTICE: call a use case, not a repository directly):
  * ```kotlin
  * try {
- *   repo.saveCoffee(coffee)
+ *   saveCoffeeUseCase(coffee)
  * } catch (t: Throwable) {
  *   val ui = t.toUiError()
  *   main { send(Effect.Message(ui.message)) }
@@ -39,10 +39,10 @@ data class UiError(
  * - Re-throws [CancellationException] so structured cancellation stays intact.
  * - Falls back to [defaultMsg] if throwable message is blank/null.
  *
- * Example:
+ * Example (use case centric):
  * ```kotlin
  * suspend fun load(vm: SimpleViewModel) = vm.io {
- *   try { repo.refresh() } catch (t: Throwable) {
+ *   try { refreshDataUseCase() } catch (t: Throwable) {
  *     val ui = t.toUiError("Refresh failed")
  *     main { send(Effect.Message(ui.message)) }
  *   }
@@ -114,10 +114,10 @@ sealed class Effect {
  * Use for primary screen state where you DO NOT need Loading/Error semantics.
  * Combine with a separate `booleanState()` if you need a global spinner.
  *
- * Example in ViewModel:
+ * Example in ViewModel (delegating to a use case):
  * ```kotlin
  * val coffee = state<Coffee?>(null)
- * fetchInto(coffee, showLoading = isLoading) { repo.getCoffee(id) }
+ * fetchInto(coffee, showLoading = isLoading) { getCoffeeUseCase(id) }
  * ```
  */
 open class StateVar<T> internal constructor(initial: T) {
@@ -163,7 +163,7 @@ class ListStateVar<T> internal constructor(initial: List<T>) : StateVar<List<T>>
  * Example manual usage (rare — usually use `fetchInto/observeInto`):
  * ```kotlin
  * reviews.loading()
- * try { reviews.data(repo.getReviews(id)) } catch (t: Throwable) { reviews.error(t.toUiError()) }
+ * try { reviews.data(getReviewsUseCase(id)) } catch (t: Throwable) { reviews.error(t.toUiError()) }
  * ```
  */
 class LoadableVar<T> internal constructor(initial: Loadable<T> = Loadable.Uninitialized) {
@@ -198,7 +198,7 @@ fun <T> loadableState(): LoadableVar<T> = LoadableVar()
  * Typical pattern when integrating existing Result-returning use cases:
  * ```kotlin
  * runResult(
- *   call = { repo.tryLogin(username, pass) },
+ *   call = { loginUseCase(username, pass) },
  *   onSuccess = { user -> main { send(Effect.Navigate("home")) } },
  *   onFailure = { err -> main { send(Effect.Message(err.message)) } }
  * )
@@ -228,7 +228,7 @@ suspend fun <R> SimpleViewModel.runResult(
  * Example:
  * ```kotlin
  * val profile = loadableState<User>()
- * fetchResultInto(profile) { service.getUserResult(id) }
+ * fetchResultInto(profile) { getUserResultUseCase(id) }
  * ```
  */
 fun <R> SimpleViewModel.fetchResultInto(
@@ -248,7 +248,7 @@ fun <R> SimpleViewModel.fetchResultInto(
  *
  * Example:
  * ```kotlin
- * observeResultInto(stats, repo.observeStatsResult(id))
+ * observeResultInto(stats, observeStatsResultUseCase(id))
  * ```
  */
 fun <R> SimpleViewModel.observeResultInto(
