@@ -2,7 +2,9 @@ package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.mapper.toDTO
 import com.synaptix.capetowncoffees.data.mapper.toDomain
@@ -83,6 +85,15 @@ class CoffeeUserRepository @Inject constructor(
             awaitClose { auth.removeAuthStateListener(listener) }
         }.distinctUntilChanged()
 
+
+    override suspend fun signInWithGoogle(idToken: String): Result<FirebaseUser> =
+        runCatching {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = auth.signInWithCredential(credential).await()
+            val user = authResult.user ?: error("Google sign-in returned no user")
+            upsertUserProfileFromFirebase(user)
+            user
+        }
     // ----------------------------
     // User profile (Firestore)
     // ----------------------------
@@ -109,4 +120,22 @@ class CoffeeUserRepository @Inject constructor(
             // Then delete Auth user
             user.delete().await()
         }
+
+    //checks to see if user profile exists, if not creates one, if it does merges data
+    private suspend fun upsertUserProfileFromFirebase(user: FirebaseUser) {
+        val ref = firestore.collection(childCollection).document(user.uid)
+        val existing = ref.get().await().toObject(CoffeeUserDTO::class.java)
+
+        val merged = CoffeeUserDTO(
+            id = user.uid,
+            email = user.email ?: existing?.email.orEmpty(),
+            fullName = user.displayName ?: existing?.fullName,
+            photoBase64 = existing?.photoBase64,
+            createdAt = existing?.createdAt ?: CoffeeTimeUtils.nowSeconds(),
+            updatedAt = CoffeeTimeUtils.nowSeconds(),
+            lastLoginAt = CoffeeTimeUtils.nowSeconds()
+        )
+
+        ref.set(merged, SetOptions.merge()).await()
+    }
 }

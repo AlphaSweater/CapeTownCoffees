@@ -107,4 +107,10 @@ interface ICoffeeUserRepository {
      * @return Result indicating success or failure.
      */
     suspend fun deleteUserAccount(): Result<Unit>
+
+    /**
+     * Signs in with a Google ID token using FirebaseAuth.
+     * Returns the authenticated FirebaseUser.
+     */
+    suspend fun signInWithGoogle(idToken: String): Result<FirebaseUser>
 }
