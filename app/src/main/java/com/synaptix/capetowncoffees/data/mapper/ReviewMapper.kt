@@ -28,7 +28,7 @@ object ReviewMapper {
             id = dto.id,
             reviewerId = dto.userId,
             placeId = placeIdOverride ?: dto.placeId,
-            author = userDto.fullName,
+            authorName = userDto.fullName,
             profilePhotoBase64 = userDto.photoBase64,
             rating = dto.rating,
             text = dto.text,
@@ -138,7 +138,7 @@ object ReviewMapper {
             id = null, // capture an id if the SDK exposes one in your version
             reviewerId = null,
             placeId = placeId,
-            author = attr.name,
+            authorName = attr.name,
             profilePhotoUrl = attr.photoUri,
             rating = googleReview.rating,
             text = googleReview.text,

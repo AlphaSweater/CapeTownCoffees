@@ -27,7 +27,7 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.TopRounded16" />
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Ctc.TopRounded16" />
 
         <!-- Subtle top scrim over image (helps icons pop) -->
         <View
@@ -93,6 +93,7 @@
                     android:ellipsize="end"
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textColor="@color/text_primary"
+                    android:textStyle="bold"
                     tools:text="Truth Coffee Roasting" />
 
                 <!-- 40dp touch target with ripple -->

@@ -80,21 +80,6 @@ class HomeFragment : Fragment() {
         ensureLocation()
     }
 
-    // Optional: show skeletons briefly when returning to the screen if you already had data
-    override fun onResume() {
-        super.onResume()
-        val comingBack = (featuredAdapter.itemCount > 0 || nearMeAdapter.itemCount > 0)
-        if (comingBack) {
-            if (binding.rvFeatured.adapter !== featuredSkeletonAdapter) {
-                binding.rvFeatured.adapter = featuredSkeletonAdapter
-            }
-            if (binding.rvNearMe.adapter !== nearSkeletonAdapter) {
-                binding.rvNearMe.adapter = nearSkeletonAdapter
-            }
-            // vm.refreshIfStale(maxAgeMs = 30_000)
-        }
-    }
-
     private fun initAdapters() {
         categoryAdapter = CategoryAdapter { category: Category ->
             vm.onCategorySelected(category)

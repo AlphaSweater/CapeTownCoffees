@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.facebook.shimmer.ShimmerFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/shimmerRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:shimmer_auto_start="true"
+    app:shimmer_base_alpha="0.6"
+    app:shimmer_highlight_alpha="1.0"
+    app:shimmer_duration="1000">
+
+    <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.Ctc.ElevatedCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/ctc_card_margin_h"
+        android:layout_marginVertical="@dimen/ctc_card_margin_v"
+        android:foreground="?attr/selectableItemBackground"
+        android:stateListAnimator="@animator/ctc_card_lift">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/ctc_content_padding_h"
+            android:paddingEnd="@dimen/ctc_content_padding_h"
+            android:paddingTop="@dimen/ctc_content_padding_t"
+            android:paddingBottom="@dimen/ctc_content_padding_b">
+
+            <!-- Avatar placeholder -->
+            <View
+                android:id="@+id/sk_avatar"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_skeleton_circle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Name line + rating chip line -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp"
+                app:layout_constraintStart_toEndOf="@id/sk_avatar"
+                app:layout_constraintTop_toTopOf="@id/sk_avatar"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <View
+                    android:layout_width="160dp"
+                    android:layout_height="16dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="6dp">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/bg_skeleton_circle_small" />
+
+                    <View
+                        android:layout_width="36dp"
+                        android:layout_height="14dp"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/bg_skeleton_soft" />
+
+                    <View
+                        android:layout_width="48dp"
+                        android:layout_height="16dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_skeleton_soft" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Body lines -->
+            <LinearLayout
+                android:id="@+id/sk_text_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp"
+                app:layout_constraintStart_toStartOf="@id/sk_avatar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/sk_avatar">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="14dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_skeleton_soft" />
+            </LinearLayout>
+
+            <!-- Actions (two small dots) -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="end"
+                android:orientation="horizontal"
+                app:layout_constraintStart_toStartOf="@id/sk_text_container"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/sk_text_container">
+
+                <View
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_skeleton_circle" />
+
+                <View
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_skeleton_circle" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</com.facebook.shimmer.ShimmerFrameLayout>
