@@ -39,7 +39,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 - Favourites List: For ease of access users can save their favourite cafés for quick access later on.
 
-- Deatiled View: Users can see a detailed overview of different coffee shops, showing information such as the shop's rating, description, distance away, etc.
+- Detailed View: Users can see a detailed overview of different coffee shops, showing information such as the shop's rating, description, distance away, etc.
 
 ## 🔐 Security Features
 - Firebase Authentication for secure login and identity management.
