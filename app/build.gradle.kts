@@ -114,7 +114,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     //allows for google sign in
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation(libs.play.services.auth)
 
     // Storage for profile photo uploads
     implementation("com.google.firebase:firebase-storage")
