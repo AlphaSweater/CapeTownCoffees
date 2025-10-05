@@ -72,6 +72,12 @@ class ReviewsAdapter @AssistedInject constructor(
         object : BaseViewHolder<CoffeeReview, ItemCoffeeReviewBinding>(binding) {
 
             override fun bind(item: CoffeeReview) = with(vb) {
+                // ─── Source Chip ────────────────────────────────────────
+                tvSourceChip.text = if (item.isInApp)
+                    root.context.getString(R.string.coffee_review_chip_in_app)
+                else
+                    root.context.getString(R.string.coffee_review_chip_google)
+
                 // ─── Author / Avatar ───────────────────────────────────────────
                 tvAuthor.text = item.authorName.orEmpty()
 
