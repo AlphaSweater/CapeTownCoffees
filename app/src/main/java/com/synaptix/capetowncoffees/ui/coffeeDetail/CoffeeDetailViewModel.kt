@@ -83,22 +83,7 @@ class CafeDetailViewModel @Inject constructor(
         // Whenever 'place' changes to Data, (re)compute Ui
         viewModelScope.launch {
             place.flow.collect { loadable ->
-                when (loadable) {
-                    is Loadable.Data -> updateUiFrom(loadable.value)
-                    else -> Unit
-                }
-            }
-        }
-        // Timber log 5 reviews after reviews are fetched
-        viewModelScope.launch {
-            reviews.flow.collect { loadable ->
-                if (loadable is Loadable.Data) {
-                    val reviewList = loadable.value
-                    reviewList.take(5).forEachIndexed { idx, review ->
-                        // Log author, rating, and text (customize as needed)
-                        Timber.d("Review #${idx + 1}: author=${review.authorName}, rating=${review.rating}, text=${review.text}")
-                    }
-                }
+                if (loadable is Loadable.Data) updateUiFrom(loadable.value)
             }
         }
     }
@@ -125,9 +110,7 @@ class CafeDetailViewModel @Inject constructor(
         val placeData = place.value
         if (placeData is Loadable.Data) {
             val mapUrl = placeData.value.googleMapsUrl ?: return
-            val b = Bundle().apply {
-                putString("map_url", mapUrl)
-            }
+            val b = Bundle().apply { putString("map_url", mapUrl) }
             main { send(Effect.Navigate("action_open_external_map", b)) }
         }
     }
@@ -138,6 +121,31 @@ class CafeDetailViewModel @Inject constructor(
         val phone = ui.value.phoneNumber ?: return
         val b = Bundle().apply { putString("phone", phone) }
         main { send(Effect.Navigate("action_dial_phone", b)) }
+    }
+
+    // ───────────────────── Reviews interactions (adapter → VM) ─────────────────────
+
+    fun onReviewLike(reviewId: String) {
+        // TODO: integrate with your use case to post a "helpful/upvote" for in-app review
+        Timber.i("Like review: $reviewId")
+        main { send(Effect.Message("Thanks for the feedback!")) }
+        // Later: update local state via payloads or refresh the section
+    }
+
+    fun onReviewDislike(reviewId: String) {
+        // TODO: integrate with your use case to post a "not helpful/downvote" for in-app review
+        Timber.i("Dislike review: $reviewId")
+        main { send(Effect.Message("We'll keep improving!")) }
+    }
+
+    fun onOpenPhoto(reviewId: String, startIndex: Int, urls: List<String>) {
+        if (urls.isEmpty()) return
+        val b = Bundle().apply {
+            putString("review_id", reviewId)
+            putInt("start", startIndex)
+            putStringArrayList("urls", ArrayList(urls))
+        }
+        main { send(Effect.Navigate("action_open_review_gallery", b)) }
     }
 
     // ───────────────────────────────── helpers ─────────────────��───────────────

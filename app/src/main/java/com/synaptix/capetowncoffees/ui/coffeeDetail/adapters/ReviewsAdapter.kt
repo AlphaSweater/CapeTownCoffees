@@ -9,20 +9,20 @@ import com.bumptech.glide.Glide
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.ItemCoffeeReviewBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
+import com.synaptix.capetowncoffees.domain.model.avatarModelOrNull
 import com.synaptix.capetowncoffees.domain.model.isInApp
+import com.synaptix.capetowncoffees.domain.model.photoUrlsOrEmpty
+import com.synaptix.capetowncoffees.domain.model.safeReviewKey
+import com.synaptix.capetowncoffees.domain.model.stableId
 import com.synaptix.capetowncoffees.ui.common.BaseAdapter
 import com.synaptix.capetowncoffees.ui.common.BaseViewHolder
 import com.synaptix.capetowncoffees.ui.common.simpleDiff
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-
-// Local adapter-only helpers (implemented in CoffeeReviewExtensions.kt)
-import com.synaptix.capetowncoffees.domain.model.avatarModelOrNull
-import com.synaptix.capetowncoffees.domain.model.photoUrlsOrEmpty
-import com.synaptix.capetowncoffees.domain.model.safeReviewKey
-import com.synaptix.capetowncoffees.domain.model.stableId
 
 /**
  * ReviewsAdapter
@@ -39,6 +39,7 @@ import com.synaptix.capetowncoffees.domain.model.stableId
 class ReviewsAdapter @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
     @Assisted private val onClick: (Click) -> Unit,
+    private val locationUtil: LocationUtil
 ) : BaseAdapter<CoffeeReview, ItemCoffeeReviewBinding>(
     diff = simpleDiff(
         sameItem = { o, n -> (o.id ?: o.safeReviewKey()) == (n.id ?: n.safeReviewKey()) },
@@ -89,9 +90,9 @@ class ReviewsAdapter @AssistedInject constructor(
                 ratingBar.isGone = rating == null
                 ratingBar.rating = (rating ?: 0.0).toFloat()
 
-                // ─── Date (prefer relative from VM if you have it) ─────────────
-                // Bind your VM-provided string here (left blank otherwise).
-                tvDate.text = ""
+                // ─── Date ─────────────
+                val dateText = CoffeeTimeUtils.formatRelativeTime(item.publishTime)
+                tvDate.text = dateText
                 tvDate.isGone = tvDate.text.isNullOrBlank()
 
                 // ─── Body ──────────────────────────────────────────────────────
@@ -190,16 +191,15 @@ class ReviewsAdapter @AssistedInject constructor(
                     cs.connect(target, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
                 }
 
-                when {
-                    count == 1 -> {
+                when (count) {
+                    1 -> {
                         clearAll()
                         ivPhoto1.isVisible = true
                         load(R.id.ivPhoto1, urls[0])
                         full(R.id.ivPhoto1)
                         ivPhoto1.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 0, urls)) }
                     }
-
-                    count == 2 -> {
+                    2 -> {
                         clearAll()
                         ivPhoto1.isVisible = true
                         ivPhoto2.isVisible = true
@@ -210,8 +210,7 @@ class ReviewsAdapter @AssistedInject constructor(
                         ivPhoto1.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 0, urls)) }
                         ivPhoto2.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 1, urls)) }
                     }
-
-                    count == 3 -> {
+                    3 -> {
                         clearAll()
                         ivPhoto1.isVisible = true
                         ivPhoto2.isVisible = true
@@ -226,7 +225,6 @@ class ReviewsAdapter @AssistedInject constructor(
                         ivPhoto2.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 1, urls)) }
                         ivPhoto3.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 2, urls)) }
                     }
-
                     else -> {
                         // 4+
                         clearAll()

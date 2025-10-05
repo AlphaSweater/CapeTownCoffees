@@ -9,10 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.R
@@ -25,6 +28,7 @@ import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.collect
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.collectLoadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.start
+import com.synaptix.capetowncoffees.ui.coffeeDetail.adapters.ReviewsAdapter
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -35,6 +39,10 @@ import javax.inject.Inject
 class CoffeeDetailFragment : Fragment() {
     @Inject lateinit var locationUtil: LocationUtil
     @Inject lateinit var coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase
+
+    @Inject lateinit var reviewsAdapterFactory: ReviewsAdapter.Factory
+    private lateinit var reviewsAdapter: ReviewsAdapter
+
     private val vm: CafeDetailViewModel by viewModels()
     private var _binding: FragmentCoffeeDetailBinding? = null
     private val binding get() = _binding!!
@@ -52,11 +60,40 @@ class CoffeeDetailFragment : Fragment() {
         // SimpleVM lifecycle entry point
         start(vm)
 
+        setupRecyclers()
+
         setupUiListeners()
         setupCollectors()
 
         // Ask for user location to enable distance once available
         getCurrentLocation()
+    }
+
+    // ───────────────────────── Recycler & Adapter ─────────────────────────
+
+    private fun setupRecyclers() = with(binding) {
+        reviewsAdapter = reviewsAdapterFactory.create(
+            viewLifecycleOwner.lifecycleScope
+        ) { click ->
+            when (click) {
+                is ReviewsAdapter.Click.Like      -> vm.onReviewLike(click.reviewId)
+                is ReviewsAdapter.Click.Dislike   -> vm.onReviewDislike(click.reviewId)
+                is ReviewsAdapter.Click.OpenPhoto -> vm.onOpenPhoto(
+                    reviewId = click.reviewId,
+                    startIndex = click.startIndex,
+                    urls = click.urls
+                )
+            }
+        }
+
+        rvReviews.layoutManager = LinearLayoutManager(requireContext())
+        rvReviews.adapter = reviewsAdapter
+        rvReviews.addItemDecoration(
+            DividerItemDecoration(
+                requireContext(),
+                DividerItemDecoration.VERTICAL
+            )
+        )
     }
 
     // ───────────────────────── UI listeners (platform only) ─────────────────────────
@@ -85,16 +122,19 @@ class CoffeeDetailFragment : Fragment() {
                     // Dial intent
                     "action_dial_phone" -> {
                         val phone = eff.args?.getString("phone") ?: return@collect
-                        val dial = Intent(Intent.ACTION_DIAL,
-                            "tel:${phone.filter { it.isDigit() }}".toUri())
+                        val dial = Intent(Intent.ACTION_DIAL, "tel:${phone.filter { it.isDigit() }}".toUri())
                         startActivity(dial)
                     }
-                    // Fallback: use NavController if route is a nav graph destination
-                    else -> {
-                        when (eff.route) {
-                            else -> findNavController().navigate(eff.route.toUri(), null)
-                        }
+                    // Open a simple photo viewer route (adapt to your NavGraph or show a bottom sheet)
+                    "action_open_review_gallery" -> {
+                        val urls = eff.args?.getStringArrayList("urls").orEmpty()
+                        val start = eff.args?.getInt("start") ?: 0
+                        // Example: open external viewer for the tapped photo; replace with your gallery
+                        val uri = urls.getOrNull(start)?.toUri() ?: return@collect
+                        startActivity(Intent(Intent.ACTION_VIEW, uri))
                     }
+                    // Fallback: use NavController if route is a nav graph destination
+                    else -> findNavController().navigate(eff.route.toUri(), null)
                 }
             }
         }
@@ -138,15 +178,15 @@ class CoffeeDetailFragment : Fragment() {
                 getString(R.string.no_opening_hours_available)
 
             // Phone
-            binding.tvPhone.visibility = if (ui.phoneNumber != null) View.VISIBLE else View.GONE
+            binding.tvPhone.isVisible = ui.phoneNumber != null
             binding.tvPhone.text = ui.phoneNumber.orEmpty()
             binding.tvPhone.setOnClickListener(
                 if (ui.phoneNumber != null) View.OnClickListener { vm.onPhoneClicked() } else null
             )
 
             // Rating
-            binding.ratingBar.visibility = if (ui.showRating) View.VISIBLE else View.GONE
-            binding.tvRating.visibility = if (ui.showRating) View.VISIBLE else View.GONE
+            binding.ratingBar.isVisible = ui.showRating
+            binding.tvRating.isVisible = ui.showRating
             if (ui.showRating) {
                 binding.ratingBar.rating = ui.rating?.toFloat() ?: 0f
                 // Prefer count badge if present, else numeric rating
@@ -154,8 +194,8 @@ class CoffeeDetailFragment : Fragment() {
             }
 
             // Distance (computed in VM when both locations known)
-            binding.tvDistance.visibility = if (ui.showDistance) View.VISIBLE else View.GONE
-            binding.ivPin.visibility = if (ui.showDistance) View.VISIBLE else View.GONE
+            binding.tvDistance.isVisible = ui.showDistance
+            binding.ivPin.isVisible = ui.showDistance
             binding.tvDistance.text = ui.distanceText.orEmpty()
         }
 
@@ -171,19 +211,22 @@ class CoffeeDetailFragment : Fragment() {
 
     // ───────────────────────────── Render helpers ─────────────────────────────
 
-    private fun renderReviews(list: List<CoffeeReview>) {
-        // TODO: bind to RecyclerView adapter
-        // binding.reviewsEmpty.isVisible = list.isEmpty()
-        // adapter.submitList(list)
+    private fun renderReviews(list: List<CoffeeReview>) = with(binding) {
+        // Optional empty-state view if you have one
+        reviewsEmpty.isVisible = list.isEmpty()
+        rvReviews.isVisible = list.isNotEmpty()
+        reviewsAdapter.updateItems(list)
     }
 
-    private fun showReviewsSkeleton() {
-        // TODO: shimmer/skeleton
-        // binding.reviewsEmpty.isVisible = false
+    private fun showReviewsSkeleton() = with(binding) {
+        // Toggle your shimmer/skeleton views if present
+        reviewsEmpty.isVisible = false
+        // Optionally show a shimmer container here
     }
 
     private fun showReviewsError(msg: String, retry: () -> Unit) {
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+        // If you have a dedicated error view with a retry button, wire it here
         // binding.reviewsError.retryButton.setOnClickListener { retry() }
     }
 
@@ -191,7 +234,7 @@ class CoffeeDetailFragment : Fragment() {
         val imageView = binding.ivImage
         val placeholderRes = R.drawable.featured_placeholder
         cafe.images?.firstOrNull()?.let { meta ->
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(meta, maxWidthDp = 1000)
                 if (uri != null) {
                     Glide.with(imageView.context)
@@ -206,21 +249,17 @@ class CoffeeDetailFragment : Fragment() {
     }
 
     private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        // If you add SwipeRefreshLayout, also stop it here
-        // binding.swipeRefresh.isRefreshing = false
+        binding.progressBar.isVisible = isLoading
     }
 
     // ───────────────────────────── Location plumbing ─────────────────────────────
 
     private fun getCurrentLocation() {
         // Fetch and let the VM compute distance text
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             @Suppress("MissingPermission")
             runCatching { locationUtil.getCurrentLatLng().getOrNull() }
-                .onSuccess { location ->
-                    location?.let { vm.onUserLocation(it) }
-                }
+                .onSuccess { location -> location?.let { vm.onUserLocation(it) } }
                 .onFailure {
                     Timber.e(it, "Failed to get current location")
                     // VM will hide distance when it can't compute it next tick
@@ -230,6 +269,7 @@ class CoffeeDetailFragment : Fragment() {
 
     // ───────────────────────────── Intents ─────────────────────────────
 
+    @Deprecated ("Use Effect.Navigate instead")
     private fun openMaps(location: LatLng, address: String) {
         val gmmIntentUri =
             "geo:${location.latitude},${location.longitude}?q=${Uri.encode(address)}".toUri()
@@ -252,6 +292,5 @@ class CoffeeDetailFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        // Don’t clear VM state; SimpleVM persists across config changes.
     }
 }

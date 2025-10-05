@@ -303,9 +303,26 @@
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"/>
 
-            <!-- Sample review items (static includes) -->
-            <include layout="@layout/item_review"/>
-            <include layout="@layout/item_review"/>
+            <!-- Reviews section -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvReviews"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="16dp"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <!-- Optional empty-state text -->
+            <TextView
+                android:id="@+id/reviewsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:text="@string/no_reviews_yet"
+                android:gravity="center"
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 
