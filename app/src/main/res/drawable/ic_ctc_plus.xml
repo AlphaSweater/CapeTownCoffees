@@ -6,14 +6,14 @@
   <path
       android:pathData="M5,12h14"
       android:strokeLineJoin="round"
-      android:strokeWidth="2"
+      android:strokeWidth="3"
       android:fillColor="#00000000"
       android:strokeColor="@color/text_primary"
       android:strokeLineCap="round"/>
   <path
       android:pathData="M12,5v14"
       android:strokeLineJoin="round"
-      android:strokeWidth="2"
+      android:strokeWidth="3"
       android:fillColor="#00000000"
       android:strokeColor="@color/text_primary"
       android:strokeLineCap="round"/>

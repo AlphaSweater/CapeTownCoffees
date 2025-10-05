@@ -48,4 +48,14 @@
     <!-- Status Colors -->
     <color name="success_green">#4CAF50</color>
     <color name="error_red">#F44336</color>
+
+    <!-- Subtle elevated surface that works on any BG -->
+    <color name="ctc_card_surface">#FFFFFFFF</color>
+    <color name="ctc_card_stroke">#1F000000</color>        <!-- ~12% black -->
+    <color name="ctc_icon_chip_bg">@color/coffee_accent</color>       <!-- faint white pill -->
+    <color name="ctc_ripple">#14000000</color>             <!-- 8% black -->
+
+    <color name="ctc_skeleton_bar">#E6E6E6</color>
+    <color name="ctc_skeleton_image">#DADADA</color>
+
 </resources>

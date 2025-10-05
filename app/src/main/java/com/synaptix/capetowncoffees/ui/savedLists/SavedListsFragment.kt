@@ -80,14 +80,21 @@ class SavedListsFragment : Fragment() {
     }
     
     private fun observeSavedLists() {
-        viewModel.lists.observe(viewLifecycleOwner) { lists ->
-            Timber.d("Observed ${lists.size} saved lists in UI")
-            if (lists.isNotEmpty()) {
-                Timber.d("First list: ${lists[0]}")
+        viewModel.userId.observe(viewLifecycleOwner) { uid ->
+            if (uid != null) {
+                viewModel.getLists().observe(viewLifecycleOwner) { lists ->
+                    Timber.d("Observed ${lists.size} saved lists in UI")
+                    if (lists.isNotEmpty()) {
+                        Timber.d("First list: ${lists[0]}")
+                    } else {
+                        Timber.d("No saved lists found")
+                    }
+                    adapter.submit(lists)
+                }
             } else {
-                Timber.d("No saved lists found")
+                Timber.d("Waiting for userId to load...")
+                adapter.submit(emptyList())
             }
-            adapter.submit(lists)
         }
     }
 

@@ -1,8 +1,8 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
-import com.synaptix.capetowncoffees.util.TimeUtils
-import com.synaptix.capetowncoffees.domain.model.CoffeeList as DomainList
+import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
+import com.synaptix.capetowncoffees.domain.model.CoffeeList
 
 data class UserListDTO(
     @DocumentId
@@ -12,23 +12,23 @@ data class UserListDTO(
     @field:JvmField
     val isPublic: Boolean = false,
     val placeIds: List<String>? = null,
-    val createdAt: Long = TimeUtils.nowSeconds(),
-    val updatedAt: Long = TimeUtils.nowSeconds(),
+    val createdAt: Long = CoffeeTimeUtils.nowSeconds(),
+    val updatedAt: Long = CoffeeTimeUtils.nowSeconds(),
 ) {
     companion object {
-        fun fromDomain(list: DomainList): UserListDTO = UserListDTO(
+        fun fromDomain(list: CoffeeList): UserListDTO = UserListDTO(
             id = list.id,
             name = list.name,
             description = list.description,
             isPublic = list.isPublic,
             placeIds = list.placeIds,
-            createdAt = TimeUtils.nowSeconds(),
-            updatedAt = TimeUtils.nowSeconds()
+            createdAt = CoffeeTimeUtils.nowSeconds(),
+            updatedAt = CoffeeTimeUtils.nowSeconds()
         )
     }
 }
 
-fun UserListDTO.toDomain(): DomainList = DomainList(
+fun UserListDTO.toDomain(): CoffeeList = CoffeeList(
     id = id,
     name = name ?: "",
     description = description,
@@ -36,4 +36,4 @@ fun UserListDTO.toDomain(): DomainList = DomainList(
     placeIds = placeIds ?: emptyList()
 )
 
-fun DomainList.toDTO(): UserListDTO = UserListDTO.fromDomain(this)
+fun CoffeeList.toDTO(): UserListDTO = UserListDTO.fromDomain(this)

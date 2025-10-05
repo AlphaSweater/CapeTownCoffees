@@ -111,4 +111,19 @@
     <string name="description">
         Description of the coffee place.
     </string>
+
+    <!-- Profile -->
+    <string name="account_security">Account Security</string>
+    <string name="change">Change</string>
+    <string name="loading">Loading</string>
+    
+    <!-- Change Password -->
+    <string name="change_password">Change Password</string>
+    <string name="change_password_description">To update your password, please enter your current password and create a new one. Make sure your new password is strong and secure.</string>
+    <string name="empty_state">Nothing Here</string>
+    <string name="retry">Retry</string>
+    <string name="addToList">Add place to list</string>
+    <string name="add_to_favorites">Add to favorites</string>
+    <string name="cafe_image">Coffee Shop Image</string>
+    <string name="add_to_list">Add to List</string>
 </resources>

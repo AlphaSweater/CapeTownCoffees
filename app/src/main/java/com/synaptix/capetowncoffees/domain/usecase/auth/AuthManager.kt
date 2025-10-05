@@ -1,14 +1,14 @@
 package com.synaptix.capetowncoffees.domain.usecase.auth
 
 import kotlinx.coroutines.flow.Flow
-import com.synaptix.capetowncoffees.domain.repository.IUserRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import javax.inject.Inject
 
 class AuthManager @Inject constructor(
     private val loginUserUseCase: LoginUserUseCase,
     private val registerUserUseCase: RegisterUserUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
-    private val IUserRepository: IUserRepository // Inject UserRepository for auth state observation
+    private val coffeeUserRepository: ICoffeeUserRepository // Inject UserRepository for auth state observation
 ) {
     suspend fun login(email: String, password: String): LoginResult {
         return loginUserUseCase(email, password)
@@ -23,12 +23,12 @@ class AuthManager @Inject constructor(
     }
 
     fun observeAuthState(): Flow<Boolean> {
-        return IUserRepository.observeAuthState()
+        return coffeeUserRepository.observeAuthState()
     }
 
     suspend fun deleteAccount(): Result<Unit> {
         return try {
-            IUserRepository.deleteUserAccount()
+            coffeeUserRepository.deleteUserAccount()
         } catch (e: Exception) {
             Result.failure(e)
         }

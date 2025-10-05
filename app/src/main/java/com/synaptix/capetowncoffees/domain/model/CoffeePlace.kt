@@ -27,7 +27,7 @@ interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
 
 // Full details model for a coffee place.
 data class CoffeePlaceFull(
-    val id: String?,
+    val id: String,
     val name: String?,
     val address: String?,
     val location: LatLng?,
@@ -53,7 +53,7 @@ data class CoffeePlaceFull(
     val tags: List<Tag>, // Unified tags for UI
 
     // ⭐ Reviews
-    val reviews: List<Review>?, // In-app and Google reviews combined
+    val coffeeReviews: List<CoffeeReview> = emptyList(), // In-app and Google reviews combined
 
     // 💰 Other attributes
     val priceLevel: Int? = null // Google price level (0-4)
@@ -68,7 +68,6 @@ data class CoffeePlaceFull(
             Place.Field.LOCATION,
             Place.Field.PRIMARY_TYPE,
             Place.Field.TYPES,
-            Place.Field.REVIEWS,
             Place.Field.RATING,
             Place.Field.USER_RATING_COUNT,
             Place.Field.PHOTO_METADATAS,
@@ -86,7 +85,7 @@ data class CoffeePlaceFull(
 
 // Lightweight model for feed/search results.
 data class CoffeePlaceLite(
-    val id: String?,
+    val id: String,
     val name: String?,
     val address: String?,
     val location: LatLng?,
@@ -98,7 +97,8 @@ data class CoffeePlaceLite(
     val currentOpeningHours: List<String>?,
     val businessStatus: String?,
     val priceLevel: Int? = null,
-    val tags: List<Tag> // Unified tags for UI
+    val tags: List<Tag>, // Unified tags for UI
+    var isFavorite: Boolean = false
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {
@@ -122,7 +122,7 @@ data class CoffeePlaceLite(
 
 // Model for search/autocomplete suggestions.
 data class CoffeePlaceSuggestion(
-    val id: String?,
+    val id: String,
     val name: String?
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------

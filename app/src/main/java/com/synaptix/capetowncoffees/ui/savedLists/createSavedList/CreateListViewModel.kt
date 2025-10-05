@@ -6,8 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
-import com.synaptix.capetowncoffees.domain.usecase.savedLists.CreateListResult
-import com.synaptix.capetowncoffees.domain.usecase.savedLists.CreateListUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeList.CreateListResult
+import com.synaptix.capetowncoffees.domain.usecase.coffeeList.CreateListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
