@@ -76,7 +76,6 @@ class CoffeeDetailFragment : Fragment() {
                 is Effect.Message  -> Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
                 is Effect.Navigate -> when (eff.route) {
                     // External map intent
-                    //TODO: Replace with provided Uri from google in the places model
                     "action_open_external_map" -> {
                         val args = eff.args ?: return@collect
                         val mapUrl = args.getString("map_url") ?: return@collect

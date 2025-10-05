@@ -45,6 +45,13 @@
     <color name="google_button_stroke">#444444</color>
     <color name="google_button_text">#FFFFFF</color>
 
+    <!-- Soft neutral for subtle chips -->
+    <color name="chip_bg_soft">#14FFFFFF</color>   <!-- 8% white on dark / adjust for light theme -->
+
+    <!-- Hairline dividers -->
+    <color name="divider_soft">#1FFFFFFF</color>   <!-- 12% white; tweak for your theme -->
+
+
     <color name="ctc_card_surface">#FF1E1E1E</color>       <!-- near-surface -->
     <color name="ctc_card_stroke">#30FFFFFF</color>        <!-- ~19% white -->
     <color name="ctc_icon_chip_bg">@color/coffee_accent</color>       <!-- faint white chip -->

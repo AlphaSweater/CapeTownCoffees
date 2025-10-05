@@ -19,15 +19,15 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
-class NearMeAdapter @AssistedInject constructor(
+@Deprecated ("Old version, use NearMeItemAdapter")
+class NearMeAdapterhhhhh @AssistedInject constructor(
     @Assisted private var currentLocation: LatLng? = null,
     @Assisted private val coroutineScope: CoroutineScope,
     @Assisted private val onItemClick: (CoffeePlaceLite) -> Unit = {},
     private val coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase,
     private val locationUtil: LocationUtil,
-) : ListAdapter<CoffeePlaceLite, NearMeAdapter.ViewHolder>(DiffCallback()) {
+) : ListAdapter<CoffeePlaceLite, NearMeAdapterhhhhh.ViewHolder>(DiffCallback()) {
 
     @AssistedFactory
     interface Factory {
@@ -35,7 +35,7 @@ class NearMeAdapter @AssistedInject constructor(
             currentLocation: LatLng?,
             coroutineScope: CoroutineScope,
             onItemClick: (CoffeePlaceLite) -> Unit
-        ): NearMeAdapter
+        ): NearMeAdapterhhhhh
     }
     
     private class DiffCallback : DiffUtil.ItemCallback<CoffeePlaceLite>() {
