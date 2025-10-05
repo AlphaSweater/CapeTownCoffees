@@ -12,7 +12,7 @@
 Cape Town Coffees is a sleek Android application designed for coffee lovers across Cape Town.
 The app helps users discover nearby coffee shops, explore reviews, share their own experiences, and save favourites for easy access later.
 
-Whether you’re searching for a cozy spot to study, a trendy café to meet friends, or the perfect latte. Cape Town Coffees connects you to the city’s best brews.
+Whether you’re searching for a cozy spot to study, a trendy café to meet friends, or the perfect latte, Cape Town Coffees connects you to the city’s best brews.
 
 ## 📚 Table of Contents
 - [Features](#-features)
