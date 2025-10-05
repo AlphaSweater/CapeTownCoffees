@@ -132,8 +132,10 @@ class NearMeItemAdapter @AssistedInject constructor(
                     if (url != null) {
                         Glide.with(ivImage)
                             .load(url)
+                            .thumbnail(0.25f)                     // render faster preview
                             .placeholder(R.drawable.featured_placeholder)
                             .error(R.drawable.featured_placeholder)
+                            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.AUTOMATIC)
                             .into(ivImage)
                     } else {
                         ivImage.setImageResource(R.drawable.featured_placeholder)

@@ -3,15 +3,20 @@ package com.synaptix.capetowncoffees.ui.home
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.R
@@ -46,7 +51,7 @@ class HomeFragment : Fragment() {
     private lateinit var nearMeAdapter: NearMeItemAdapter
 
     private lateinit var featuredSkeletonAdapter: SkeletonAdapter
-    private lateinit var nearSkeletonAdapter:   SkeletonAdapter
+    private lateinit var nearSkeletonAdapter: SkeletonAdapter
 
     // Permissions launcher
     private val requestPerms = registerForActivityResult(
@@ -54,7 +59,8 @@ class HomeFragment : Fragment() {
     ) { grants ->
         val ok = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (ok) fetchLocation() else Toast.makeText(requireContext(), "Location permission required", Toast.LENGTH_LONG).show()
+        if (ok) fetchLocation() else
+            Toast.makeText(requireContext(), "Location permission required", Toast.LENGTH_LONG).show()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -72,13 +78,9 @@ class HomeFragment : Fragment() {
         setupClicks()
 
         ensureLocation()
-
-        (binding.rvFeatured.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)
-            ?.supportsChangeAnimations = false
-        (binding.rvNearMe.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)
-            ?.supportsChangeAnimations = false
     }
 
+    // Optional: show skeletons briefly when returning to the screen if you already had data
     override fun onResume() {
         super.onResume()
         val comingBack = (featuredAdapter.itemCount > 0 || nearMeAdapter.itemCount > 0)
@@ -89,13 +91,9 @@ class HomeFragment : Fragment() {
             if (binding.rvNearMe.adapter !== nearSkeletonAdapter) {
                 binding.rvNearMe.adapter = nearSkeletonAdapter
             }
-            showFeaturedSkeleton(show = true, hideContent = false) // content is skeleton list
-            showNearMeSkeleton(show = true, hideContent = false)
-            // vm.refreshIfStale(maxAgeMs = 30_000) // optional
+            // vm.refreshIfStale(maxAgeMs = 30_000)
         }
     }
-
-
 
     private fun initAdapters() {
         categoryAdapter = CategoryAdapter { category: Category ->
@@ -112,6 +110,7 @@ class HomeFragment : Fragment() {
             onClick = ::onNearMeClick
         )
 
+        // ⭐ Self-shimmering skeleton rows (5 each)
         featuredSkeletonAdapter = SkeletonAdapter(
             count = 5,
             layoutResId = R.layout.item_place_skeleton
@@ -120,6 +119,10 @@ class HomeFragment : Fragment() {
             count = 5,
             layoutResId = R.layout.item_place_skeleton
         )
+
+        // Disable change animations (prevents flicker on partial updates)
+        (binding.rvNearMe.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        (binding.rvFeatured.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
     }
 
     private fun setupRecyclerViews() = with(binding) {
@@ -137,7 +140,6 @@ class HomeFragment : Fragment() {
             adapter = nearMeAdapter
             setHasFixedSize(true)
         }
-
     }
 
     private fun setupClicks() = with(binding) {
@@ -151,15 +153,15 @@ class HomeFragment : Fragment() {
         collect(vm.effects) { eff ->
             when (eff) {
                 is Effect.Message  -> Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
-                else               -> { /* none yet */}
+                else               -> Unit
             }
         }
 
         // Bind UI (categories, selection, current location, refreshing)
         collect(vm.ui.flow) { ui ->
             categoryAdapter.updateCategories(ui.categories)
-            // Do NOT toggle the center spinner here; let section shimmers show instead.
-            binding.progressBar.visibility = View.GONE
+            // Let the section skeletons indicate loading; no center spinner
+            binding.progressBar.isGone = true
         }
 
         // Featured
@@ -169,145 +171,50 @@ class HomeFragment : Fragment() {
                     if (binding.rvFeatured.adapter !== featuredSkeletonAdapter) {
                         binding.rvFeatured.adapter = featuredSkeletonAdapter
                     }
-                    showFeaturedSkeleton(true, hideContent = false)
+                    binding.rvFeatured.isVisible = true
                 }
                 is Loadable.Data -> {
-                    // swap back to real adapter before hiding shimmer
                     if (binding.rvFeatured.adapter !== featuredAdapter) {
                         binding.rvFeatured.adapter = featuredAdapter
                     }
                     featuredAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
-                    showFeaturedSkeleton(false)
+                    binding.rvFeatured.isVisible = loadable.value.isNotEmpty()
                 }
                 is Loadable.Error -> {
-                    // still swap back so user sees last good data / empty state
                     if (binding.rvFeatured.adapter !== featuredAdapter) {
                         binding.rvFeatured.adapter = featuredAdapter
                     }
-                    showFeaturedSkeleton(false)
+                    binding.rvFeatured.isVisible = false
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-// Near Me
+        // Near Me
         collectLoadable(vm.nearMe) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> {
                     if (binding.rvNearMe.adapter !== nearSkeletonAdapter) {
                         binding.rvNearMe.adapter = nearSkeletonAdapter
                     }
-                    showNearMeSkeleton(true, hideContent = false)
+                    binding.rvNearMe.isVisible = true
                 }
                 is Loadable.Data -> {
                     if (binding.rvNearMe.adapter !== nearMeAdapter) {
                         binding.rvNearMe.adapter = nearMeAdapter
                     }
                     nearMeAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
-                    showNearMeSkeleton(false)
+                    binding.rvNearMe.isVisible = loadable.value.isNotEmpty()
                 }
                 is Loadable.Error -> {
                     if (binding.rvNearMe.adapter !== nearMeAdapter) {
                         binding.rvNearMe.adapter = nearMeAdapter
                     }
-                    showNearMeSkeleton(false)
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
-
-    // ───────── collectors call these ─────────
-    private fun showFeaturedSkeleton(show: Boolean, hideContent: Boolean = false) = with(binding) {
-        if (show) {
-            crossfadeInShimmer(
-                shimmer = shimmerFeatured,
-                content = rvFeatured,
-                minContainer = featuredContainer,
-                peekDimen = R.dimen.home_featured_peek_height,
-                hideContent = hideContent
-            )
-        } else {
-            crossfadeOutShimmer(
-                shimmer = shimmerFeatured,
-                content = rvFeatured,
-                minContainer = featuredContainer
-            )
-        }
-    }
-
-    private fun showNearMeSkeleton(show: Boolean, hideContent: Boolean = false) = with(binding) {
-        if (show) {
-            crossfadeInShimmer(
-                shimmer = shimmerNear,
-                content = rvNearMe,
-                minContainer = nearContainer,
-                peekDimen = R.dimen.home_near_peek_height,
-                hideContent = hideContent
-            )
-        } else {
-            crossfadeOutShimmer(
-                shimmer = shimmerNear,
-                content = rvNearMe,
-                minContainer = nearContainer
-            )
-        }
-    }
-
-    private val crossFadeDuration = 220L
-
-    private fun crossfadeInShimmer(
-        shimmer: View,
-        content: View,
-        minContainer: ViewGroup,
-        peekDimen: Int,
-        hideContent: Boolean
-    ) {
-        // if true, fully hide content while shimmer runs; else dim it (peek)
-        content.alpha = if (hideContent) 0f else 0.3f
-        content.visibility = View.VISIBLE
-
-        minContainer.minimumHeight = resources.getDimensionPixelSize(peekDimen)
-
-        shimmer.apply {
-            alpha = 0f
-            visibility = View.VISIBLE
-            animate().cancel()
-            animate()
-                .alpha(1f)
-                .setDuration(crossFadeDuration)
-                .withStartAction { if (this is com.facebook.shimmer.ShimmerFrameLayout) startShimmer() }
-                .start()
-        }
-    }
-
-    private fun crossfadeOutShimmer(
-        shimmer: View,
-        content: View,
-        minContainer: ViewGroup
-    ) {
-        content.post {
-            shimmer.animate().cancel()
-            shimmer.animate()
-                .alpha(0f)
-                .setDuration(crossFadeDuration)
-                .withEndAction {
-                    if (shimmer is com.facebook.shimmer.ShimmerFrameLayout) shimmer.stopShimmer()
-                    shimmer.visibility = View.GONE
-                    shimmer.alpha = 1f
-
-                    content.animate().cancel()
-                    content.animate()
-                        .alpha(1f)
-                        .setDuration(160L)
-                        .start()
-
-                    minContainer.minimumHeight = 0
-                }
-                .start()
-        }
-    }
-
 
     // ───────────────────── Location permissions & fetch ─────────────────────
 
@@ -336,19 +243,18 @@ class HomeFragment : Fragment() {
 
     private fun fetchFreshLocationFallback() {
         // If you have a suspend util (like LocationUtil.getCurrentLatLng()), call it here in a coroutine.
-        // For brevity, we just give up silently; VM shows a message if it can’t fetch without location.
     }
 
     // ─────────────────────────── Click routing ───────────────────────────
 
-    private fun onNearMeClick(nearMeItemClick: NearMeItemAdapter.Click) = when (nearMeItemClick) {
-        is NearMeItemAdapter.Click.Open -> navigateToCafeDetailsId(nearMeItemClick.id)
+    private fun onNearMeClick(c: NearMeItemAdapter.Click) = when (c) {
+        is NearMeItemAdapter.Click.Open -> navigateToCafeDetailsId(c.id)
         is NearMeItemAdapter.Click.ToggleFavorite -> {
-            // TODO: hook up to VM if you track favorites
+            // Hook to VM if you track favorites:
             // vm.toggleFavorite(c.id, c.newValue)
-            Toast.makeText(requireContext(), "Fav ${nearMeItemClick.id}: ${nearMeItemClick.newValue}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Fav ${c.id}: ${c.newValue}", Toast.LENGTH_SHORT).show()
         }
-        is NearMeItemAdapter.Click.AddToList -> showAddToListBottomSheet(nearMeItemClick.id)
+        is NearMeItemAdapter.Click.AddToList -> showAddToListBottomSheet(c.id)
     }
 
     private fun showAddToListBottomSheet(id: String) {

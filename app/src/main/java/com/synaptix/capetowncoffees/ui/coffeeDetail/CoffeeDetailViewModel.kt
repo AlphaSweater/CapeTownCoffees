@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import javax.inject.Inject
+import timber.log.Timber
 
 @HiltViewModel
 class CafeDetailViewModel @Inject constructor(
@@ -88,6 +89,18 @@ class CafeDetailViewModel @Inject constructor(
                 }
             }
         }
+        // Timber log 5 reviews after reviews are fetched
+        viewModelScope.launch {
+            reviews.flow.collect { loadable ->
+                if (loadable is Loadable.Data) {
+                    val reviewList = loadable.value
+                    reviewList.take(5).forEachIndexed { idx, review ->
+                        // Log author, rating, and text (customize as needed)
+                        Timber.d("Review #${idx + 1}: author=${review.author}, rating=${review.rating}, text=${review.text}")
+                    }
+                }
+            }
+        }
     }
 
     fun refresh() {
@@ -127,7 +140,7 @@ class CafeDetailViewModel @Inject constructor(
         main { send(Effect.Navigate("action_dial_phone", b)) }
     }
 
-    // ───────────────────────────────── helpers ─────────────────────────────────
+    // ───────────────────────────────── helpers ─────────────────��───────────────
 
     private fun updateUiFrom(place: CoffeePlaceFull) {
         placeLocation = place.location

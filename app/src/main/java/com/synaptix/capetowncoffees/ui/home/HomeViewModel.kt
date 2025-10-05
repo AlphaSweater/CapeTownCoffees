@@ -1,6 +1,5 @@
 package com.synaptix.capetowncoffees.ui.home
 
-import android.os.Bundle
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.Category
@@ -10,7 +9,6 @@ import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffe
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.SimpleViewModel
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.fetchResultInto
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.loadableState
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.state
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.toUiError
@@ -18,7 +16,6 @@ import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import javax.inject.Inject
-import kotlin.math.max
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
