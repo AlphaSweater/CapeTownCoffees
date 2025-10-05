@@ -52,7 +52,7 @@
     <!-- Soft neutral for subtle chips -->
     <color name="chip_bg_soft">#14000000</color>
     <!-- Hairline dividers -->
-    <color name="divider_soft">#1FFFFFFF</color>
+    <color name="divider_soft">#14000000</color>
 
     <!-- Subtle elevated surface that works on any BG -->
     <color name="ctc_card_surface">#FFFFFFFF</color>

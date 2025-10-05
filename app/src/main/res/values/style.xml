@@ -35,13 +35,52 @@
         <item name="cornerSize">16dp</item>
     </style>
 
-    <!-- Only top corners rounded for the hero image -->
-    <style name="ShapeAppearanceOverlay.Ctc.TopRounded16" parent="">
+    <style name="ShapeAppearance.Ctc.TopRounded16" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSizeTopLeft">16dp</item>
         <item name="cornerSizeTopRight">16dp</item>
         <item name="cornerSizeBottomLeft">0dp</item>
         <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Ctc.TopLeftRounded16" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeTopRight">0p</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Ctc.TopRightRounded16" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Ctc.BottomRounded16" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomLeft">16dp</item>
+        <item name="cornerSizeBottomRight">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Ctc.BottomLeftRounded16" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomLeft">16dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Ctc.BottomRightRounded16" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">16dp</item>
     </style>
 
     <!-- Reusable elevated card that looks good on any BG -->
@@ -53,6 +92,12 @@
         <item name="shapeAppearance">@style/ShapeAppearance.Ctc.Rounded16</item>
         <item name="cardElevation">3dp</item>          <!-- soft stand-off -->
         <item name="rippleColor">@color/ctc_ripple</item>
+    </style>
+
+    <!-- 100% circle shape overlay -->
+    <style name="ShapeAppearanceOverlay.Ctc.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
     </style>
 
 </resources>

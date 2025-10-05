@@ -24,23 +24,23 @@
             android:id="@+id/ivAvatar"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:contentDescription="@string/profile_photo"
             android:scaleType="centerCrop"
+            android:contentDescription="@string/profile_photo"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.Circle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:src="@drawable/ic_avatar_placeholder" />
+            tools:src="@drawable/bg_skeleton_circle" />
 
-        <!-- Author + rating + date in a single row -->
+        <!-- Header (name + rating + chip) -->
         <LinearLayout
             android:id="@+id/headerTextContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:layout_marginStart="12dp"
             app:layout_constraintStart_toEndOf="@id/ivAvatar"
             app:layout_constraintTop_toTopOf="@id/ivAvatar"
-            app:layout_constraintEnd_toStartOf="@id/tvDate"
-            android:layout_marginStart="12dp">
+            app:layout_constraintEnd_toStartOf="@id/tvDate">
 
             <TextView
                 android:id="@+id/tvAuthor"
@@ -48,6 +48,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                 android:textColor="@color/text_primary"
+                android:textStyle="bold"
                 tools:text="Alex Johnson" />
 
             <LinearLayout
@@ -62,7 +63,7 @@
                     android:id="@+id/ratingBar"
                     style="@style/Widget.AppCompat.RatingBar.Small"
                     android:layout_width="wrap_content"
-                    android:layout_height="16dp"
+                    android:layout_height="wrap_content"
                     android:isIndicator="true"
                     android:numStars="5"
                     android:stepSize="0.5"
@@ -78,9 +79,8 @@
                     android:layout_marginStart="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="@color/text_secondary"
-                    tools:text="4.5" />
+                    tools:text="4.6" />
 
-                <!-- Small badge for source (“Google”, “In-App”) -->
                 <TextView
                     android:id="@+id/tvSourceChip"
                     android:layout_width="wrap_content"
@@ -101,7 +101,7 @@
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
             android:textColor="@color/text_tip"
-            app:layout_constraintTop_toTopOf="@+id/ivAvatar"
+            app:layout_constraintTop_toTopOf="@id/ivAvatar"
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="2d ago" />
 
@@ -112,30 +112,125 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/text_secondary"
             app:layout_constraintStart_toStartOf="@id/ivAvatar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ivAvatar"
-            tools:text="This spot has the smoothest flat white I’ve had in a while. Vibes are cozy, staff are super friendly, and Wi-Fi is solid." />
+            tools:text="Smooth flat white, cozy vibes, friendly staff — solid Wi-Fi too." />
 
-        <!-- Optional photo strip (hidden by default; show when review has photos) -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPhotos"
+        <!-- ───────────────────── MOSAIC (adaptive) ───────────────────── -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/photosMosaic"
             android:layout_width="0dp"
-            android:layout_height="84dp"
+            android:layout_height="0dp"
             android:layout_marginTop="8dp"
-            android:clipToPadding="false"
-            android:paddingEnd="4dp"
             android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:orientation="horizontal"
             app:layout_constraintStart_toStartOf="@id/tvBody"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvBody"
+            app:layout_constraintDimensionRatio="16:9"
             tools:visibility="visible"
-            tools:itemCount="3" />
+            tools:layout_height="200dp">
 
-        <!-- Divider before actions; auto-hides if no actions -->
+            <!-- Guidelines split -->
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/gVert50"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/gHorz50"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_percent="0.5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <!-- NOTE: default constraints = 2x2 GRID (used for 4+) -->
+
+            <!-- top-left -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivPhoto1"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/gVert50"
+                app:layout_constraintBottom_toTopOf="@id/gHorz50"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Ctc.TopLeftRounded16"
+                tools:src="@drawable/featured_placeholder" />
+
+            <!-- top-right -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivPhoto2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="@id/gVert50"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/gHorz50"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Ctc.TopRightRounded16"
+                tools:src="@drawable/featured_placeholder" />
+
+            <!-- bottom-left -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivPhoto3"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/gHorz50"
+                app:layout_constraintEnd_toStartOf="@id/gVert50"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Ctc.BottomLeftRounded16"
+                tools:src="@drawable/featured_placeholder" />
+
+            <!-- bottom-right (with +N overlay) -->
+            <FrameLayout
+                android:id="@+id/photo4Container"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toStartOf="@id/gVert50"
+                app:layout_constraintTop_toBottomOf="@id/gHorz50"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/ivPhoto4"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    tools:src="@drawable/featured_placeholder" />
+
+                <View
+                    android:id="@+id/moreScrim"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_mosaic_scrim"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/tvMoreBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|bottom"
+                    android:layout_margin="8dp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:background="@drawable/bg_chip_soft"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                    android:textColor="@color/text_primary"
+                    android:visibility="gone"
+                    tools:text="+4"
+                    tools:visibility="visible" />
+            </FrameLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Divider below mosaic -->
         <View
             android:id="@+id/dividerActions"
             android:layout_width="0dp"
@@ -144,9 +239,9 @@
             android:background="@color/divider_soft"
             app:layout_constraintStart_toStartOf="@id/tvBody"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rvPhotos" />
+            app:layout_constraintTop_toBottomOf="@id/photosMosaic" />
 
-        <!-- Actions: Like / Dislike (only for InAppReview; hide for Google) -->
+        <!-- Actions (only for InAppReview; hide in code otherwise) -->
         <LinearLayout
             android:id="@+id/actionsContainer"
             android:layout_width="0dp"
@@ -168,23 +263,21 @@
                 app:icon="@drawable/ic_ctc_thumbs_up"
                 app:iconGravity="textStart"
                 app:iconSize="18dp"
-                app:iconTint="@color/icon_primary"
-                tools:ignore="TouchTargetSizeCheck" />
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/success_green" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDislike"
                 style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginStart="6dp"
-                android:contentDescription="@string/dislike"
+                android:contentDescription="@string/like"
                 app:icon="@drawable/ic_ctc_thumbs_down"
                 app:iconGravity="textStart"
                 app:iconSize="18dp"
-                app:iconTint="@color/icon_primary"
-                tools:ignore="TouchTargetSizeCheck" />
-        </LinearLayout>
+                app:iconTint="@color/white"
+                app:backgroundTint="@color/error_red" />
 
-        <!-- Guard: if actions hidden, also hide divider via code -->
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
