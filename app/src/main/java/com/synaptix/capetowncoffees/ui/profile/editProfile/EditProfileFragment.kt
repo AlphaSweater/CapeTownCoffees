@@ -138,11 +138,11 @@ class EditProfileFragment : Fragment() {
                                         binding.ivProfilePicture.setImageBitmap(bitmap)
                                     } catch (e: Exception) {
                                         // If there's an error loading the image, show the default avatar
-                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                                     }
                                 } ?: run {
                                     // If no profile picture is available, show the default avatar
-                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                                 }
                                 
                                 // Set the user's name in the profile header if available

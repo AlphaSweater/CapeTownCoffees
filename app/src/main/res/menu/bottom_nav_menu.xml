@@ -2,16 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/homeFragment"
-        android:icon="@drawable/ic_explore"
+        android:icon="@drawable/ic_ctc_compass"
         android:title="Explore" />
-        
+
     <item
         android:id="@+id/savedFragment"
-        android:icon="@drawable/ic_bookmark_border"
+        android:icon="@drawable/ic_ctc_bookmark"
         android:title="Saved" />
-        
+
     <item
         android:id="@+id/profileFragment"
-        android:icon="@drawable/ic_person_outline"
+        android:icon="@drawable/ic_ctc_person_circled"
         android:title="Profile" />
 </menu>

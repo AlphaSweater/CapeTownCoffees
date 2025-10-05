@@ -82,10 +82,10 @@ class SearchFragment : Fragment() {
             view.doOnPreDraw {
                 view.slideDown()
             }
-            binding.masterFilterArrow.setImageResource(R.drawable.ic_arrow_down)
+            binding.masterFilterArrow.setImageResource(R.drawable.ic_ctc_arrow_drop_down)
         } else {
             binding.filtersContainer.slideUp()
-            binding.masterFilterArrow.setImageResource(R.drawable.ic_arrow_forward)
+            binding.masterFilterArrow.setImageResource(R.drawable.ic_ctc_arrow_drop_foward)
         }
     }
 

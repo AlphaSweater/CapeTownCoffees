@@ -17,7 +17,7 @@
     android:textColor="@color/button_category"
     android:textStyle="bold"
     android:textSize="14sp"
-    app:icon="@drawable/ic_medal"
+    app:icon="@drawable/ic_ctc_medal"
     app:iconTint="@color/button_category"
     app:iconSize="18dp"
     app:iconPadding="8dp"

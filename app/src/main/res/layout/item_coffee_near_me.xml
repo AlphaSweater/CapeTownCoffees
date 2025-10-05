@@ -131,7 +131,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_location"
+                    android:src="@drawable/ic_ctc_location"
                     android:contentDescription="@string/location"
                     app:tint="@color/text_secondary" />
 
@@ -159,7 +159,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_location"
+                    android:src="@drawable/ic_ctc_location"
                     android:contentDescription="@string/distance"
                     app:tint="@color/text_secondary" />
 
@@ -184,7 +184,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_star"
+                    android:src="@drawable/ic_ctc_star"
                     android:contentDescription="@string/cafe_rating"
                     app:tint="@color/text_secondary" />
 

@@ -92,10 +92,10 @@ class ProfileFragment : Fragment() {
                                         binding.ivProfilePicture.setImageBitmap(bitmap)
                                     } catch (e: Exception) {
                                         Timber.e(e, "Error loading profile image")
-                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                        binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                                     }
                                 } ?: run {
-                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_profile_placeholder)
+                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                                 }
                             }
                         }

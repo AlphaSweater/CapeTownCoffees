@@ -17,7 +17,11 @@
     <color name="text_on_primary">#FFFFFFFF</color>
     <color name="text_favourite">#4d5e6a</color>
     <color name="text_alt">#fff5f0</color>
-    
+
+    <!-- Navigation Bar Colors -->
+    <color name="nav_bar_pill">#ffe0cc</color>
+    <color name="nav_bar_item">#5D4037</color>
+
     <!-- Background Colors -->
     <color name="background">#fff5f0</color>  <!-- Very light cream -->
     <color name="surface">#FFFFFF</color>     <!-- White surface -->

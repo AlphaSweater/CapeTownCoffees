@@ -36,7 +36,7 @@ class AddPlacesToListAdapter(
         val item = getItem(position)
         val b = holder.b
 
-        b.ivIcon.setImageResource(R.drawable.ic_bookmark_border)
+        b.ivIcon.setImageResource(R.drawable.ic_ctc_bookmark)
         b.tvName.text = item.name
         b.tvSubtitle.text = (if (item.isPublic) "Public" else "Private") +
                 " • ${item.placeIds.size} places"
