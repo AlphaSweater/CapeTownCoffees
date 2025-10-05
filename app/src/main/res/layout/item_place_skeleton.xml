@@ -11,8 +11,6 @@
     app:shimmer_duration="1000">
 
     <com.google.android.material.card.MaterialCardView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         style="@style/Widget.Ctc.ElevatedCard"
         android:layout_width="match_parent"
@@ -36,7 +34,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.TopRounded16"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Ctc.TopRounded16"
                 tools:ignore="ContentDescription" />
 
             <!-- Top scrim placeholder -->
