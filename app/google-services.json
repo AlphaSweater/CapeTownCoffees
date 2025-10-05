@@ -12,7 +12,20 @@
           "package_name": "com.synaptix.capetowncoffees"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1067620773075-tkqnao0n96cj4k81dljdu3tcl3nub43g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.synaptix.capetowncoffees",
+            "certificate_hash": "7e62430c188c741dc11c8b9d92008cb5c3888ca5"
+          }
+        },
+        {
+          "client_id": "1067620773075-8gv551tftchkm0cj68avcivnh87949l7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBjDY_P5DvUygPOKPArqAjQc3zpLzF2_4w"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1067620773075-8gv551tftchkm0cj68avcivnh87949l7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

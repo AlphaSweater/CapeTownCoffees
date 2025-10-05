@@ -8,6 +8,7 @@ class AuthManager @Inject constructor(
     private val loginUserUseCase: LoginUserUseCase,
     private val registerUserUseCase: RegisterUserUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val coffeeUserRepository: ICoffeeUserRepository // Inject UserRepository for auth state observation
 ) {
     suspend fun login(email: String, password: String): LoginResult {
@@ -17,6 +18,9 @@ class AuthManager @Inject constructor(
     suspend fun register(email: String, password: String, fullName: String): RegistrationResult {
         return registerUserUseCase(email, password, fullName)
     }
+
+    suspend fun loginWithGoogle(idToken: String): LoginResult =
+        loginWithGoogleUseCase(idToken)
 
     suspend fun logout(): LogoutResult {
         return logoutUserUseCase()

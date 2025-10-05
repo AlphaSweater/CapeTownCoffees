@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.synaptix.capetowncoffees.domain.usecase.auth.LoginWithGoogleUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegisterUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegistrationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +25,8 @@ sealed class RegisterUiState {
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val registerUserUseCase: RegisterUserUseCase
+    private val registerUserUseCase: RegisterUserUseCase,
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase
 ) : ViewModel() {
     // Internal MutableLiveData for register state
     private val _registerState = MutableLiveData<RegisterUiState>(RegisterUiState.Idle)
@@ -105,6 +107,27 @@ class RegisterViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _registerState.value = RegisterUiState.Error(e.localizedMessage ?: "Unknown error")
+            }
+        }
+    }
+
+    fun registerWithGoogleToken(idToken: String) {
+        _registerState.value = RegisterUiState.Loading
+        viewModelScope.launch {
+            try {
+                when (val r = loginWithGoogleUseCase(idToken)) {
+                    is RegistrationResult -> {}
+                    else -> {}
+                }
+            } catch (_: Throwable) {}
+
+            when (val result = loginWithGoogleUseCase(idToken)) {
+                is com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult.Success ->
+                    _registerState.value = RegisterUiState.Success
+                is com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult.Error ->
+                    _registerState.value = RegisterUiState.Error(result.message)
+                is com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult.InvalidCredentials ->
+                    _registerState.value = RegisterUiState.Error("Could not sign in with Google")
             }
         }
     }

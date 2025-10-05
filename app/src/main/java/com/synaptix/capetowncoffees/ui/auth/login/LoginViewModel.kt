@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginUserUseCase
+import com.synaptix.capetowncoffees.domain.usecase.auth.LoginWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,7 +26,8 @@ sealed class LoginUiState {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val loginUserUseCase: LoginUserUseCase // Injected use case to handle the login logic
+    private val loginUserUseCase: LoginUserUseCase, // Injected use case to handle the login logic
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase // Injected use case for Google login
 ) : ViewModel() {
     // LiveData to hold the current login state
     private val _loginState = MutableLiveData<LoginUiState>(LoginUiState.Idle)
@@ -100,6 +102,31 @@ class LoginViewModel @Inject constructor(
                 _loginState.value = LoginUiState.Error(
                     e.localizedMessage ?: "An unexpected error occurred"
                 )
+            }
+        }
+    }
+    fun loginWithGoogleToken(idToken: String) {
+        Timber.d("loginWithGoogleToken called")
+        viewModelScope.launch {
+            _loginState.value = LoginUiState.Loading
+            try {
+                when (val result = loginWithGoogleUseCase(idToken)) {
+                    is LoginResult.Success -> {
+                        Timber.d("Google login success")
+                        _loginState.value = LoginUiState.Success
+                    }
+                    is LoginResult.Error -> {
+                        Timber.d("Google login error: %s", result.message)
+                        _loginState.value = LoginUiState.Error(result.message)
+                    }
+                    is LoginResult.InvalidCredentials -> {
+                        // Rare for Google; still handle generically
+                        _loginState.value = LoginUiState.Error("Could not sign in with Google")
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Exception during Google login")
+                _loginState.value = LoginUiState.Error(e.localizedMessage ?: "Unexpected error")
             }
         }
     }
