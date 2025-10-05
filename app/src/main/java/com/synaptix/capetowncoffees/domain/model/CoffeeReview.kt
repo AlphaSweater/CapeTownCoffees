@@ -1,11 +1,9 @@
 package com.synaptix.capetowncoffees.domain.model
 
 import android.os.Parcelable
+import android.util.Base64
 import kotlinx.parcelize.Parcelize
-import com.google.android.libraries.places.api.model.Review as GReview
-import com.synaptix.capetowncoffees.data.model.AppReviewDTO
 import com.synaptix.capetowncoffees.data.mapper.ReviewMapper
-import kotlin.io.encoding.Base64
 
 /**
  * Sealed parent: shared fields across all review sources.
@@ -19,7 +17,7 @@ sealed class CoffeeReview : Parcelable {
     abstract val id: String?
     abstract val reviewerId: String?
     abstract val placeId: String?
-    abstract val author: String?
+    abstract val authorName: String?
     abstract val rating: Double?
     abstract val text: String?
     abstract val publishTime: Long?          // epoch seconds (null-safe)
@@ -56,7 +54,7 @@ data class InAppReview(
     override val id: String? = null,
     override val reviewerId: String?,
     override val placeId: String?,
-    override val author: String? = null,
+    override val authorName: String? = null,
     val profilePhotoBase64: String? = null,
     override val rating: Double?,
     override val text: String?,
@@ -80,7 +78,7 @@ data class GooglePlaceReview(
     override val id: String? = null,
     override val reviewerId: String? = null,
     override val placeId: String?,
-    override val author: String?,
+    override val authorName: String?,
     val profilePhotoUrl: String? = null,
     override val rating: Double?,
     override val text: String?,
@@ -102,9 +100,37 @@ data class GooglePlaceReview(
  * For InAppReview, returns the Base64 image string.
  * For GooglePlaceReview, returns profilePhotoUrl.
  */
-fun CoffeeReview.getProfilePhoto(): String? = when (this) {
-    is InAppReview -> profilePhotoBase64
+fun CoffeeReview.avatarModelOrNull(): Any? = when (this) {
+    is InAppReview       -> profilePhotoBase64?.decodeBase64OrNull()
     is GooglePlaceReview -> profilePhotoUrl
+}
+
+/** Per-review photos (empty for now). */
+fun CoffeeReview.photoUrlsOrEmpty(): List<String> = emptyList()
+//fun CoffeeReview.photoUrlsOrEmpty(): List<String> = when (this) {
+//    is InAppReview       -> thisPhotoUrls ?: emptyList()
+//    is GooglePlaceReview -> thisPhotoUrls ?: emptyList()
+//}
+
+/** Stable Long for RecyclerView even if id is null. */
+fun CoffeeReview.stableId(): Long {
+    val key = when (this) {
+        is InAppReview ->
+            "INAPP:${id ?: ""}:${reviewerId ?: ""}:${placeId ?: ""}:${publishTime ?: 0}:${rating ?: -1.0}"
+        is GooglePlaceReview ->
+            "GOOG:${id ?: ""}:${reviewerId ?: ""}:${placeId ?: ""}:${publishTime ?: 0}:${rating ?: -1.0}"
+    }
+    return key.hashCode().toLong()
+}
+
+/** Non-empty identifier for click payloads when id is null. */
+fun CoffeeReview.safeReviewKey(): String =
+    id ?: "${if (this is InAppReview) "inapp" else "google"}:${reviewerId ?: "anon"}:${publishTime ?: 0}"
+
+private fun String.decodeBase64OrNull(): ByteArray? = try {
+    Base64.decode(this, Base64.DEFAULT or Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+} catch (_: IllegalArgumentException) {
+    null
 }
 
 // Tiny convenience flags

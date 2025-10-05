@@ -96,7 +96,7 @@ class CafeDetailViewModel @Inject constructor(
                     val reviewList = loadable.value
                     reviewList.take(5).forEachIndexed { idx, review ->
                         // Log author, rating, and text (customize as needed)
-                        Timber.d("Review #${idx + 1}: author=${review.author}, rating=${review.rating}, text=${review.text}")
+                        Timber.d("Review #${idx + 1}: author=${review.authorName}, rating=${review.rating}, text=${review.text}")
                     }
                 }
             }
