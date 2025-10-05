@@ -31,7 +31,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 - SignUp and Login: Users can securely create an account and log in to access their personal budget data from anywhere. This ensures that all personal information is protected and personalized for each user.
 
-- Google SignUp: Users can choose to sign up through Google's secure sign up.
+- Google SignUp: Users can choose to sign up through Google's secure authentication.
 
 - Find Nearby Coffee Shops: The app uses location services to show users nearby cafés with distance, ratings, and open/closed status.
 
