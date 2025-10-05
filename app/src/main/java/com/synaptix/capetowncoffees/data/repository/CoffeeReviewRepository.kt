@@ -57,25 +57,31 @@ class CoffeeReviewRepository @Inject constructor(
         placeId: String,
         limit: Int?
     ): Result<List<CoffeeReview>> = coroutineScope {
-        val dbDeferred = async { getAll(limit = limit, parentDocId = placeId) }
-        val apiDeferred = async { placesApiRepository.getCoffeePlaceReviews(placeId) }
+        val dbDeferred = async { getAll(limit = limit, parentDocId = placeId) }           // Result<List<Dto>>
+        val apiDeferred = async { placesApiRepository.getCoffeePlaceReviews(placeId) }    // Result<List<CoffeeReview>>
 
         val dbResult = dbDeferred.await()
         val apiResult = apiDeferred.await()
 
-        val inApp: List<InAppReview> = dbResult
-            .map { it.orEmpty() }
-            .map { dtos ->
-                val userIds = dtos.mapNotNull { it.userId }.distinct()
-                val users = buildUserMapFromUseCase(userIds, strict = false)
-                dtos.toDomainListWithUsers(users = users, strict = false)
-            }
-            .getOrElse { emptyList() } // DB failure shouldn't nuke Google reviews
+        // --- In-app reviews: only fetch users if there are any dtos ---
+        val dtos: List<AppReviewDTO> = dbResult.getOrElse { emptyList() }
 
+        val inApp: List<InAppReview> = if (dtos.isEmpty()) {
+            // Nothing in DB => skip user fetch entirely
+            emptyList()
+        } else {
+            // Build users map only when needed
+            val userIds: List<String> = dtos.mapNotNull { it.userId }.distinct()
+            val users = if (userIds.isEmpty()) emptyMap() else buildUserMapFromUseCase(userIds, strict = false)
+            dtos.toDomainListWithUsers(users = users, strict = false)
+        }
+
+        // --- Google reviews: failure -> empty list (don’t block in-app) ---
         val google: List<CoffeeReview> = apiResult.getOrElse { emptyList() }
 
         Result.success((inApp + google).myOrder(OrderMode.DefaultSectioned))
     }
+
 
     override suspend fun addReview(
         coffeeReview: InAppReview,

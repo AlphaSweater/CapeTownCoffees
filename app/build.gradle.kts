@@ -94,7 +94,7 @@ dependencies {
     // --- Material Design ---
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3.android)
-    implementation("com.google.android.material:material:1.8.0")
+
 
     // --- Kotlin Coroutines ---
     implementation(libs.kotlinx.coroutines.core)
@@ -124,9 +124,12 @@ dependencies {
     // --- Optional helpers ---
     implementation("de.hdodenhof:circleimageview:3.1.0") // Circle Image View
 
+    //Facebook shimmer
+    implementation(libs.shimmer)
+
     // --- Image loading ---
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    kapt("com.github.bumptech.glide:compiler:4.16.0")
+    implementation(libs.glide)
+    kapt(libs.compiler)
 
     // --- Testing & Logging ---
     implementation(libs.timber)

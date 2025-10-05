@@ -1,5 +1,6 @@
-package com.synaptix.capetowncoffees.ui._simple
+package com.synaptix.capetowncoffees.ui._simple.viewmodel
 
+import android.os.Bundle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -104,7 +105,7 @@ sealed class Effect {
     /** Transient user message (snackbar / toast). */
     data class Message(val text: String) : Effect()
     /** Navigation request; route interpreted by the Fragment/Coordinator. */
-    data class Navigate(val route: String, val args: android.os.Bundle? = null) : Effect()
+    data class Navigate(val route: String, val args: Bundle? = null) : Effect()
 }
 
 // ---------------- State wrappers ----------------

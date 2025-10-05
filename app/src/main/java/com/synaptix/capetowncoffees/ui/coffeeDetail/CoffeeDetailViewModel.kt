@@ -8,12 +8,12 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.GetCoffeePlaceDetailsUseCase
 import com.synaptix.capetowncoffees.domain.usecase.coffeeReview.GetCoffeeReviewsForPlaceUseCase
-import com.synaptix.capetowncoffees.ui._simple.Effect
-import com.synaptix.capetowncoffees.ui._simple.Loadable
-import com.synaptix.capetowncoffees.ui._simple.SimpleViewModel
-import com.synaptix.capetowncoffees.ui._simple.fetchResultInto
-import com.synaptix.capetowncoffees.ui._simple.loadableState
-import com.synaptix.capetowncoffees.ui._simple.state
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.SimpleViewModel
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.fetchResultInto
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.loadableState
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.state
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,8 +21,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.util.Locale
 import javax.inject.Inject
+import timber.log.Timber
 
 @HiltViewModel
 class CafeDetailViewModel @Inject constructor(
@@ -89,6 +89,18 @@ class CafeDetailViewModel @Inject constructor(
                 }
             }
         }
+        // Timber log 5 reviews after reviews are fetched
+        viewModelScope.launch {
+            reviews.flow.collect { loadable ->
+                if (loadable is Loadable.Data) {
+                    val reviewList = loadable.value
+                    reviewList.take(5).forEachIndexed { idx, review ->
+                        // Log author, rating, and text (customize as needed)
+                        Timber.d("Review #${idx + 1}: author=${review.author}, rating=${review.rating}, text=${review.text}")
+                    }
+                }
+            }
+        }
     }
 
     fun refresh() {
@@ -128,7 +140,7 @@ class CafeDetailViewModel @Inject constructor(
         main { send(Effect.Navigate("action_dial_phone", b)) }
     }
 
-    // ───────────────────────────────── helpers ─────────────────────────────────
+    // ───────────────────────────────── helpers ─────────────────��───────────────
 
     private fun updateUiFrom(place: CoffeePlaceFull) {
         placeLocation = place.location
