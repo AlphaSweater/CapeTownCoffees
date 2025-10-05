@@ -15,26 +15,24 @@ import com.synaptix.capetowncoffees.R
  * SkeletonAdapters — reusable skeleton rows for RecyclerViews
  * ---------------------------------------------------------------------------
  *
- * Use cases:
- *  - Show N copies of one skeleton layout -> [SkeletonAdapter]
- *  - Show a sequence of different skeleton layouts -> [MultiSkeletonAdapter] + [SkeletonSpec]
- *  - Quick helpers -> [SkeletonFactories]
+ * What’s new:
+ * - Mutable counts with granular notify (no scroll jump)
+ * - show()/hide() helpers
+ * - setShimmerEnabled(enabled) to pause/resume shimmer
+ * - Stable IDs for smoother prefetch/recycling
+ * - MultiSkeletonAdapter: setSpecs(...), setVisible(...), setShimmerEnabled(...)
  *
- * Typical pattern in Fragment:
+ * Typical pattern (keeps your ConcatAdapter stable):
  *
- *   private lateinit var featuredSkeleton: SkeletonAdapter
- *
- *   featuredSkeleton = SkeletonFactories.of(
- *       layout = R.layout.item_coffee_near_me_skeleton,
- *       count = 5
- *   )
+ *   val popularSkeleton = SkeletonFactories.of(R.layout.item_place_skeleton, 5)
+ *   val popularConcat = ConcatAdapter(popularSkeleton, popularAdapter)
  *
  *   // While loading
- *   if (rv.adapter !== featuredSkeleton) rv.adapter = featuredSkeleton
+ *   popularSkeleton.show(5)
  *
  *   // When data arrives
- *   realAdapter.updateItems(data)
- *   if (rv.adapter !== realAdapter) rv.adapter = realAdapter
+ *   popularAdapter.updateItems(data)
+ *   popularSkeleton.hide()
  */
 
 /* ───────────────────────────── Utilities ───────────────────────────── */
@@ -50,7 +48,7 @@ private fun View.disableInteractive() {
 /**
  * Finds a ShimmerFrameLayout for this row:
  * - If the root *is* a ShimmerFrameLayout, return it.
- * - Else, look for a child with id @id/shimmerRoot (recommended on your skeleton layout).
+ * - Else, look for a child with id @id/shimmerRoot (recommended in your skeleton layout).
  */
 private fun View.findShimmer(): ShimmerFrameLayout? = when (this) {
     is ShimmerFrameLayout -> this
@@ -66,17 +64,29 @@ private fun View.findShimmer(): ShimmerFrameLayout? = when (this) {
  *  - Have a ShimmerFrameLayout as the root, OR
  *  - Contain a ShimmerFrameLayout with android:id="@+id/shimmerRoot"
  *
- * @param count how many rows to render (default 5)
- * @param layoutResId the skeleton row layout (e.g., R.layout.item_coffee_near_me_skeleton)
+ * @param count how many rows to render initially (default 5)
+ * @param layoutResId the skeleton row layout (e.g., R.layout.item_place_skeleton)
  * @param onBind optional callback to tweak per-item (margins, width, etc.)
  */
 class SkeletonAdapter(
-    private val count: Int = 5,
+    count: Int = 5,
     @param:LayoutRes private val layoutResId: Int,
-    private val onBind: ((itemView: View, position: Int) -> Unit)? = null
+    private var onBind: ((itemView: View, position: Int) -> Unit)? = null
 ) : RecyclerView.Adapter<SkeletonAdapter.VH>() {
 
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    // Mutable so we can toggle without swapping adapters
+    private var count: Int = count
+
+    // Let the adapter pause shimmer globally
+    private var shimmerEnabled: Boolean = true
+
+    init {
+        setHasStableIds(true) // improves prefetch/recycling
+    }
+
+    override fun getItemId(position: Int): Long = position.toLong()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context).inflate(layoutResId, parent, false)
@@ -90,13 +100,15 @@ class SkeletonAdapter(
 
     override fun getItemCount(): Int = count
 
-    /** Start shimmer when the row becomes visible. */
+    /** Start shimmer when the row becomes visible (if enabled). */
     override fun onViewAttachedToWindow(holder: VH) {
         super.onViewAttachedToWindow(holder)
-        holder.itemView.findShimmer()?.startShimmer()
+        holder.itemView.findShimmer()?.let { shimmer ->
+            if (shimmerEnabled) shimmer.startShimmer() else shimmer.stopShimmer()
+        }
     }
 
-    /** Stop shimmer when the row is recycled / off-screen to save CPU/GPU. */
+    /** Stop shimmer when off-screen to save CPU/GPU. */
     override fun onViewDetachedFromWindow(holder: VH) {
         holder.itemView.findShimmer()?.stopShimmer()
         super.onViewDetachedFromWindow(holder)
@@ -105,6 +117,36 @@ class SkeletonAdapter(
     override fun onViewRecycled(holder: VH) {
         holder.itemView.findShimmer()?.stopShimmer()
         super.onViewRecycled(holder)
+    }
+
+    // ─────────────── Public controls ───────────────
+
+    /** Toggle how many skeleton rows are shown, with granular updates (no jump). */
+    fun setCount(newCount: Int) {
+        if (newCount == count) return
+        val old = count
+        count = newCount
+
+        when {
+            newCount == 0 && old > 0 -> notifyItemRangeRemoved(0, old)
+            old == 0 && newCount > 0 -> notifyItemRangeInserted(0, newCount)
+            newCount > old           -> notifyItemRangeInserted(old, newCount - old)
+            newCount < old           -> notifyItemRangeRemoved(newCount, old - newCount)
+        }
+    }
+
+    /** Convenience: show N skeleton rows (default 5). */
+    fun show(n: Int = 5) = setCount(n)
+
+    /** Convenience: hide all skeleton rows. */
+    fun hide() = setCount(0)
+
+    /** Enable/disable shimmer globally (e.g., in onResume/onPause). */
+    fun setShimmerEnabled(enabled: Boolean) {
+        if (shimmerEnabled == enabled) return
+        shimmerEnabled = enabled
+        // Refresh visible rows to apply start/stop. This is cheap for small skeleton lists.
+        if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
     }
 }
 
@@ -120,21 +162,29 @@ data class SkeletonSpec(@param:LayoutRes val layout: Int, val count: Int)
  *   val adapter = MultiSkeletonAdapter(
  *       specs = listOf(
  *           SkeletonSpec(R.layout.item_section_header_skeleton, 1),
- *           SkeletonSpec(R.layout.item_coffee_near_me_skeleton, 5)
+ *           SkeletonSpec(R.layout.item_place_skeleton, 5)
  *       )
  *   )
  */
 class MultiSkeletonAdapter(
     specs: List<SkeletonSpec>,
-    private val onBind: ((itemView: View, absolutePos: Int, layout: Int) -> Unit)? = null
+    private var onBind: ((itemView: View, absolutePos: Int, layout: Int) -> Unit)? = null
 ) : RecyclerView.Adapter<MultiSkeletonAdapter.VH>() {
 
-    // Flatten spec blocks into a per-position layout list
-    private val layouts: List<Int> = buildList {
-        specs.forEach { spec -> repeat(spec.count) { add(spec.layout) } }
-    }
-
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    private var layouts: MutableList<Int> = buildList {
+        specs.forEach { spec -> repeat(spec.count) { add(spec.layout) } }
+    }.toMutableList()
+
+    private var shimmerEnabled: Boolean = true
+
+    init { setHasStableIds(true) }
+
+    override fun getItemId(position: Int): Long {
+        // compose viewType + position for stability across identical layouts
+        return (getItemViewType(position).toLong() shl 32) or position.toLong()
+    }
 
     override fun getItemCount(): Int = layouts.size
     override fun getItemViewType(position: Int): Int = layouts[position]
@@ -149,13 +199,13 @@ class MultiSkeletonAdapter(
         onBind?.invoke(holder.itemView, position, getItemViewType(position))
     }
 
-    /** Start shimmer when the row becomes visible. */
     override fun onViewAttachedToWindow(holder: VH) {
         super.onViewAttachedToWindow(holder)
-        holder.itemView.findShimmer()?.startShimmer()
+        holder.itemView.findShimmer()?.let { shimmer ->
+            if (shimmerEnabled) shimmer.startShimmer() else shimmer.stopShimmer()
+        }
     }
 
-    /** Stop shimmer when the row is recycled / off-screen to save CPU/GPU. */
     override fun onViewDetachedFromWindow(holder: VH) {
         holder.itemView.findShimmer()?.stopShimmer()
         super.onViewDetachedFromWindow(holder)
@@ -164,6 +214,37 @@ class MultiSkeletonAdapter(
     override fun onViewRecycled(holder: VH) {
         holder.itemView.findShimmer()?.stopShimmer()
         super.onViewRecycled(holder)
+    }
+
+    // ─────────────── Public controls ───────────────
+
+    /** Replace skeleton sequence; simplest refresh (skeletons are cheap). */
+    fun setSpecs(specs: List<SkeletonSpec>) {
+        val newLayouts = buildList {
+            specs.forEach { spec -> repeat(spec.count) { add(spec.layout) } }
+        }
+        layouts = newLayouts.toMutableList()
+        notifyDataSetChanged()
+    }
+
+    /** Show/hide the current skeleton sequence. */
+    fun setVisible(visible: Boolean) {
+        if (visible) {
+            // no-op: caller should also ensure layouts is non-empty (via setSpecs)
+            return
+        }
+        if (layouts.isNotEmpty()) {
+            val n = layouts.size
+            layouts.clear()
+            notifyItemRangeRemoved(0, n)
+        }
+    }
+
+    /** Enable/disable shimmer globally (e.g., in onResume/onPause). */
+    fun setShimmerEnabled(enabled: Boolean) {
+        if (shimmerEnabled == enabled) return
+        shimmerEnabled = enabled
+        if (itemCount > 0) notifyItemRangeChanged(0, itemCount)
     }
 }
 
@@ -175,7 +256,7 @@ object SkeletonFactories {
      * Create a simple skeleton adapter.
      *
      * @param layout the skeleton item layout resource
-     * @param count how many rows to show (default 5)
+     * @param count how many rows to show initially (default 5)
      * @param onBind optional callback to tweak each skeleton row
      */
     fun of(
@@ -193,11 +274,7 @@ object SkeletonFactories {
      */
     fun multi(
         specs: List<SkeletonSpec>,
-        onBind: ((
-            itemView: View,
-            absolutePos: Int,
-            layout: Int
-        ) -> Unit)? = null
+        onBind: ((itemView: View, absolutePos: Int, layout: Int) -> Unit)? = null
     ): MultiSkeletonAdapter = MultiSkeletonAdapter(specs, onBind)
 }
 
@@ -205,7 +282,7 @@ object SkeletonFactories {
 /*
     // Simple:
     val featuredSkeleton = SkeletonFactories.of(
-        layout = R.layout.item_coffee_near_me_skeleton,
+        layout = R.layout.item_place_skeleton,
         count = 5
     )
 
@@ -213,13 +290,27 @@ object SkeletonFactories {
     val fancySkeleton = SkeletonFactories.multi(
         specs = listOf(
             SkeletonSpec(R.layout.item_section_header_skeleton, 1),
-            SkeletonSpec(R.layout.item_coffee_near_me_skeleton, 5)
+            SkeletonSpec(R.layout.item_place_skeleton, 5)
         )
     )
 
-    // Swap pattern:
-    rv.adapter = featuredSkeleton              // during Loading
-    // ...
+    // With ConcatAdapter (recommended):
+    val concat = ConcatAdapter(featuredSkeleton, realAdapter)
+
+    // While loading:
+    featuredSkeleton.show(5)
+
+    // When Data arrives:
     realAdapter.updateItems(data)
-    rv.adapter = realAdapter                   // when Data arrives
+    featuredSkeleton.hide()
+
+    // Pause/resume shimmer with Fragment lifecycle:
+    override fun onResume() {
+        super.onResume()
+        featuredSkeleton.setShimmerEnabled(true)
+    }
+    override fun onPause() {
+        featuredSkeleton.setShimmerEnabled(false)
+        super.onPause()
+    }
 */

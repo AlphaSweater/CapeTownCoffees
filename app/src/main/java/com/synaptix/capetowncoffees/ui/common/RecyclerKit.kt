@@ -12,6 +12,7 @@ import androidx.viewbinding.ViewBinding
 abstract class BaseViewHolder<T, VB : ViewBinding>(val vb: VB) : RecyclerView.ViewHolder(vb.root) {
     open fun bind(item: T) {}
     open fun bind(item: T, payloads: List<Any>) { bind(item) }
+    open fun onRecycled() {}
 }
 
 
@@ -19,32 +20,32 @@ abstract class BaseViewHolder<T, VB : ViewBinding>(val vb: VB) : RecyclerView.Vi
 abstract class BaseAdapter<T : Any, VB : ViewBinding>(
     diff: DiffUtil.ItemCallback<T>,
     private val idProvider: ((T) -> Long)? = null,
-) : androidx.recyclerview.widget.ListAdapter<T, BaseViewHolder<T, VB>>(diff) {
-
+) : ListAdapter<T, BaseViewHolder<T, VB>>(diff) {
 
     init { setHasStableIds(idProvider != null) }
 
-
     abstract fun onCreateBinding(inflater: LayoutInflater, parent: ViewGroup): VB
     abstract fun onCreateVH(binding: VB): BaseViewHolder<T, VB>
-
 
     final override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<T, VB> {
         val vb = onCreateBinding(LayoutInflater.from(parent.context), parent)
         return onCreateVH(vb)
     }
 
-
     final override fun onBindViewHolder(holder: BaseViewHolder<T, VB>, position: Int) =
         holder.bind(getItem(position))
-
 
     final override fun onBindViewHolder(holder: BaseViewHolder<T, VB>, position: Int, payloads: MutableList<Any>) =
         if (payloads.isNotEmpty()) holder.bind(getItem(position), payloads) else holder.bind(getItem(position))
 
-
     final override fun getItemId(position: Int): Long =
         idProvider?.invoke(getItem(position)) ?: super.getItemId(position)
+
+    final override fun onViewRecycled(holder: BaseViewHolder<T, VB>) {
+        holder.onRecycled()
+        super.onViewRecycled(holder)
+    }
+
 }
 
 
