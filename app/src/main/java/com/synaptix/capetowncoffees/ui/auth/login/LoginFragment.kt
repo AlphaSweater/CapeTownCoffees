@@ -4,10 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentAuthLoginBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,6 +23,22 @@ class LoginFragment : Fragment() {
     private var _binding: FragmentAuthLoginBinding? = null
     private val binding get() = _binding!!
     private val viewModel: LoginViewModel by viewModels()
+
+    private lateinit var signInClient: GoogleSignInClient
+
+    private val googleLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account.idToken ?: throw IllegalStateException("No ID token from Google")
+            Timber.d("Got Google ID token, forwarding to ViewModel")
+            viewModel.loginWithGoogleToken(idToken)
+        } catch (e: Exception) {
+            Timber.e(e, "Google sign-in failed")
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,6 +72,25 @@ class LoginFragment : Fragment() {
         binding.buttonGoogleLogin.setOnClickListener {
             Timber.d("Google login button clicked, navigating to HomeFragment")
             findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
+        }
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        signInClient = GoogleSignIn.getClient(requireActivity(), gso)
+
+        binding.buttonlogin.setOnClickListener {
+            val email = binding.emailEditText.text.toString()
+            val password = binding.passwordEditText.text.toString()
+            viewModel.loginUser(email, password)
+        }
+
+        binding.buttonGoogleLogin.setOnClickListener {
+            Timber.d("Google login button clicked")
+            signInClient.signOut().addOnCompleteListener {
+                googleLauncher.launch(signInClient.signInIntent)
+            }
         }
 
         // TODO: Add error text view to show errors

@@ -123,19 +123,22 @@ class CoffeeUserRepository @Inject constructor(
 
     //checks to see if user profile exists, if not creates one, if it does merges data
     private suspend fun upsertUserProfileFromFirebase(user: FirebaseUser) {
-        val ref = firestore.collection(childCollection).document(user.uid)
-        val existing = ref.get().await().toObject(CoffeeUserDTO::class.java)
+        runTransaction { tx ->
+            val docRef = getCollection().document(user.uid)
+            val snap   = tx.get(docRef)
+            val existing = snap.toObject(CoffeeUserDTO::class.java)
 
-        val merged = CoffeeUserDTO(
-            id = user.uid,
-            email = user.email ?: existing?.email.orEmpty(),
-            fullName = user.displayName ?: existing?.fullName,
-            photoBase64 = existing?.photoBase64,
-            createdAt = existing?.createdAt ?: CoffeeTimeUtils.nowSeconds(),
-            updatedAt = CoffeeTimeUtils.nowSeconds(),
-            lastLoginAt = CoffeeTimeUtils.nowSeconds()
-        )
-
-        ref.set(merged, SetOptions.merge()).await()
+            val merged = CoffeeUserDTO(
+                id          = user.uid,
+                email       = user.email ?: existing?.email.orEmpty(),
+                fullName    = user.displayName ?: existing?.fullName,
+                photoBase64 = existing?.photoBase64, // keep your locally-stored photo if any
+                createdAt   = existing?.createdAt ?: CoffeeTimeUtils.nowSeconds(),
+                updatedAt   = CoffeeTimeUtils.nowSeconds(),
+                lastLoginAt = CoffeeTimeUtils.nowSeconds()
+            )
+            tx.set(docRef, merged, SetOptions.merge())
+            true
+        }.getOrThrow()
     }
 }
