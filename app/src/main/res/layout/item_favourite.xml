@@ -69,7 +69,7 @@
                     android:layout_height="30dp"
                     android:background="@drawable/circle_white_bg"
                     android:padding="8dp"
-                    android:src="@drawable/ic_download"
+                    android:src="@drawable/ic_ctc_arrow_download"
                     app:tint="@color/icon_download"
                     android:backgroundTint="@color/button_download" />
             </LinearLayout>
@@ -85,7 +85,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/ic_location"
+                    android:src="@drawable/ic_ctc_location"
                     android:tint="@color/icon_primary"
                     tools:ignore="UseAppTint" />
 
@@ -110,7 +110,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/ic_star"
+                    android:src="@drawable/ic_ctc_star"
                     android:tint="@color/icon_primary"
                     tools:ignore="UseAppTint"  />
 

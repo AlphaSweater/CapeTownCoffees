@@ -63,7 +63,7 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            app:startIconDrawable="@drawable/ic_email"
+            app:startIconDrawable="@drawable/ic_ctc_email"
             app:startIconTint="@color/button_category"
             app:hintTextColor="@color/button_category"
             android:hint="@string/email">
@@ -95,7 +95,7 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            app:startIconDrawable="@drawable/ic_lock"
+            app:startIconDrawable="@drawable/ic_ctc_lock"
             app:startIconTint="@color/button_category"
             app:endIconMode="password_toggle"
             app:endIconTint="@color/button_category"

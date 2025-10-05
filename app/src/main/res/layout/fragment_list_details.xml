@@ -21,7 +21,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="8dp"
-            android:src="@drawable/ic_lock"
+            android:src="@drawable/ic_ctc_lock"
             app:tint="@color/text_primary" />
 
         <TextView
@@ -41,7 +41,7 @@
             android:background="@drawable/circle_white_bg"
             android:contentDescription="Close"
             android:padding="8dp"
-            android:src="@drawable/ic_close"
+            android:src="@drawable/ic_ctc_cross"
             app:tint="@color/icon_primary" />
     </LinearLayout>
 

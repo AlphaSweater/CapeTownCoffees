@@ -52,7 +52,7 @@
                             android:layout_height="28dp"
                             android:layout_gravity="center"
                             android:scaleType="centerInside"
-                            android:src="@drawable/ic_settings_gear"
+                            android:src="@drawable/ic_ctc_settings_gear"
                             android:tint="@color/text_primary"
                             android:visibility="visible" />
                     </com.google.android.material.card.MaterialCardView>
@@ -84,7 +84,7 @@
                                 android:id="@+id/ivProfilePicture"
                                 android:layout_width="80dp"
                                 android:layout_height="80dp"
-                                android:src="@drawable/ic_profile_placeholder"
+                                android:src="@drawable/ic_ctc_person"
                                 app:civ_border_width="1dp"
                                 app:civ_border_color="@color/coffee_light" />
 

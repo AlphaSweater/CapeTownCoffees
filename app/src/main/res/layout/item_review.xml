@@ -88,7 +88,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_heart"
+                    android:src="@drawable/ic_ctc_heart_filled"
                     app:tint="@color/icon_heart" />
 
                 <TextView

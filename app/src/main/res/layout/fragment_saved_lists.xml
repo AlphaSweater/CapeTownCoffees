@@ -108,7 +108,7 @@
                 android:layout_width="28dp"
                 android:layout_height="28dp"
                 android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_add"
+                android:src="@drawable/ic_ctc_plus"
                 app:tint="@color/text_primary" />
 
             <TextView
@@ -140,7 +140,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_bookmark_border"
+                android:src="@drawable/ic_ctc_bookmark"
                 app:tint="@color/text_primary" />
 
             <LinearLayout
@@ -166,7 +166,7 @@
             <ImageView
                 android:layout_width="22dp"
                 android:layout_height="22dp"
-                android:src="@drawable/ic_download"
+                android:src="@drawable/ic_ctc_arrow_download"
                 app:tint="@color/text_primary" />
         </LinearLayout>
 

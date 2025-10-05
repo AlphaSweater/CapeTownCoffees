@@ -60,7 +60,7 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:padding="8dp"
-                    android:src="@drawable/ic_arrow_back"
+                    android:src="@drawable/ic_ctc_arrow_back"
                     android:background="@drawable/circle_white_bg"
                     android:contentDescription="Back"/>
 
@@ -74,7 +74,7 @@
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:padding="8dp"
-                    android:src="@drawable/ic_favorite_border"
+                    android:src="@drawable/ic_ctc_heart"
                     android:background="@drawable/circle_white_bg"
                     android:contentDescription="Favourite"/>
             </LinearLayout>
@@ -159,7 +159,7 @@
                             android:id="@+id/ivPin"
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:src="@drawable/ic_pin"
+                            android:src="@drawable/ic_ctc_location"
                             app:tint="@color/text_secondary"
                             app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintBottom_toBottomOf="parent"
@@ -242,7 +242,7 @@
                         <ImageView
                             android:layout_width="18dp"
                             android:layout_height="18dp"
-                            android:src="@drawable/ic_location"
+                            android:src="@drawable/ic_ctc_location"
                             app:tint="@color/text_secondary" />
                         <TextView
                             android:id="@+id/tvCafeAddress"
@@ -265,7 +265,7 @@
                             android:id="@+id/btnCall"
                             android:layout_width="18dp"
                             android:layout_height="18dp"
-                            android:src="@drawable/ic_phone"
+                            android:src="@drawable/ic_ctc_phone"
                             app:tint="@color/text_secondary"
                             tools:ignore="UseAppTint" />
                         <TextView

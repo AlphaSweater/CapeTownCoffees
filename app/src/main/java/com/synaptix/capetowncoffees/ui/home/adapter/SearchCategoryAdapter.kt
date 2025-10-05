@@ -93,7 +93,7 @@ class SearchCategoryAdapter(
         // Set initial visibility based on isExpanded state without animation
         holder.sliderContentContainer.visibility = if (category.isExpanded) View.VISIBLE else View.GONE
         holder.arrowIcon.setImageResource(
-            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+            if (category.isExpanded) R.drawable.ic_ctc_arrow_drop_down else R.drawable.ic_ctc_arrow_drop_foward
         )
 
         if (category.options.isNotEmpty()) {
@@ -120,7 +120,7 @@ class SearchCategoryAdapter(
             // Animate the change
             if (category.isExpanded) holder.sliderContentContainer.slideDown() else holder.sliderContentContainer.slideUp()
             holder.arrowIcon.setImageResource(
-                if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+                if (category.isExpanded) R.drawable.ic_ctc_arrow_drop_down else R.drawable.ic_ctc_arrow_drop_foward
             )
             // Notify the fragment that the size has changed
             onSizeChanged()
@@ -134,7 +134,7 @@ class SearchCategoryAdapter(
         // Set initial visibility based on isExpanded state without animation
         holder.pillsScrollView.visibility = if (category.isExpanded) View.VISIBLE else View.GONE
         holder.arrowIcon.setImageResource(
-            if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+            if (category.isExpanded) R.drawable.ic_ctc_arrow_drop_down else R.drawable.ic_ctc_arrow_drop_foward
         )
 
         holder.optionsContainer.removeAllViews()
@@ -164,7 +164,7 @@ class SearchCategoryAdapter(
             // Animate the change
             if (category.isExpanded) holder.pillsScrollView.slideDown() else holder.pillsScrollView.slideUp()
             holder.arrowIcon.setImageResource(
-                if (category.isExpanded) R.drawable.ic_arrow_down else R.drawable.ic_arrow_forward
+                if (category.isExpanded) R.drawable.ic_ctc_arrow_drop_down else R.drawable.ic_ctc_arrow_drop_foward
             )
             // Notify the fragment that the size has changed
             onSizeChanged()
