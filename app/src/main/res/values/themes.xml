@@ -5,7 +5,11 @@
         <item name="colorPrimary">@color/coffee_medium</item>
         <item name="colorPrimaryVariant">@color/coffee_dark</item>
         <item name="colorOnPrimary">@color/white</item>
-        
+
+        <!-- Navigation bar indicator -->
+        <item name="colorSecondaryContainer">@color/nav_bar_pill</item>
+        <item name="colorOnSecondaryContainer">@color/coffee_dark</item>
+
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/coffee_light</item>
         <item name="colorSecondaryVariant">@color/coffee_medium</item>

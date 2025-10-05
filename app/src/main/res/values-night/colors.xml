@@ -18,6 +18,10 @@
     <color name="text_favourite">#d4ae96</color>
     <color name="text_alt">#3E2723</color>
 
+    <!-- Navigation Bar Colors -->
+    <color name="nav_bar_pill">#382a23</color>
+    <color name="nav_bar_item">#D7CCC8</color>
+
     <!-- Background Colors -->
     <color name="background">#1f1c1b</color>   <!-- Standard dark background -->
     <color name="surface">#382a23</color>      <!-- Elevated surfaces -->
