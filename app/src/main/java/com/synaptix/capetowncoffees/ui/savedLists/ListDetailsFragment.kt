@@ -60,7 +60,7 @@ class ListDetailsFragment : Fragment() {
                         return@observe
                     }
                     tvTitle.text = list.name
-                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_explore else R.drawable.ic_lock)
+                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_ctc_compass else R.drawable.ic_ctc_lock)
                     // Load places
                     viewModel.loadPlacesForIds(list.placeIds)
                 }

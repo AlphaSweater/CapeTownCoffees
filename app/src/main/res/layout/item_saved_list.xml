@@ -18,7 +18,7 @@
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:layout_marginEnd="16dp"
-            android:src="@drawable/ic_bookmark_border"
+            android:src="@drawable/ic_ctc_bookmark"
             app:tint="@color/text_primary" />
 
         <LinearLayout
@@ -51,7 +51,7 @@
             android:id="@+id/ivChevron"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@drawable/ic_arrow_forward"
+            android:src="@drawable/ic_ctc_arrow_drop_foward"
             app:tint="@color/text_primary" />
     </LinearLayout>
 

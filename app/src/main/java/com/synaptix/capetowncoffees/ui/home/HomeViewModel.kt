@@ -117,11 +117,11 @@ class HomeViewModel @Inject constructor(
 
     companion object {
         private val DEFAULT_CATEGORIES = listOf(
-            Category(1, "All", R.drawable.ic_medal),
-            Category(2, "Popular", R.drawable.ic_star),
-            Category(3, "Pet Friendly", R.drawable.baseline_pets_24),
-            Category(4, "Nearby", R.drawable.ic_location),
-            Category(5, "Dates", R.drawable.ic_heart)
+            Category(1, "All", R.drawable.ic_ctc_medal),
+            Category(2, "Popular", R.drawable.ic_ctc_star),
+            Category(3, "Pet Friendly", R.drawable.ic_ctc_pet),
+            Category(4, "Nearby", R.drawable.ic_ctc_location),
+            Category(5, "Dates", R.drawable.ic_ctc_heart)
         )
     }
 }
