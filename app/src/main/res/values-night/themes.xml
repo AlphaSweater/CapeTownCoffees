@@ -1,34 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Dark theme overrides -->
-    <style name="Theme.CapeTownCoffees" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.CapeTownCoffees" parent="Theme.Material3.DayNight.NoActionBar">
+
         <!-- Primary brand color (slightly lighter for dark theme) -->
         <item name="colorPrimary">@color/coffee_light</item>
         <item name="colorPrimaryVariant">@color/coffee_medium</item>
         <item name="colorOnPrimary">@color/black</item>
-        
-        <!-- Secondary brand color -->
+
+        <!-- Navigation bar indicator -->
+        <item name="colorSecondaryContainer">@color/surface</item>
+        <item name="colorOnSecondaryContainer">@color/white</item>
+
+       <!-- Secondary brand color -->
         <item name="colorSecondary">@color/coffee_medium</item>
         <item name="colorSecondaryVariant">@color/coffee_light</item>
         <item name="colorOnSecondary">@color/black</item>
-        
+
         <!-- Background colors (darker for dark theme) -->
         <item name="android:windowBackground">@color/coffee_dark</item>
         <item name="android:colorBackground">@color/coffee_dark</item>
         <item name="colorSurface">@color/black</item>
-        
+
         <!-- Text colors -->
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/coffee_cream</item>
-        
+
         <!-- Status bar color -->
         <item name="android:statusBarColor">@color/black</item>
         <item name="android:navigationBarColor">@color/black</item>
-        
+
         <!-- Card style for dark theme -->
         <item name="cardViewStyle">@style/Widget.App.CardView.Night</item>
     </style>
-    
+
     <!-- Card style for dark theme -->
     <style name="Widget.App.CardView.Night" parent="Widget.MaterialComponents.CardView">
         <item name="cardElevation">4dp</item>

@@ -4,12 +4,12 @@
         android:id="@+id/homeFragment"
         android:icon="@drawable/ic_explore"
         android:title="Explore" />
-        
+
     <item
         android:id="@+id/savedFragment"
         android:icon="@drawable/ic_bookmark_border"
         android:title="Saved" />
-        
+
     <item
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_person_outline"
