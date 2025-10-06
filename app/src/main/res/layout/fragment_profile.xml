@@ -11,15 +11,14 @@
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/colorSurface">
+        android:layout_height="match_parent">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
             android:fitsSystemWindows="true"
+            android:background="@color/background"
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
@@ -40,11 +39,6 @@
                     app:layout_collapseParallaxMultiplier="0.8"
                     android:fitsSystemWindows="true"
                     android:contentDescription="@null" />
-
-                <!-- Subtle overlay with night mode support -->
-
-                <!-- Profile Content -->
-
             </com.google.android.material.appbar.CollapsingToolbarLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -54,7 +48,7 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:fillViewport="true"
-            android:background="?attr/colorSurface"
+            android:background="@color/background"
             android:elevation="4dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
@@ -437,7 +431,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:alpha="0.03"
-            android:background="?android:attr/textColorPrimary"
+            android:background="@color/text_primary"
             android:contentDescription="@null"
             android:fitsSystemWindows="true"
             app:layout_anchor="@+id/appBarLayout"
