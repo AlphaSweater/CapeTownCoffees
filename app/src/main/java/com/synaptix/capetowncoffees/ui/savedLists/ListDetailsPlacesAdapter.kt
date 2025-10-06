@@ -23,7 +23,6 @@ class ListDetailsPlacesAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = getItem(position)
-        // 2. Set the click listener on the item's view
         holder.itemView.setOnClickListener {
             onItemClicked(item)
         }
