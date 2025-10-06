@@ -44,8 +44,8 @@ class SavedListsAdapter(
             
             // Set different icon based on list type
             icon.setImageResource(
-                if (item.isPublic) R.drawable.ic_ctc_compass
-                else R.drawable.ic_ctc_lock
+                if (item.isPublic) R.drawable.ic_ctc_earth_public
+                else R.drawable.ic_ctc_earth_private
             )
             
             itemView.setOnClickListener { onItemClick(item) }
