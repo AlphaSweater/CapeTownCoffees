@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 
+// 1. Add a click listener to the constructor
 class ListDetailsPlacesAdapter(
     private val onItemClicked: (CoffeePlaceFull) -> Unit
 ) : ListAdapter<CoffeePlaceFull, ListDetailsPlacesAdapter.VH>(Diff()) {
@@ -44,8 +45,7 @@ class ListDetailsPlacesAdapter(
             val rating = item.rating ?: 0.0
             val count = item.ratingCount ?: 0
             tvRating.text = String.format("%.1f (%d)", rating, count)
-            // You might want a placeholder for the image here
-            // ivImage.setImageResource(R.drawable.cafe_placeholder)
+            ivImage.setImageResource(R.drawable.cafe_placeholder)
         }
     }
 
