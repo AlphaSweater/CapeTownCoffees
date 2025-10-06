@@ -39,17 +39,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_CapeTownCoffees)
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-
-        // Clear any flags that could cause underlap
-        window.clearFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
-                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
-        )
-        // Keep bars opaque (you said color doesn’t matter, but this avoids surprises)
-        window.statusBarColor = ContextCompat.getColor(this, R.color.coffee_dark)
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.coffee_dark)
+//        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         setContentView(R.layout.activity_main)
 
