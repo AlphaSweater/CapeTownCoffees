@@ -9,7 +9,7 @@
     android:background="@color/background"
     tools:context=".ui.home.search.SearchFragment">
 
-    <!-- App bar (required for scroll flags to work correctly) -->
+    <!-- App bar -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appbar"
         android:layout_width="match_parent"
@@ -49,23 +49,48 @@
             android:orientation="vertical"
             android:paddingTop="8dp">
 
-            <!-- SearchBar (anchor for the overlay SearchView) -->
-            <com.google.android.material.search.SearchBar
-                android:id="@+id/searchBar"
+            <!-- Search field (inline, no overlay) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/searchFieldCard"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="@string/search_hint_coffee_shops"
-                app:backgroundTint="@color/surface"
-                app:navigationIcon="@drawable/ic_ctc_search"
-                app:tintNavigationIcon="@color/icon_primary"
-                app:hintTextColor="@color/text_tip"
-                app:titleTextColor="@color/text_primary"/>
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilSearch"
+                    style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/search_hint_coffee_shops"
+                    app:boxBackgroundColor="@color/surface"
+                    app:startIconDrawable="@drawable/ic_ctc_search"
+                    app:startIconTint="@color/icon_primary"
+                    app:boxBackgroundMode="filled"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textColor="@color/text_primary"
+                        android:textColorHint="@color/text_tip" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="12dp" />
 
-            <!-- Single card that contains header + collapsible content -->
+            <!-- Unified Filters card (header + collapsible content) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/filtersCard"
                 style="@style/Widget.Ctc.ElevatedCard"
@@ -114,11 +139,11 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:rotation="0"
-                            android:src="@drawable/ic_ctc_arrow_drop_down"
+                            android:src="@drawable/ic_ctc_arrow_drop_foward"
                             app:tint="@color/icon_primary" />
                     </LinearLayout>
 
-                    <!-- Subtle divider inside the same card -->
+                    <!-- Divider only shows when expanded -->
                     <View
                         android:id="@+id/filtersDivider"
                         android:layout_width="match_parent"
@@ -138,7 +163,7 @@
                         android:visibility="gone"
                         tools:visibility="visible">
 
-                        <!-- Radius row -->
+                        <!-- Radius -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -201,13 +226,13 @@
                                 android:checked="true" />
                         </LinearLayout>
 
-                        <!-- (Future) more sub-sections here -->
+                        <!-- (Future) more sub-sections go here -->
 
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Keep your suggestions header/list below if you use them outside SearchView -->
+            <!-- Bottom suggestions (visible when you want passive suggestions) -->
             <TextView
                 android:id="@+id/tvSuggestionsHeader"
                 android:layout_width="wrap_content"
@@ -229,26 +254,8 @@
                 android:visibility="gone"
                 tools:visibility="visible"
                 tools:listitem="@layout/item_search_suggestion" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!-- Overlay SearchView (M3). MUST be a sibling, not inside the ScrollView. -->
-    <com.google.android.material.search.SearchView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:searchBar="@id/searchBar">
-
-        <!-- Suggestions inside the SearchView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerSuggestions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            tools:listitem="@layout/item_search_suggestion"
-            tools:itemCount="5"/>
-    </com.google.android.material.search.SearchView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

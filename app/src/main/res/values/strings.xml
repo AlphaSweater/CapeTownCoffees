@@ -135,7 +135,7 @@
     <string name="coffee_image">Image of place</string>
     <string name="location_permission_required">Location Permissions are required for this app to function!</string>
     <string name="location_fetch_failed">Failed to fetch location!!</string>
-    <string name="search_hint_coffee_shops">Star Sucks, West Coast</string>
+    <string name="search_hint_coffee_shops">Coffee Shops</string>
     <string name="search_radius">Search Radius</string>
     <string name="filters">Filters</string>
     <string name="strict_coffee_only">Strict Coffee Places</string>
