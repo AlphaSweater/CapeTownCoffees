@@ -21,6 +21,7 @@ espressoCore = "3.7.0"
 places = "5.0.0"
 placesKtx = "3.5.0"
 shimmer = "0.5.0"
+swiperefreshlayout = "1.1.0"
 timber = "5.0.1"
 uiGraphicsAndroid = "1.9.2"
 foundationAndroid = "1.9.2"
@@ -55,6 +56,7 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle" }
 
 # Firebase
+androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
@@ -78,6 +80,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 places = { module = "com.google.android.libraries.places:places", version.ref = "places" }
 places-ktx = { module = "com.google.maps.android:places-ktx", version.ref = "placesKtx" }
+recyclerview-integration = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "compiler" }
 shimmer = { module = "com.facebook.shimmer:shimmer", version.ref = "shimmer" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }
