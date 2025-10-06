@@ -59,6 +59,7 @@
                 app:boxBackgroundColor="@color/surface"
                 app:startIconDrawable="@drawable/ic_ctc_search"
                 app:startIconTint="@color/icon_primary"
+                app:hintTextColor="@color/icon_primary"
                 app:boxBackgroundMode="filled"
                 app:boxCornerRadiusTopStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
