@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Coffee Theme Colors (Dark) -->
-    <color name="coffee_dark">#2B1E1B</color>       <!-- Darker brown base -->
-    <color name="coffee_medium">#4A332E</color>     <!-- Medium brown for accents -->
-    <color name="coffee_light">#70574F</color>      <!-- Muted light brown -->
+    <color name="coffee_dark">#1A120F</color>       <!-- Darker brown base for gradient -->
+    <color name="coffee_medium">#3A2A24</color>     <!-- Medium brown for gradient -->
+    <color name="coffee_light">#5D4037</color>      <!-- Light brown for gradient -->
+    <color name="coffee_dark_night">#1A120F</color>  <!-- Gradient start color -->
+    <color name="coffee_medium_night">#3A2A24</color> <!-- Gradient middle color -->
+    <color name="coffee_light_night">#5D4037</color>  <!-- Gradient end color -->
     <color name="coffee_cream">#1f1c1b</color>      <!-- Very dark cream tint -->
     <color name="coffee_accent">#6D4C41</color>    <!-- Accent brown -->
     <color name="coffee_accent_light">#d4ae96</color>
@@ -43,6 +46,11 @@
     <color name="icon_heart">#382a23</color>
     <color name="icon_star">#ffb056</color>
     <color name="icon_blank_bar">#635d5b</color>
+
+    <!-- Filled star -->
+    <color name="star_filled">#FFC107</color>
+    <!-- Unfilled star on dark bg (light, semi-opaque) -->
+    <color name="star_empty">#66FFFFFF</color>
 
     <!-- Google Button (keep contrast against dark bg) -->
     <color name="google_button">#2A2A2A</color>

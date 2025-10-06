@@ -5,15 +5,14 @@
 <h1 align="center">📊 Cape Town Coffees</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/stars/AlphaSweater/CapeTownCoffees?style=social">
-  <img src="https://img.shields.io/github/last-commit/AlphaSweater/CapeTownCoffees">
   <img src="https://img.shields.io/badge/Made%20with-Kotlin-blue?logo=kotlin">
 </p>
 
 ## 📝 Overview
-BudgetBuddy is a sleek, user-friendly budgeting app designed to help users take control of their personal finances. Whether you're tracking daily expenses, managing multiple income streams, or aiming to understand your financial habits better — BudgetBuddy is here to guide you.
+Cape Town Coffees is a sleek Android application designed for coffee lovers across Cape Town.
+The app helps users discover nearby coffee shops, explore reviews, share their own experiences, and save favourites for easy access later.
 
-With intuitive tools and insightful financial summaries, BudgetBuddy empowers users to make smarter money decisions. From categorizing expenses to setting spending goals, our app provides everything you need for effective financial management.
+Whether you’re searching for a cozy spot to study, a trendy café to meet friends, or the perfect latte, Cape Town Coffees connects you to the city’s best brews.
 
 ## 📚 Table of Contents
 - [Features](#-features)
@@ -30,24 +29,17 @@ With intuitive tools and insightful financial summaries, BudgetBuddy empowers us
 
 ## 🌟 Features
 
-- SignUp and Login: Users can securely create an account and log in to access their personal budget data from anywhere. This ensures that all financial information is protected and personalized for each user.
+- SignUp and Login: Users can securely create an account and log in to access their personal budget data from anywhere. This ensures that all personal information is protected and personalized for each user.
 
-- Create Categories and Entries: Users can easily organize their finances by creating custom categories (e.g., Food, Transport, Entertainment) and adding income or expense entries under each category. This helps users track where their money is going in a structured way.
+- Google SignUp: Users can choose to sign up through Google's secure authentication.
 
-- Take and Store Photos: Users can capture and attach photos of receipts, invoices, or any related documents to your entries. This feature helps users keep a visual record of their transactions for better tracking and accountability.
+- Find Nearby Coffee Shops: The app uses location services to show users nearby cafés with distance, ratings, and open/closed status.
 
-- Set Minimum and Maximum Goals: Set financial goals by setting minimum and maximum spending limits. This allows users to stick to their budget and avoid overspending.
+- Advanced Search and Filters: The app allows users to search for coffee shops by name, and radius range from 1–50 km
 
-- View List of Entries in a Period: View a detailed list of all income and expense entries within a selected date range. This makes it easy to review and analyze user financial activity over days, weeks, or months.
+- Favourites List: For ease of access users can save their favourite cafés for quick access later on.
 
-- View Category Totals in a Period: Get a clear summary of total spending and earnings per category within a specific time period. This feature provides insights into user's spending habits and helps adjust their budget as needed.
-
-
-## Own Features
-
-- Multi-Wallet support: Application allows for multiple different wallets to be created and used by one profile, each wallet has its own transactions and balance as well as their own individual minimum and maximum goals that gets added together to create a global minimum and maximum goal for the user.
-
-- Advanced multi-Budget Support: Application allows for users to create multiple budgets that can each track spending for multiple different categories for that month. Amount spent in each budget resets on the first of every month.
+- Detailed View: Users can see a detailed overview of different coffee shops, showing information such as the shop's rating, description, distance away, etc.
 
 ## 🔐 Security Features
 - Firebase Authentication for secure login and identity management.
@@ -75,8 +67,7 @@ https://developer.android.com/studio
 
 3. Get the project files:
 
-- Option 1 - Clone the Repository: Click "Get from Version Control" in the github repository and paste the repository link:
-https://github.com/AlphaSweater/BudgetBuddy-Project.git
+- Option 1 - Clone the Repository: Click "Get from Version Control" in the github repository and paste the repository link: https://github.com/AlphaSweater/CapeTownCoffees.git
 
 - Option 2 - Download Zip File: If you downloaded a ZIP file, extract it, then click "Open" in Android Studio and select the extracted project folder.
 
@@ -102,8 +93,8 @@ https://github.com/AlphaSweater/BudgetBuddy-Project.git
 ## 🎥 Video Demo
 
 📺 **Watch the full walkthrough of BudgetBuddy on YouTube:**
-👉 [Click here to view](https://youtu.be/lYHgekc2NSg)
-- https://youtu.be/lYHgekc2NSg
+👉 [Click here to view]()
+- 
 
 
 ## 🔧 Tech Stack
@@ -141,11 +132,7 @@ https://github.com/AlphaSweater/BudgetBuddy-Project.git
 
 
 ## 👥 contributors
-<a href="https://github.com/AlphaSweater/BudgetBuddy-Project/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=AlphaSweater/BudgetBuddy-Project" />
-</a>
 
-- Made with [contrib.rocks](https://contrib.rocks).
 
 - Chad Fairlie ST10269509
 - Dhiren Ruthenavelu ST10256859
@@ -156,7 +143,6 @@ https://github.com/AlphaSweater/BudgetBuddy-Project.git
 
 - Advanced use of Jetpack Compose for UI
 - Integration of Firestore for real-time data syncing
-- Handling image uploads with external APIs (Imgur)
 - Creating custom mappers between database entities and domain models
 - Building responsive layouts and implementing state-driven UIs with Kotlin StateFlow
 - Using and managing coroutines for efficient thread utilization
@@ -175,7 +161,7 @@ https://github.com/AlphaSweater/BudgetBuddy-Project.git
 - ChatGPT also helped with the forming of comments for the code.
 
 ##
-![App Demo](https://i.postimg.cc/HWtLyjr6/kerchoo-kachow.gif)
+![App Demo]()
 ##
 
 

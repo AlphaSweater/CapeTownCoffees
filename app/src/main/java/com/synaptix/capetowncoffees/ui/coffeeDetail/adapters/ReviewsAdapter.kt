@@ -46,8 +46,11 @@ class ReviewsAdapter @AssistedInject constructor(
         sameContent = { o, n -> o == n },
         payload = { _, _ -> null }
     ),
+    // Keep stable ids; namespace if you like: 0x20_0000_0000L xor it.stableId()
     idProvider = { it.stableId() }
 ) {
+    // ✅ with the new BaseAdapter, override this hook (not getItemViewType)
+    override fun itemViewTypeFor(position: Int): Int = R.layout.item_coffee_review
 
     sealed interface Click {
         data class Like(val reviewId: String) : Click
@@ -72,17 +75,23 @@ class ReviewsAdapter @AssistedInject constructor(
         object : BaseViewHolder<CoffeeReview, ItemCoffeeReviewBinding>(binding) {
 
             override fun bind(item: CoffeeReview) = with(vb) {
-                // ─── Author / Avatar ───────────────────────────────────────────
+                // ─── Source Chip ────────────────────────────────────────
+                tvSourceChip.text = if (item.isInApp)
+                    root.context.getString(R.string.coffee_review_chip_in_app)
+                else
+                    root.context.getString(R.string.coffee_review_chip_google)
+
+                // ─── Author / Avatar ───────────────────────────────────
                 tvAuthor.text = item.authorName.orEmpty()
 
                 Glide.with(ivAvatar)
-                    .load(item.avatarModelOrNull()) // ByteArray for Base64 OR String URL for Google
+                    .load(item.avatarModelOrNull()) // ByteArray or URL
                     .placeholder(R.drawable.ic_ctc_person)
                     .error(R.drawable.ic_ctc_person)
                     .circleCrop()
                     .into(ivAvatar)
 
-                // ─── Rating (number & bar) ─────────────────────────────────────
+                // ─── Rating (number & bar) ─────────────────────────────
                 val rating = item.rating
                 tvRating.text = rating?.let { String.format("%.1f", it) } ?: ""
                 tvRating.isGone = rating == null
@@ -90,20 +99,20 @@ class ReviewsAdapter @AssistedInject constructor(
                 ratingBar.isGone = rating == null
                 ratingBar.rating = (rating ?: 0.0).toFloat()
 
-                // ─── Date ─────────────
+                // ─── Date ──────────────────────────────────────────────
                 val dateText = CoffeeTimeUtils.formatRelativeTime(item.publishTime)
                 tvDate.text = dateText
                 tvDate.isGone = tvDate.text.isNullOrBlank()
 
-                // ─── Body ──────────────────────────────────────────────────────
+                // ─── Body ──────────────────────────────────────────────
                 tvBody.text = item.text.orEmpty()
                 tvBody.isVisible = !item.text.isNullOrBlank()
 
-                // ─── Photos mosaic (optional) ──────────────────────────────────
+                // ─── Photos mosaic (optional) ──────────────────────────
                 val urls = item.photoUrlsOrEmpty()
                 bindMosaic(reviewId = item.safeReviewKey(), urls = urls)
 
-                // ─── Actions (In-App only) ─────────────────────────────────────
+                // ─── Actions (In-App only) ─────────────────────────────
                 val isInApp = item.isInApp
                 actionsContainer.isVisible = isInApp
                 dividerActions.isVisible = isInApp

@@ -44,6 +44,11 @@
     <color name="icon_star">#ffb056</color>
     <color name="icon_blank_bar">#c5beba</color>
 
+    <!-- Filled star -->
+    <color name="star_filled">#FFC107</color>
+    <!-- Unfilled star on light bg -->
+    <color name="star_empty">#665C6B7E</color>
+
     <!-- Google Button -->
     <color name="google_button">#FFFFFFFF</color>
     <color name="google_button_stroke">#DDDDDD</color>

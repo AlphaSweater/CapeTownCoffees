@@ -236,15 +236,14 @@ class LocationUtil @Inject constructor(
     /** Unit system for display. */
     enum class UnitSystem { METRIC, IMPERIAL }
 
-    /**
-     * Travel mode with nominal speeds for rough ETAs.
-     * - `WALK` ≈ 1.35 m/s (~4.9 km/h)
-     * - `DRIVE` ≈ 13.9 m/s (~50 km/h city-ish)
-     */
-    enum class TravelMode(val mPerSec: Float) {
-        WALK(1.35f),
-        DRIVE(13.9f)
+    /** Travel mode with nominal speeds for rough ETAs. */
+    enum class TravelMode(val metersPerSecond: Float) {
+        WALK(1.4f),   // ≈ 5 km/h (average walking speed)
+        DRIVE(13.9f), // ≈ 50 km/h (urban driving average)
+        BIKE(4.1f),   // ≈ 15 km/h (optional, for completeness)
+        RUN(3.0f);    // ≈ 10.8 km/h (optional, for completeness)
     }
+
 
     /**
      * Choose unit system from locale (`US`, `LR`, `MM` → imperial; otherwise metric).
@@ -324,11 +323,11 @@ class LocationUtil @Inject constructor(
      */
     fun etaLabel(
         distanceMeters: Float,
-        mode: TravelMode = TravelMode.WALK,
+        mode: TravelMode = TravelMode.DRIVE,
         locale: Locale = Locale.getDefault()
     ): String {
         val meters = distanceMeters.takeIf { it.isFinite() }?.coerceAtLeast(0f) ?: 0f
-        val seconds = (meters / mode.mPerSec).toLong()
+        val seconds = (meters / mode.metersPerSecond).toLong()
         val minutes = (seconds / 60).toInt().coerceAtLeast(0)
         return when {
             minutes < 1 -> String.format(locale, "<1 min")
@@ -349,6 +348,6 @@ class LocationUtil @Inject constructor(
         meters: Float,
         locale: Locale = Locale.getDefault(),
         unit: UnitSystem = preferredUnitSystem(locale),
-        mode: TravelMode = TravelMode.WALK
+        mode: TravelMode = TravelMode.DRIVE
     ): String = "${formatDistance(meters, locale, unit)} • ${etaLabel(meters, mode, locale)}"
 }
