@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/coffee_cream"
+        app:liftOnScroll="false"
         android:elevation="0dp">
 
         <!-- Search Bar (pinned in the app bar for snappy feel) -->
@@ -98,6 +99,8 @@
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:orientation="horizontal"
                     tools:itemCount="5"
+                    android:layout_marginLeft="10dp"
+                    android:visibility="gone"
                     tools:listitem="@layout/item_category" />
 
                 <!-- Featured -->
@@ -123,20 +126,13 @@
                             android:text="@string/cafe_featured"
                             android:textSize="28sp"
                             android:textStyle="bold"
+                            android:layout_marginLeft="16dp"
                             android:textColor="@color/text_primary" />
 
                         <View
                             android:layout_width="0dp"
                             android:layout_height="0dp"
                             android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/tvSeeAllFeatured"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/see_all"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <!-- Horizontal carousel; nested scrolling OFF -->
@@ -169,6 +165,7 @@
 
                         <TextView
                             android:id="@+id/tvNearTitle"
+                            android:layout_marginLeft="16dp"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/near_me"
@@ -180,14 +177,6 @@
                             android:layout_width="0dp"
                             android:layout_height="0dp"
                             android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/tvSeeAllNearMe"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/see_all"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <androidx.recyclerview.widget.RecyclerView
