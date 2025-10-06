@@ -27,6 +27,7 @@ import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.transition.platform.MaterialSharedAxis
 import com.synaptix.capetowncoffees.R
+import com.synaptix.capetowncoffees.ui.home.HomeFragment
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +58,13 @@ class SearchFragment : androidx.fragment.app.Fragment(R.layout.fragment_search) 
     // Debounce
     private var typingJob: Job? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Mirror motion for a cohesive feel
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.Y, false)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // Optional: subtle enter/return motion for niceness
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward = */ true)
@@ -77,6 +85,27 @@ class SearchFragment : androidx.fragment.app.Fragment(R.layout.fragment_search) 
         view.post {
             etSearch.requestFocus()
             showKeyboard(etSearch)
+        }
+
+        val openFilters = arguments?.getBoolean(HomeFragment.ARG_OPEN_FILTERS, false) ?: false
+        val prefill     = arguments?.getString(HomeFragment.ARG_PREFILL_QUERY).orEmpty()
+        val radiusKm    = arguments?.getInt(HomeFragment.ARG_RADIUS_KM).takeIf { it != null && it!! > 0 }
+        val strictOnly  = arguments?.getBoolean(HomeFragment.ARG_STRICT_ONLY)
+
+        // Pre-fill query (inline text field version)
+        if (prefill.isNotBlank()) {
+            etSearch.setText(prefill)
+            etSearch.setSelection(prefill.length)
+        }
+
+        // Apply radius / strict if provided
+        radiusKm?.let { sliderRadius.value = it.toFloat() }
+        strictOnly?.let { switchStrictCoffee.isChecked = it }
+
+        // Expand filters if requested
+        if (openFilters && filtersContent.visibility != View.VISIBLE) {
+            val container = view
+            toggleFilters(container) // uses your existing expand logic
         }
     }
 
@@ -106,11 +135,7 @@ class SearchFragment : androidx.fragment.app.Fragment(R.layout.fragment_search) 
     private fun setupFilters(container: ViewGroup) {
         // Expand/collapse
         filtersHeader.setOnClickListener {
-            val expand = filtersContent.visibility != View.VISIBLE
-            TransitionManager.beginDelayedTransition(container, AutoTransition().apply { duration = 180 })
-            filtersDivider.isVisible = expand
-            filtersContent.isVisible = expand
-            ivChevron.animate().rotation(if (expand) 90f else 0f).setDuration(180).start()
+            toggleFilters(container)
         }
 
         // Radius label
@@ -130,6 +155,15 @@ class SearchFragment : androidx.fragment.app.Fragment(R.layout.fragment_search) 
             fetchSuggestions(etSearch.text?.toString().orEmpty())
         }
     }
+
+    private fun toggleFilters(container: ViewGroup) {
+        val expand = filtersContent.visibility != View.VISIBLE
+        TransitionManager.beginDelayedTransition(container, AutoTransition().apply { duration = 180 })
+        filtersDivider.isVisible = expand
+        filtersContent.isVisible = expand
+        ivChevron.animate().rotation(if (expand) 90f else 0f).setDuration(180).start()
+    }
+
 
     private fun setupSuggestionsList() {
         rvSuggestions.layoutManager = LinearLayoutManager(requireContext())
