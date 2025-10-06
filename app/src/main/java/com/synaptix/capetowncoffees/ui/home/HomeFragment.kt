@@ -28,14 +28,9 @@ import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.collect
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.collectLoadable
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.start
+import com.synaptix.capetowncoffees.ui._simple.viewmodel.*
 import com.synaptix.capetowncoffees.ui.common.SkeletonAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.CoffeePlaceItemAdapter
+import com.synaptix.capetowncoffees.ui.home.adapter.*
 import com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList.AddPlacesToListBottomSheet
 import com.synaptix.capetowncoffees.util.ImagePreloadUtil
 import com.synaptix.capetowncoffees.util.PhotoUrlCache
@@ -273,9 +268,22 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private inline fun RecyclerView.batchLayout(block: () -> Unit) {
+        suppressLayout(true)
+        try { block() } finally { suppressLayout(false) }
+    }
+
     private fun startNetworkRefresh() {
-        showSkeletons(POPULAR_SKELETON_COUNT, NEAR_SKELETON_COUNT)
-        clearDataAdapters()
+        binding.rvFeatured.batchLayout {
+            popularSkeleton.show(POPULAR_SKELETON_COUNT)
+            popularAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
+            popularItems = emptyList()
+        }
+        binding.rvNearMe.batchLayout {
+            nearSkeleton.show(NEAR_SKELETON_COUNT)
+            nearAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
+            nearItems = emptyList()
+        }
     }
 
     private fun showSkeletons(popularCount: Int, nearCount: Int) {
@@ -307,9 +315,16 @@ class HomeFragment : Fragment() {
             binding.progressBar.isGone = true
             categoryAdapter.updateCategories(ui.categories)
 
-            // Rising edge detection for programmatic refreshes
-            if (!lastIsRefreshing && ui.isRefreshing) startNetworkRefresh()
-            lastIsRefreshing = ui.isRefreshing
+            val combinedRefreshing = ui.isRefreshing
+            val hasDataAlready =
+                (vm.nearMe.value is Loadable.Data && (vm.nearMe.value as Loadable.Data).value.isNotEmpty()) ||
+                        (vm.featured.value is Loadable.Data && (vm.featured.value as Loadable.Data).value.isNotEmpty())
+
+            // Only flip to skeletons if we DON'T already have content shown
+            if (!lastIsRefreshing && combinedRefreshing && !hasDataAlready) {
+                startNetworkRefresh()
+            }
+            lastIsRefreshing = combinedRefreshing
         }
 
         // Featured (Popular)
@@ -321,7 +336,7 @@ class HomeFragment : Fragment() {
                 }
                 is Loadable.Data -> {
                     popularItems = loadable.value
-                    photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2)
+                    binding.root.post { photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2) }
 
                     hideSkeletonsIfBothResolved(featuredResolved = true, nearResolved = vm.nearMe.value is Loadable.Data)
                     popularAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
@@ -344,7 +359,7 @@ class HomeFragment : Fragment() {
                 }
                 is Loadable.Data -> {
                     nearItems = loadable.value
-                    photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2)
+                    binding.root.post { photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2) }
 
                     hideSkeletonsIfBothResolved(
                         featuredResolved = vm.featured.value is Loadable.Data,

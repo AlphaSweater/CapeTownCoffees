@@ -14,7 +14,9 @@ import com.synaptix.capetowncoffees.ui._simple.viewmodel.state
 import com.synaptix.capetowncoffees.ui._simple.viewmodel.toUiError
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,156 +25,205 @@ class HomeViewModel @Inject constructor(
     private val locationUtil: LocationUtil
 ) : SimpleViewModel() {
 
-    // ─────────── Config ───────────
-    private val MIN_REQUERY_DISTANCE_M = 20.0        // refresh if user moved this much
-    private val TTL_MILLIS = 10 * 60 * 1000L         // 10 minutes
+    /* ╭──────────────────────────── Config ──────────────────────────────╮ */
+    private companion object {
+        const val MIN_REQUERY_DISTANCE_M = 20.0
+        const val TTL_MILLIS = 10 * 60 * 1000L
 
+        // Nearby config
+        const val NEAR_RADIUS_M = 5_000
+        const val NEAR_MAX_RESULTS = 32
+        const val NEAR_SORT_BY_DISTANCE = true
+
+        // Featured config (popular within radius)
+        const val FEATURED_RADIUS_M = 5_000
+        const val FEATURED_MAX_RESULTS = 20
+        const val FEATURED_SORT_BY_DISTANCE = false
+
+        // Categories
+        val DEFAULT_CATEGORIES = listOf(
+            Category(1, "All", R.drawable.ic_ctc_medal),
+            Category(2, "Popular", R.drawable.ic_ctc_star),
+            Category(3, "Pet Friendly", R.drawable.ic_ctc_pet),
+            Category(4, "Nearby", R.drawable.ic_ctc_location),
+            Category(5, "Dates", R.drawable.ic_ctc_heart)
+        )
+    }
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
+
+    /* ╭──────────────────────────── UI State ────────────────────────────╮ */
     data class Ui(
         val categories: List<Category> = DEFAULT_CATEGORIES,
         val selectedCategory: Category = DEFAULT_CATEGORIES.first(),
         val currentLocation: LatLng? = null,
-        val isRefreshing: Boolean = false
-    )
-
+        val isRefreshingNear: Boolean = false,
+        val isRefreshingFeatured: Boolean = false
+    ) {
+        val isRefreshing: Boolean get() = isRefreshingNear || isRefreshingFeatured
+    }
     val ui = state(Ui())
 
-    // Exposed to Fragment
-    val nearMe   = loadableState<List<CoffeePlaceLite>>()   // vertical list
-    val featured = loadableState<List<CoffeePlaceLite>>()   // horizontal carousel
+    // Lists exposed to the Fragment
+    val nearMe   = loadableState<List<CoffeePlaceLite>>()  // vertical list (first 20 nearest)
+    val featured = loadableState<List<CoffeePlaceLite>>()  // horizontal carousel (popular)
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    // ─────────── In-memory cache ───────────
+    /* ╭──────────────────────────── Caches ──────────────────────────────╮ */
     private data class CacheEntry(
-        val baseItems: List<CoffeePlaceLite>,   // unfiltered source list
-        val center: LatLng,                     // location used for the request
-        val timestamp: Long                     // when fetched
+        val baseItems: List<CoffeePlaceLite>,
+        val center: LatLng,
+        val timestamp: Long
     )
     private var nearCache: CacheEntry? = null
     private var featuredCache: CacheEntry? = null
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    // Public API from Fragment
+    /* ╭──────────────────── In-flight jobs (cancel on re-run) ───────────╮ */
+    private var nearJob: Job? = null
+    private var featuredJob: Job? = null
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
+
+    /* ───────────────────────────── Public API ────────────────────────── */
+
     fun onUserLocation(loc: LatLng) {
-        val prev = ui.value.currentLocation
         ui.update { it.copy(currentLocation = loc) }
 
-        // If we have cache and movement is small, just paint cached data; else refetch
-        if (shouldUseNearCacheFor(loc)) {
+        // Paint from cache immediately if valid
+        if (hasFreshEnough(nearCache, loc)) {
             nearCache?.let { cache ->
-                nearMe.data(filterByCategoryInternal(ui.value.selectedCategory, cache.baseItems, loc))
+                nearMe.data(filterByCategory(ui.value.selectedCategory, cache.baseItems, loc))
             }
         }
-        if (shouldUseFeaturedCacheFor(loc)) {
-            featuredCache?.let { cache ->
-                featured.data(cache.baseItems)
-            }
+        if (hasFreshEnough(featuredCache, loc)) {
+            featuredCache?.let { cache -> featured.data(cache.baseItems) }
         }
 
-        if (!hasFreshEnough(nearCache, loc) || !hasFreshEnough(featuredCache, loc)) {
-            refresh(force = true) // moved far or stale
-        }
+        // Independently refresh each section if its cache is stale or too far
+        if (!hasFreshEnough(nearCache, loc)) refreshNear(force = true)
+        if (!hasFreshEnough(featuredCache, loc)) refreshFeatured(force = true)
     }
 
     fun onCategorySelected(category: Category) {
         ui.update { it.copy(selectedCategory = category) }
-
-        // Re-use near cache instantly if present
-        val loc = ui.value.currentLocation
-        val base = nearCache?.baseItems
-        if (base != null && loc != null) {
-            nearMe.data(filterByCategoryInternal(category, base, loc))
+        val loc = ui.value.currentLocation ?: return
+        nearCache?.let { cache ->
+            nearMe.data(filterByCategory(category, cache.baseItems, loc))
         }
     }
 
-    fun pullToRefresh() = refresh(force = true)
+    fun pullToRefresh() {
+        refreshNear(force = true)
+        refreshFeatured(force = true)
+    }
 
     fun refresh(force: Boolean = false) {
+        refreshNear(force)
+        refreshFeatured(force)
+    }
+
+    /* ──────────────────────────── Refresh: NEAR ──────────────────────── */
+
+    fun refreshNear(force: Boolean) {
         val loc = ui.value.currentLocation ?: run {
             main { send(Effect.Message("Location not available yet")) }
             return
         }
 
-        // If not forced and caches are valid, just paint and bail (no network)
-        if (!force) {
-            var served = false
-            if (hasFreshEnough(nearCache, loc)) {
-                nearCache?.let { cache ->
-                    nearMe.data(filterByCategoryInternal(ui.value.selectedCategory, cache.baseItems, loc))
-                    served = true
-                }
+        if (!force && hasFreshEnough(nearCache, loc)) {
+            nearCache?.let { cache ->
+                nearMe.data(filterByCategory(ui.value.selectedCategory, cache.baseItems, loc))
             }
-            if (hasFreshEnough(featuredCache, loc)) {
-                featuredCache?.let { cache ->
-                    featured.data(cache.baseItems)
-                    served = true
-                }
-            }
-            if (served) return
+            return
         }
 
-        // Show skeletons only if we have nothing to show yet
+        // Only show loading if nothing is on screen yet
         if (nearMe.value !is Loadable.Data) nearMe.loading()
-        if (featured.value !is Loadable.Data) featured.loading()
+        ui.update { it.copy(isRefreshingNear = true) }
 
-        ui.update { it.copy(isRefreshing = true) }
-
+        // cancel previous and launch fresh
         io {
-            val now = System.currentTimeMillis()
+            nearJob?.cancelAndJoin()
+            nearJob = launch {
+                val now = System.currentTimeMillis()
+                val params = CoffeeSearchParameters.Builder()
+                    .radiusMeters(NEAR_RADIUS_M)
+                    .maxResults(NEAR_MAX_RESULTS)
+                    .sortByDistance(NEAR_SORT_BY_DISTANCE)
+                    .build()
 
-            val nearbyParams = CoffeeSearchParameters.Builder()
-                .radiusMeters(5000)
-                .maxResults(32)
-                .build()
+                searchNearby(params = params, userLatLng = loc)
+                    .onSuccess { list ->
+                        nearCache = CacheEntry(list, loc, now)
+                        val filtered = filterByCategory(ui.value.selectedCategory, list, loc)
+                        nearMe.data(filtered)
+                    }
+                    .onFailure { err ->
+                        if (nearMe.value !is Loadable.Data) {
+                            nearMe.error(err.toUiError("Couldn't load nearby"))
+                        }
+                    }
 
-            val featuredParams = CoffeeSearchParameters.Builder()
-                .radiusMeters(5000)
-                .maxResults(5)
-                .sortByDistance(false)
-                .build()
-
-            val nearDeferred = async {
-                searchNearby(params = nearbyParams, userLatLng = loc).map { list -> list }
+                main { ui.update { it.copy(isRefreshingNear = false) } }
             }
-            val featuredDeferred = async {
-                searchNearby(params = featuredParams, userLatLng = loc).map { list -> list }
-            }
-
-            // NEAR
-            nearDeferred.await()
-                .onSuccess { list ->
-                    nearCache = CacheEntry(baseItems = list, center = loc, timestamp = now)
-                    val filtered = filterByCategoryInternal(ui.value.selectedCategory, list, loc)
-                    nearMe.data(filtered)
-                }
-                .onFailure { nearMe.error(it.toUiError("Couldn't load nearby")) }
-
-            // FEATURED
-            featuredDeferred.await()
-                .onSuccess { list ->
-                    featuredCache = CacheEntry(baseItems = list, center = loc, timestamp = now)
-                    featured.data(list)
-                }
-                .onFailure { featured.error(it.toUiError("Couldn't load featured")) }
-
-            main { ui.update { it.copy(isRefreshing = false) } }
         }
     }
 
-    // ─────────── Cache policy helpers ───────────
+    /* ───────────────────────── Refresh: FEATURED ─────────────────────── */
+
+    fun refreshFeatured(force: Boolean) {
+        val loc = ui.value.currentLocation ?: run {
+            main { send(Effect.Message("Location not available yet")) }
+            return
+        }
+
+        if (!force && hasFreshEnough(featuredCache, loc)) {
+            featuredCache?.let { cache -> featured.data(cache.baseItems) }
+            return
+        }
+
+        if (featured.value !is Loadable.Data) featured.loading()
+        ui.update { it.copy(isRefreshingFeatured = true) }
+
+        io {
+            featuredJob?.cancelAndJoin()
+            featuredJob = launch {
+                val now = System.currentTimeMillis()
+                val params = CoffeeSearchParameters.Builder()
+                    .radiusMeters(FEATURED_RADIUS_M)
+                    .maxResults(FEATURED_MAX_RESULTS)
+                    .sortByDistance(FEATURED_SORT_BY_DISTANCE) // server provides “popular” sort
+                    .build()
+
+                searchNearby(params = params, userLatLng = loc)
+                    .onSuccess { list ->
+                        featuredCache = CacheEntry(list, loc, now)
+                        featured.data(list)
+                    }
+                    .onFailure { err ->
+                        if (featured.value !is Loadable.Data) {
+                            featured.error(err.toUiError("Couldn't load featured"))
+                        }
+                    }
+
+                main { ui.update { it.copy(isRefreshingFeatured = false) } }
+            }
+        }
+    }
+
+    /* ─────────────────────────── Helpers & Policy ────────────────────── */
 
     private fun hasFreshEnough(entry: CacheEntry?, loc: LatLng): Boolean {
         if (entry == null) return false
-        val ageOk = (System.currentTimeMillis() - entry.timestamp) <= TTL_MILLIS
+        val fresh = (System.currentTimeMillis() - entry.timestamp) <= TTL_MILLIS
         val moved = distance(entry.center, loc) >= MIN_REQUERY_DISTANCE_M
-        return ageOk && !moved
+        return fresh && !moved
     }
-
-    private fun shouldUseNearCacheFor(loc: LatLng): Boolean = hasFreshEnough(nearCache, loc)
-    private fun shouldUseFeaturedCacheFor(loc: LatLng): Boolean = hasFreshEnough(featuredCache, loc)
 
     private fun distance(a: LatLng, b: LatLng): Double =
         locationUtil.distanceMeters(a, b).toDouble()
 
-    // ─────────── Local filtering/sorting (no network) ───────────
-    private fun filterByCategoryInternal(
+    // local sorting/filtering for the NEAR list only (Featured is server-driven)
+    private fun filterByCategory(
         category: Category,
         source: List<CoffeePlaceLite>,
         user: LatLng?
@@ -182,17 +233,9 @@ class HomeViewModel @Inject constructor(
         "nearby"  -> if (user == null) source else source.sortedBy {
             it.location?.let { ll -> locationUtil.distanceMeters(user, ll).toFloat() } ?: Float.MAX_VALUE
         }
-        "dates"   -> source.sortedByDescending { (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f) }
+        "dates"   -> source.sortedByDescending {
+            (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f)
+        }
         else      -> source
-    }
-
-    companion object {
-        private val DEFAULT_CATEGORIES = listOf(
-            Category(1, "All", R.drawable.ic_ctc_medal),
-            Category(2, "Popular", R.drawable.ic_ctc_star),
-            Category(3, "Pet Friendly", R.drawable.ic_ctc_pet),
-            Category(4, "Nearby", R.drawable.ic_ctc_location),
-            Category(5, "Dates", R.drawable.ic_ctc_heart)
-        )
     }
 }
