@@ -78,6 +78,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 places = { module = "com.google.android.libraries.places:places", version.ref = "places" }
 places-ktx = { module = "com.google.maps.android:places-ktx", version.ref = "placesKtx" }
+recyclerview-integration = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "compiler" }
 shimmer = { module = "com.facebook.shimmer:shimmer", version.ref = "shimmer" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 androidx-room-compiler-processing-testing = { group = "androidx.room", name = "room-compiler-processing-testing", version.ref = "roomCompilerProcessingTesting" }

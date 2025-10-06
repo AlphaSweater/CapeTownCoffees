@@ -131,6 +131,7 @@ dependencies {
 
     // --- Image loading ---
     implementation(libs.glide)
+    implementation(libs.recyclerview.integration)
     kapt(libs.compiler)
 
     // --- Testing & Logging ---
