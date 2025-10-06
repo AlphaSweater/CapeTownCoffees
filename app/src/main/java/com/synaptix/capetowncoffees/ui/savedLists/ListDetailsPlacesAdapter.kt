@@ -11,7 +11,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 
-class ListDetailsPlacesAdapter : ListAdapter<CoffeePlaceFull, ListDetailsPlacesAdapter.VH>(Diff()) {
+// 1. Add a click listener to the constructor
+class ListDetailsPlacesAdapter(
+    private val onItemClicked: (CoffeePlaceFull) -> Unit
+) : ListAdapter<CoffeePlaceFull, ListDetailsPlacesAdapter.VH>(Diff()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_near_me, parent, false)
@@ -19,7 +22,12 @@ class ListDetailsPlacesAdapter : ListAdapter<CoffeePlaceFull, ListDetailsPlacesA
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        // 2. Set the click listener on the item's view
+        holder.itemView.setOnClickListener {
+            onItemClicked(item)
+        }
+        holder.bind(item)
     }
 
     fun submit(items: List<CoffeePlaceFull>) {
@@ -38,7 +46,8 @@ class ListDetailsPlacesAdapter : ListAdapter<CoffeePlaceFull, ListDetailsPlacesA
             val rating = item.rating ?: 0.0
             val count = item.ratingCount ?: 0
             tvRating.text = String.format("%.1f (%d)", rating, count)
-            ivImage.setImageResource(R.drawable.cafe_placeholder)
+            // You might want a placeholder for the image here
+            // ivImage.setImageResource(R.drawable.cafe_placeholder)
         }
     }
 

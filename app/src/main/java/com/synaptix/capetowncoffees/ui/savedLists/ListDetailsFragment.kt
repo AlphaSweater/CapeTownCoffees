@@ -24,7 +24,15 @@ class ListDetailsFragment : Fragment() {
     private lateinit var ivPrivacy: ImageView
     private lateinit var recycler: RecyclerView
 
-    private val placesAdapter = ListDetailsPlacesAdapter()
+    // 3. Initialize the adapter with the navigation logic
+    private val placesAdapter = ListDetailsPlacesAdapter { place ->
+        // This code will run when an item is clicked
+        Timber.d("Navigating to detail for placeId: ${place.id}")
+        val args = Bundle().apply {
+            putString("placeId", place.id)
+        }
+        findNavController().navigate(R.id.cafeDetailFragment, args)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -89,7 +97,7 @@ class ListDetailsFragment : Fragment() {
                     viewModel.deleteListAndReturn(
                         id = listId,
                         onDone = { findNavController().navigateUp() },
-                        onError = { e -> 
+                        onError = { e ->
                             Timber.e(e, "Failed to delete list")
                             // Show error message
                             android.widget.Toast.makeText(
