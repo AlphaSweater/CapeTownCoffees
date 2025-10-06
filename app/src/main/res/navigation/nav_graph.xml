@@ -142,6 +142,14 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+            
+        <action
+            android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
 
     </fragment>
 
@@ -191,7 +199,15 @@
         android:id="@+id/settingsFragment"
         android:name="com.synaptix.capetowncoffees.ui.settings.SettingsFragment"
         android:label="Settings"
-        tools:layout="@layout/fragment_settings" />
+        tools:layout="@layout/fragment_settings">
+        
+        <action
+            android:id="@+id/action_global_settingsFragment"
+            app:destination="@id/settingsFragment"
+            app:popUpTo="@+id/settingsFragment"
+            app:popUpToInclusive="true" />
+            
+    </fragment>
 
     <fragment
         android:id="@+id/privacyPolicyFragment"
