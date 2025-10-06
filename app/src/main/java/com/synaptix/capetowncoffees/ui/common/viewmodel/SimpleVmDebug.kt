@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui._simple.viewmodel
+package com.synaptix.capetowncoffees.ui.common.viewmodel
 
 import timber.log.Timber
 

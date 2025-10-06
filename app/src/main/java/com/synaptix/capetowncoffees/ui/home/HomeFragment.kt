@@ -29,11 +29,11 @@ import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.collect
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.collectLoadable
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.start
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collectLoadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.start
 import com.synaptix.capetowncoffees.ui.common.SkeletonAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CoffeePlaceItemAdapter
