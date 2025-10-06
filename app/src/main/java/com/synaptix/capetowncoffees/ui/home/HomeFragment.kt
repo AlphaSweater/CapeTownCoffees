@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.appbar.AppBarLayout
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
@@ -75,13 +77,17 @@ class HomeFragment : Fragment() {
     // Shared photo URL cache / warmer (moved out of the fragment)
     private lateinit var photoCache: PhotoUrlCache
 
-    // 🔒 Concat isolation config (fixes viewType/stableId collisions)
+    // 🔒 Concat isolation config
     private val concatConfig: ConcatAdapter.Config by lazy {
         ConcatAdapter.Config.Builder()
             .setIsolateViewTypes(true)
             .setStableIdMode(ConcatAdapter.Config.StableIdMode.ISOLATED_STABLE_IDS)
             .build()
     }
+
+    // Pull-to-refresh gating
+    private var appBarOffset: Int = 0
+    private var lastIsRefreshing: Boolean = false   // detect rising edge
 
     // Permissions
     private val requestPerms = registerForActivityResult(
@@ -104,11 +110,11 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         start(vm)
 
-        // new: one cache for this screen's lifecycle
         photoCache = PhotoUrlCache(viewLifecycleOwner, coffeePlaceUtils, maxWidthDp = 500)
 
         initAdapters()
         setupRecyclerViews()
+        setupPullToRefresh()
         setupCollectors()
         ensureLocation()
     }
@@ -145,13 +151,11 @@ class HomeFragment : Fragment() {
         popularSkeleton = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
         nearSkeleton    = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
 
-        // ✅ Set state restoration on CHILD adapters (not Concat)
         popularAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         nearAdapter.stateRestorationPolicy    = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         popularSkeleton.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT
         nearSkeleton.stateRestorationPolicy    = RecyclerView.Adapter.StateRestorationPolicy.PREVENT
 
-        // ✅ Concat with isolation
         popularConcat = ConcatAdapter(concatConfig, popularSkeleton, popularAdapter)
         nearConcat    = ConcatAdapter(concatConfig, nearSkeleton, nearAdapter)
     }
@@ -163,7 +167,7 @@ class HomeFragment : Fragment() {
             setHasFixedSize(true)
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
             setItemViewCacheSize(if (commonHorizontal) 8 else 2)
-            isNestedScrollingEnabled = false           // outer NSV is the only scroller
+            isNestedScrollingEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
 
             val lm = if (commonHorizontal)
@@ -188,11 +192,9 @@ class HomeFragment : Fragment() {
 
         rvFeatured.apply {
             tune(commonHorizontal = true)
-            // ✅ give this RV its own pool
             setRecycledViewPool(RecyclerView.RecycledViewPool())
             adapter = popularConcat
 
-            // new: skeleton-aware preloader via util
             ImagePreloadUtil.attachWithSkeleton(
                 recyclerView = this,
                 fragment = this@HomeFragment,
@@ -208,11 +210,9 @@ class HomeFragment : Fragment() {
 
         rvNearMe.apply {
             tune(commonHorizontal = false)
-            // ✅ and a separate pool for this one
             setRecycledViewPool(RecyclerView.RecycledViewPool())
             adapter = nearConcat
 
-            // new: skeleton-aware preloader via util
             ImagePreloadUtil.attachWithSkeleton(
                 recyclerView = this,
                 fragment = this@HomeFragment,
@@ -227,6 +227,50 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // ───────────────────────── Pull-to-refresh (swap to skeletons) ─────────────────────────
+
+    private fun setupPullToRefresh() = with(binding) {
+        swipeRefresh.isEnabled = true
+
+        appBar.doOnLayout {
+            val start = appBar.height + dp(8)
+            val end   = start + dp(64)
+            swipeRefresh.setProgressViewOffset(true, start, end)
+        }
+
+        appBar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { _, verticalOffset ->
+            appBarOffset = verticalOffset
+        })
+
+        swipeRefresh.setOnChildScrollUpCallback { _, _ ->
+            val contentNotAtTop = rootScroll.canScrollVertically(-1)
+            val appBarCollapsed = appBarOffset != 0
+            val currentlyRefreshing = vm.ui.value.isRefreshing
+            contentNotAtTop || appBarCollapsed || currentlyRefreshing
+        }
+
+        swipeRefresh.setOnRefreshListener {
+            // Hide spinner immediately; we'll show skeletons instead
+            swipeRefresh.isRefreshing = false
+            // Start network refresh UX: show skeletons, hide data items
+            startNetworkRefresh()
+            vm.pullToRefresh()
+        }
+    }
+
+    /** Swap UI into "refreshing" state: skeletons on, data off. */
+    private fun startNetworkRefresh() {
+        // Show shimmer headers
+        popularSkeleton.show(5)
+        nearSkeleton.show(5)
+        // Hide current data items so only skeletons are visible
+        popularAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
+        nearAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
+        // Also clear backing lists so preloader counts align
+        popularItems = emptyList()
+        nearItems = emptyList()
+    }
+
     // ───────────────────────── Collectors ─────────────────────────
 
     private fun setupCollectors() {
@@ -235,23 +279,31 @@ class HomeFragment : Fragment() {
                 Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
         }
 
+        // Detect refresh start/finish to ensure swap happens even for programmatic refreshes
         collect(vm.ui.flow) { ui ->
-            categoryAdapter.updateCategories(ui.categories)
             binding.progressBar.isGone = true
+            categoryAdapter.updateCategories(ui.categories)
+
+            // Rising edge: false -> true means a real network refresh started
+            if (!lastIsRefreshing && ui.isRefreshing) {
+                startNetworkRefresh()
+            }
+            lastIsRefreshing = ui.isRefreshing
         }
 
         // Popular (Featured)
         collectLoadable(vm.featured) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> {
+                    // Initial load path
                     popularSkeleton.show(5)
                     binding.rvFeatured.isVisible = true
                 }
                 is Loadable.Data -> {
                     popularItems = loadable.value
-                    // warm image URLs (moved to util)
                     photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2)
 
+                    // Swap back to data: hide skeletons, push items
                     popularSkeleton.hide()
                     popularAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     binding.rvFeatured.isVisible = loadable.value.isNotEmpty()
@@ -268,14 +320,15 @@ class HomeFragment : Fragment() {
         collectLoadable(vm.nearMe) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> {
+                    // Initial load path
                     nearSkeleton.show(5)
                     binding.rvNearMe.isVisible = true
                 }
                 is Loadable.Data -> {
                     nearItems = loadable.value
-                    // warm image URLs (moved to util)
                     photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2)
 
+                    // Swap back to data
                     nearSkeleton.hide()
                     nearAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     binding.rvNearMe.isVisible = loadable.value.isNotEmpty()
@@ -324,6 +377,9 @@ class HomeFragment : Fragment() {
         val bundle = Bundle().apply { putString("placeId", id) }
         findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
     }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 
     override fun onDestroyView() {
         super.onDestroyView()

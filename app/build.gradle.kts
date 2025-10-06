@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.swiperefreshlayout)
 
     // --- Dependency Injection (Hilt) ---
     implementation(libs.hilt.android)
