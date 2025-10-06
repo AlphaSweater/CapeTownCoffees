@@ -3,7 +3,6 @@ package com.synaptix.capetowncoffees.ui.home
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,17 +13,11 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
-import com.bumptech.glide.Glide
-import com.bumptech.glide.ListPreloader
-import com.bumptech.glide.RequestManager
-import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
@@ -42,10 +35,10 @@ import com.synaptix.capetowncoffees.ui.common.SkeletonAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CoffeePlaceItemAdapter
 import com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList.AddPlacesToListBottomSheet
+import com.synaptix.capetowncoffees.util.ImagePreloadUtil
+import com.synaptix.capetowncoffees.util.PhotoUrlCache
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlin.math.min
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -63,12 +56,9 @@ class HomeFragment : Fragment() {
     private lateinit var popularAdapter: CoffeePlaceItemAdapter
     private lateinit var nearAdapter: CoffeePlaceItemAdapter
 
-    // Data for preloader
+    // Data backing the adapters (used for preloading)
     private var popularItems: List<CoffeePlaceLite> = emptyList()
     private var nearItems: List<CoffeePlaceLite> = emptyList()
-
-    // URL cache for sync preloader lookups
-    private val photoUrlCache = mutableMapOf<String, String?>()
 
     // Skeletons via Concat
     private lateinit var popularSkeleton: SkeletonAdapter
@@ -77,12 +67,13 @@ class HomeFragment : Fragment() {
     private lateinit var popularConcat: ConcatAdapter
     private lateinit var nearConcat: ConcatAdapter
 
-    // Preloader tuning
+    // Image preloading config
     private val PRELOAD_AHEAD = 6
-
-    // Learn real ImageView sizes from adapter
     private val popularSizeProvider = ViewPreloadSizeProvider<String>()
     private val nearSizeProvider = ViewPreloadSizeProvider<String>()
+
+    // Shared photo URL cache / warmer (moved out of the fragment)
+    private lateinit var photoCache: PhotoUrlCache
 
     // 🔒 Concat isolation config (fixes viewType/stableId collisions)
     private val concatConfig: ConcatAdapter.Config by lazy {
@@ -112,6 +103,10 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         start(vm)
+
+        // new: one cache for this screen's lifecycle
+        photoCache = PhotoUrlCache(viewLifecycleOwner, coffeePlaceUtils, maxWidthDp = 500)
+
         initAdapters()
         setupRecyclerViews()
         setupCollectors()
@@ -165,7 +160,6 @@ class HomeFragment : Fragment() {
 
     private fun setupRecyclerViews() = with(binding) {
         fun RecyclerView.tune(commonHorizontal: Boolean) {
-            // ❌ do NOT share a pool across different ConcatAdapters
             setHasFixedSize(true)
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
             setItemViewCacheSize(if (commonHorizontal) 8 else 2)
@@ -197,11 +191,18 @@ class HomeFragment : Fragment() {
             // ✅ give this RV its own pool
             setRecycledViewPool(RecyclerView.RecycledViewPool())
             adapter = popularConcat
-            attachPreloader(
-                items = { popularItems },
-                skeletonCount = { popularSkeleton.itemCount },
+
+            // new: skeleton-aware preloader via util
+            ImagePreloadUtil.attachWithSkeleton(
+                recyclerView = this,
+                fragment = this@HomeFragment,
+                sizeProvider = popularSizeProvider,
                 maxPreload = PRELOAD_AHEAD,
-                sizeProvider = popularSizeProvider
+                skeletonCountProvider = { popularSkeleton.itemCount },
+                dataItemCountProvider = { popularItems.size },
+                urlProviderAtAdapterIndex = { idx ->
+                    popularItems.getOrNull(idx)?.let { place -> photoCache.peekOrCompute(place) }
+                }
             )
         }
 
@@ -210,11 +211,18 @@ class HomeFragment : Fragment() {
             // ✅ and a separate pool for this one
             setRecycledViewPool(RecyclerView.RecycledViewPool())
             adapter = nearConcat
-            attachPreloader(
-                items = { nearItems },
-                skeletonCount = { nearSkeleton.itemCount },
+
+            // new: skeleton-aware preloader via util
+            ImagePreloadUtil.attachWithSkeleton(
+                recyclerView = this,
+                fragment = this@HomeFragment,
+                sizeProvider = nearSizeProvider,
                 maxPreload = PRELOAD_AHEAD,
-                sizeProvider = nearSizeProvider
+                skeletonCountProvider = { nearSkeleton.itemCount },
+                dataItemCountProvider = { nearItems.size },
+                urlProviderAtAdapterIndex = { idx ->
+                    nearItems.getOrNull(idx)?.let { place -> photoCache.peekOrCompute(place) }
+                }
             )
         }
     }
@@ -241,7 +249,9 @@ class HomeFragment : Fragment() {
                 }
                 is Loadable.Data -> {
                     popularItems = loadable.value
-                    warmPhotoUrls(popularItems, take = PRELOAD_AHEAD * 2)
+                    // warm image URLs (moved to util)
+                    photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2)
+
                     popularSkeleton.hide()
                     popularAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     binding.rvFeatured.isVisible = loadable.value.isNotEmpty()
@@ -263,7 +273,9 @@ class HomeFragment : Fragment() {
                 }
                 is Loadable.Data -> {
                     nearItems = loadable.value
-                    warmPhotoUrls(nearItems, take = PRELOAD_AHEAD * 2)
+                    // warm image URLs (moved to util)
+                    photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2)
+
                     nearSkeleton.hide()
                     nearAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     binding.rvNearMe.isVisible = loadable.value.isNotEmpty()
@@ -274,75 +286,6 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-    }
-
-    // ───────────────────── URL cache + preloader integration ─────────────────────
-
-    /** Try cache; if missing, schedule async compute and return null for now. */
-    private fun cachedImageUrl(place: CoffeePlaceLite): String? {
-        val cached = photoUrlCache[place.id]
-        if (cached != null || photoUrlCache.containsKey(place.id)) return cached
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val url = place.images?.firstOrNull()?.let { meta ->
-                coffeePlaceUtils.getPhotoUriFromMetadata(meta, maxWidthDp = 500)?.toString()
-            }
-            photoUrlCache[place.id] = url
-        }
-        return null
-    }
-
-    /** Eagerly compute first N URLs to avoid cold misses on initial draw. */
-    private fun warmPhotoUrls(items: List<CoffeePlaceLite>, take: Int) {
-        if (!isAdded || items.isEmpty()) return
-        val n = min(items.size, take)
-        viewLifecycleOwner.lifecycleScope.launch {
-            for (i in 0 until n) {
-                val p = items[i]
-                if (!photoUrlCache.containsKey(p.id)) {
-                    val url = p.images?.firstOrNull()?.let { meta ->
-                        coffeePlaceUtils.getPhotoUriFromMetadata(meta, maxWidthDp = 500)?.toString()
-                    }
-                    photoUrlCache[p.id] = url
-                }
-            }
-        }
-    }
-
-    /** Attach Glide preloader that cooperates with the skeleton header and real ImageView size. */
-    private fun RecyclerView.attachPreloader(
-        items: () -> List<CoffeePlaceLite>,
-        skeletonCount: () -> Int,
-        maxPreload: Int,
-        sizeProvider: ViewPreloadSizeProvider<String>
-    ) {
-        val requestManager: RequestManager = Glide.with(this@HomeFragment)
-
-        val provider = object : ListPreloader.PreloadModelProvider<String> {
-            override fun getPreloadItems(position: Int): List<String> {
-                val idx = position - skeletonCount()
-                val list = items()
-                if (idx !in list.indices) return emptyList()
-                val place = list[idx]
-                val url = photoUrlCache[place.id] ?: cachedImageUrl(place)
-                return if (url == null) emptyList() else listOf(url)
-            }
-
-            override fun getPreloadRequestBuilder(item: String) =
-                requestManager
-                    .load(item)
-                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                    .thumbnail(0.25f)
-                    .centerCrop()
-        }
-
-        val preloader = RecyclerViewPreloader(
-            requestManager,
-            provider,
-            sizeProvider, // actual ImageView size supplied from adapter.bind()
-            maxPreload
-        )
-        addOnScrollListener(preloader)
     }
 
     // ───────────────────── Location permissions & fetch ─────────────────────
@@ -364,36 +307,23 @@ class HomeFragment : Fragment() {
             .lastLocation
             .addOnSuccessListener { loc ->
                 if (loc != null) vm.onUserLocation(LatLng(loc.latitude, loc.longitude))
-                else fetchFreshLocationFallback()
             }
             .addOnFailureListener {
                 Toast.makeText(requireContext(), R.string.location_fetch_failed, Toast.LENGTH_SHORT).show()
-                fetchFreshLocationFallback()
             }
-    }
-
-    private fun fetchFreshLocationFallback() {
-        // If you have a suspend helper, call it here via lifecycleScope.launch { ... }
     }
 
     // ─────────────────────────── UI helpers ───────────────────────────
 
     private fun showAddToListBottomSheet(id: String) {
-        val bottomSheet = AddPlacesToListBottomSheet.new(id)
-        bottomSheet.show(childFragmentManager, "AddPlacesToListBottomSheet")
+        AddPlacesToListBottomSheet.new(id)
+            .show(childFragmentManager, "AddPlacesToListBottomSheet")
     }
 
     private fun navigateToCafeDetailsId(id: String) {
         val bundle = Bundle().apply { putString("placeId", id) }
         findNavController().navigate(R.id.action_homeFragment_to_cafeDetailFragment, bundle)
     }
-
-    private fun dp(value: Int): Int =
-        TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            value.toFloat(),
-            resources.displayMetrics
-        ).toInt()
 
     override fun onDestroyView() {
         super.onDestroyView()
