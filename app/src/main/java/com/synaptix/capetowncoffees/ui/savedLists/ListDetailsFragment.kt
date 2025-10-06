@@ -8,11 +8,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.synaptix.capetowncoffees.R
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -24,24 +27,44 @@ class ListDetailsFragment : Fragment() {
     private lateinit var ivPrivacy: ImageView
     private lateinit var recycler: RecyclerView
 
-    private val placesAdapter = ListDetailsPlacesAdapter()
+    // Inject the Assisted factory for the adapter
+    @Inject lateinit var listDetailsAdapterFactory: ListDetailsPlacesAdapter.Factory
+    private lateinit var placesAdapter: ListDetailsPlacesAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_list_details, container, false)
-    }
+    ): View = inflater.inflate(R.layout.fragment_list_details, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        tvTitle = view.findViewById(R.id.tvTitle)
+        tvTitle   = view.findViewById(R.id.tvTitle)
         ivPrivacy = view.findViewById(R.id.ivPrivacy)
-        recycler = view.findViewById(R.id.recyclerPlaces)
-        recycler.layoutManager = LinearLayoutManager(requireContext())
-        recycler.adapter = placesAdapter
+        recycler  = view.findViewById(R.id.recyclerPlaces)
+
+        // Create adapter with lifecycle-aware scope + click navigation
+        placesAdapter = listDetailsAdapterFactory.create(
+            viewLifecycleOwner.lifecycleScope
+        ) { place ->
+            Timber.d("Navigating to detail for placeId: ${place.id}")
+            val args = Bundle().apply { putString("placeId", place.id) }
+            // Use destination id (no action required)
+            findNavController().navigate(R.id.cafeDetailFragment, args)
+        }
+
+        recycler.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = placesAdapter
+            setHasFixedSize(true)
+            (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        }
+
+        // Back button in header
+        view.findViewById<View>(R.id.btnBack).setOnClickListener {
+            findNavController().navigateUp()
+        }
 
         val listId = arguments?.getString("listId")
         if (listId.isNullOrBlank()) {
@@ -50,7 +73,7 @@ class ListDetailsFragment : Fragment() {
             return
         }
 
-        // Observe userId first, then observe list
+        // Observe userId first, then the list; when list arrives, load its places
         viewModel.userId.observe(viewLifecycleOwner) { uid ->
             if (uid != null) {
                 viewModel.observeList(listId).observe(viewLifecycleOwner) { list ->
@@ -60,8 +83,10 @@ class ListDetailsFragment : Fragment() {
                         return@observe
                     }
                     tvTitle.text = list.name
-                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_ctc_compass else R.drawable.ic_ctc_lock)
-                    // Load places
+                    ivPrivacy.setImageResource(
+                        if (list.isPublic) R.drawable.ic_ctc_earth_public
+                        else R.drawable.ic_ctc_earth_private
+                    )
                     viewModel.loadPlacesForIds(list.placeIds)
                 }
             } else {
@@ -69,19 +94,12 @@ class ListDetailsFragment : Fragment() {
             }
         }
 
-        // Observe places
         viewModel.places.observe(viewLifecycleOwner) { places ->
             placesAdapter.submit(places)
         }
 
-        // Close button
-        view.findViewById<View>(R.id.btnClose).setOnClickListener {
-            findNavController().navigateUp()
-        }
-
-        // Delete button at bottom
+        // Delete list
         view.findViewById<View>(R.id.btnDeleteList).setOnClickListener {
-            // Show confirmation dialog
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Delete List")
                 .setMessage("Are you sure you want to delete this list? This action cannot be undone.")
@@ -91,7 +109,6 @@ class ListDetailsFragment : Fragment() {
                         onDone = { findNavController().navigateUp() },
                         onError = { e ->
                             Timber.e(e, "Failed to delete list")
-                            // Show error message
                             android.widget.Toast.makeText(
                                 requireContext(),
                                 "Failed to delete list: ${e.message}",
