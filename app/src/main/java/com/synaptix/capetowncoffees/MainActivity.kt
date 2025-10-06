@@ -20,7 +20,6 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.synaptix.capetowncoffees.util.EdgeToEdgeGuard
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -42,9 +41,20 @@ class MainActivity : AppCompatActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
+        // Clear any flags that could cause underlap
+        window.clearFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
+                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
+        )
+        // Keep bars opaque (you said color doesn’t matter, but this avoids surprises)
+        window.statusBarColor = ContextCompat.getColor(this, R.color.coffee_dark)
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.coffee_dark)
+
         setContentView(R.layout.activity_main)
 
-        EdgeToEdgeGuard.install(this, R.id.root_container)
+        // ---- Set the spacer height exactly once (no stacking on resumes) ----
+        setStatusSpacerOnce(rootId = R.id.root_container, spacerId = R.id.status_spacer)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -76,8 +86,6 @@ class MainActivity : AppCompatActivity() {
             checkLocationPermissionOnResume()
         }
 
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-        window.decorView.systemUiVisibility = 0
         dumpEdgeToEdge("onResume")
     }
 
@@ -221,5 +229,36 @@ class MainActivity : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+
+    /**
+     * Measures status/cutout inset once at startup and sets the spacer height.
+     * If inset is 0 (Samsung case), spacer remains 0. If > 0 (Pixel emulator), it adds that gap.
+     */
+    private fun setStatusSpacerOnce(rootId: Int, spacerId: Int) {
+        val root = findViewById<View>(rootId) ?: return
+        val spacer = findViewById<View>(spacerId) ?: return
+
+        // One-shot listener: apply then remove so it won't run on every resume/config change.
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val topInset = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+
+            // Idempotent: set exact height (no accumulation)
+            spacer.layoutParams = spacer.layoutParams.apply { height = topInset }
+            spacer.requestLayout()
+
+            Timber.tag("E2E-ONCE").i("Startup spacerTop=%d", topInset)
+
+            // Remove listener after first application so it won't re-apply/stack
+            ViewCompat.setOnApplyWindowInsetsListener(root, null)
+
+            // Return insets unchanged
+            insets
+        }
+
+        // Kick off first insets dispatch
+        ViewCompat.requestApplyInsets(root)
     }
 }
