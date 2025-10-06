@@ -40,36 +40,7 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Setup RecyclerView
-        val rv = binding.rvReviews
-        rv.layoutManager = LinearLayoutManager(requireContext())
-
-        val demo = listOf(
-            ReviewItem(
-                "Truth Coffee",
-                "2 days ago",
-                4.5f,
-                "This place is the best!! So many different options",
-                1
-            ),
-            ReviewItem(
-                "Origin Coffee",
-                "1 week ago",
-                4.0f,
-                "Great ambiance and solid espresso.",
-                3
-            ),
-            ReviewItem(
-                "Deluxe Coffeeworks",
-                "3 weeks ago",
-                5.0f,
-                "My favorite flat white in town!",
-                5
-            )
-        )
-
-        rv.adapter = ReviewAdapter(demo)
+        
 
         // Observe user data
         viewLifecycleOwner.lifecycleScope.launch {
@@ -111,9 +82,38 @@ class ProfileFragment : Fragment() {
         // Load user data
         viewModel.loadUserProfile()
 
-        // Settings button navigation
-        binding.btnSettings.setOnClickListener {
-            findNavController().navigate(R.id.settingsFragment)
+        // Settings button navigation - simplified and fixed
+        binding.btnSettings.apply {
+            // Make sure the button is clickable
+            isClickable = true
+            isFocusable = true
+            
+            // Handle click
+            setOnClickListener {
+                try {
+                    // Try direct navigation first (simpler approach)
+                    findNavController().navigate(R.id.settingsFragment)
+                    Timber.d("Navigating to settings fragment")
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to navigate to settings")
+                }
+            }
+            
+            // Add touch feedback
+            setOnTouchListener { v, event ->
+                when (event.action) {
+                    android.view.MotionEvent.ACTION_DOWN -> {
+                        v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(100).start()
+                    }
+                    android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                        if (event.action == android.view.MotionEvent.ACTION_UP) {
+                            v.performClick()
+                        }
+                    }
+                }
+                true
+            }
         }
 
         // Edit profile button navigation
