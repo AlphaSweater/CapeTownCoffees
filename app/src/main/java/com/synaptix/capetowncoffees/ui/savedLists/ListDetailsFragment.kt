@@ -50,7 +50,6 @@ class ListDetailsFragment : Fragment() {
         ) { place ->
             Timber.d("Navigating to detail for placeId: ${place.id}")
             val args = Bundle().apply { putString("placeId", place.id) }
-            // Use destination id (no action required)
             findNavController().navigate(R.id.cafeDetailFragment, args)
         }
 

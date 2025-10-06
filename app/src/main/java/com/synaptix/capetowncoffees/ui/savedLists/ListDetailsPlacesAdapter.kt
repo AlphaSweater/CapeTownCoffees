@@ -61,7 +61,7 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val tvName: TextView = itemView.findViewById(R.id.tvCafeName)
-        private val tvAddress: TextView = itemView.findViewById(R.id.tvDistance) // your layout uses this id for address
+        private val tvAddress: TextView = itemView.findViewById(R.id.tvDistance)
         private val tvRating: TextView = itemView.findViewById(R.id.tvCafeRating)
         private val ivImage: ImageView = itemView.findViewById(R.id.ivImage)
 
@@ -76,7 +76,7 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
             // Placeholder first
             ivImage.setImageResource(R.drawable.featured_placeholder)
 
-            // Resolve Places photo → load with Glide
+            // Load image
             scope.launch {
                 val url = photoResolver.url(item)
                 if (url.isNullOrBlank()) {
