@@ -52,8 +52,11 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
             }
         }
     ),
-    idProvider = { it.id.hashCode().toLong() }
+    // 🔒 Namespace stable IDs to avoid any chance of collisions across adapters
+    idProvider = { ID_NAMESPACE xor it.id.hashCode().toLong() }
 ) {
+    // 🔒 Distinct viewType (layout id) so Concat never mixes holders
+    override fun itemViewTypeFor(position: Int): Int = R.layout.item_coffee_near_me
 
     /** Injected from the Fragment after construction so AssistedInject stays simple. */
     var preloadSizeProvider: ViewPreloadSizeProvider<String>? = null
@@ -74,10 +77,14 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
     }
 
     private companion object {
+        // Payload keys
         const val PAYLOAD_FAV = "payload_fav"
         const val PAYLOAD_RATING = "payload_rating"
         const val PAYLOAD_DISTANCE = "payload_distance"
         const val TAG = "CTC-IMG"
+
+        // Any unique salt works; just keep it constant for this adapter.
+        private const val ID_NAMESPACE: Long = 0x10_0000_0000L  // high-bit salt
     }
 
     fun updateItems(items: List<CoffeePlaceLite>, userLocation: LatLng? = null) {

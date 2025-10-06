@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
-
 /** Base ViewHolder with optional payload binding. */
 abstract class BaseViewHolder<T, VB : ViewBinding>(val vb: VB) : RecyclerView.ViewHolder(vb.root) {
     open fun bind(item: T) {}
@@ -15,14 +14,32 @@ abstract class BaseViewHolder<T, VB : ViewBinding>(val vb: VB) : RecyclerView.Vi
     open fun onRecycled() {}
 }
 
-
-/** Minimal generic ListAdapter to kill boilerplate. */
+/**
+ * Minimal generic ListAdapter.
+ *
+ * Notes:
+ * • We provide a **unique default viewType** for single-viewtype adapters to avoid collisions
+ *   when used inside ConcatAdapter/Paging load-state wrappers. If your adapter inflates a
+ *   specific layout, it’s still best practice to override `getItemViewType()` and return
+ *   the layout id (e.g., `R.layout.item_row`) — but if you forget, you’re still safe.
+ */
 abstract class BaseAdapter<T : Any, VB : ViewBinding>(
     diff: DiffUtil.ItemCallback<T>,
     private val idProvider: ((T) -> Long)? = null,
 ) : ListAdapter<T, BaseViewHolder<T, VB>>(diff) {
 
     init { setHasStableIds(idProvider != null) }
+
+    // Unique fallback viewType per adapter instance (single-viewtype case).
+    // Mask to 24 bits to avoid bumping into Android's internal ranges.
+    private val defaultViewType: Int by lazy {
+        (System.identityHashCode(this) and 0x00FFFFFF) or 0x7F000000
+    }
+
+    /** Override in children if you have multiple types or want to return a layout id. */
+    open fun itemViewTypeFor(position: Int): Int = defaultViewType
+
+    final override fun getItemViewType(position: Int): Int = itemViewTypeFor(position)
 
     abstract fun onCreateBinding(inflater: LayoutInflater, parent: ViewGroup): VB
     abstract fun onCreateVH(binding: VB): BaseViewHolder<T, VB>
@@ -35,8 +52,11 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(
     final override fun onBindViewHolder(holder: BaseViewHolder<T, VB>, position: Int) =
         holder.bind(getItem(position))
 
-    final override fun onBindViewHolder(holder: BaseViewHolder<T, VB>, position: Int, payloads: MutableList<Any>) =
-        if (payloads.isNotEmpty()) holder.bind(getItem(position), payloads) else holder.bind(getItem(position))
+    final override fun onBindViewHolder(
+        holder: BaseViewHolder<T, VB>,
+        position: Int,
+        payloads: MutableList<Any>
+    ) = if (payloads.isNotEmpty()) holder.bind(getItem(position), payloads) else holder.bind(getItem(position))
 
     final override fun getItemId(position: Int): Long =
         idProvider?.invoke(getItem(position)) ?: super.getItemId(position)
@@ -45,9 +65,7 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(
         holder.onRecycled()
         super.onViewRecycled(holder)
     }
-
 }
-
 
 /** Super-tiny DiffUtil helper so you don't have to write a class each time. */
 fun <T : Any> simpleDiff(

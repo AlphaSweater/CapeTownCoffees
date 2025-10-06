@@ -88,6 +88,9 @@ class SkeletonAdapter(
 
     override fun getItemId(position: Int): Long = position.toLong()
 
+    // 🔒 IMPORTANT: return the layout id as the viewType to avoid Concat collisions
+    override fun getItemViewType(position: Int): Int = layoutResId
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context).inflate(layoutResId, parent, false)
         v.disableInteractive()

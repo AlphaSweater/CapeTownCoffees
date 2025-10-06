@@ -77,15 +77,20 @@ class HomeFragment : Fragment() {
     private lateinit var popularConcat: ConcatAdapter
     private lateinit var nearConcat: ConcatAdapter
 
-    // Shared pool between lists
-    private val sharedPool = RecyclerView.RecycledViewPool()
-
     // Preloader tuning
     private val PRELOAD_AHEAD = 6
 
     // Learn real ImageView sizes from adapter
     private val popularSizeProvider = ViewPreloadSizeProvider<String>()
     private val nearSizeProvider = ViewPreloadSizeProvider<String>()
+
+    // 🔒 Concat isolation config (fixes viewType/stableId collisions)
+    private val concatConfig: ConcatAdapter.Config by lazy {
+        ConcatAdapter.Config.Builder()
+            .setIsolateViewTypes(true)
+            .setStableIdMode(ConcatAdapter.Config.StableIdMode.ISOLATED_STABLE_IDS)
+            .build()
+    }
 
     // Permissions
     private val requestPerms = registerForActivityResult(
@@ -143,21 +148,28 @@ class HomeFragment : Fragment() {
         ).also { it.preloadSizeProvider = nearSizeProvider }
 
         popularSkeleton = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
-        nearSkeleton = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
+        nearSkeleton    = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
 
-        popularConcat = ConcatAdapter(popularSkeleton, popularAdapter)
-        nearConcat = ConcatAdapter(nearSkeleton, nearAdapter)
+        // ✅ Set state restoration on CHILD adapters (not Concat)
+        popularAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+        nearAdapter.stateRestorationPolicy    = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+        popularSkeleton.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT
+        nearSkeleton.stateRestorationPolicy    = RecyclerView.Adapter.StateRestorationPolicy.PREVENT
+
+        // ✅ Concat with isolation
+        popularConcat = ConcatAdapter(concatConfig, popularSkeleton, popularAdapter)
+        nearConcat    = ConcatAdapter(concatConfig, nearSkeleton, nearAdapter)
     }
 
     // ───────────────────────── RecyclerViews ─────────────────────────
 
     private fun setupRecyclerViews() = with(binding) {
         fun RecyclerView.tune(commonHorizontal: Boolean) {
-            setRecycledViewPool(sharedPool)
+            // ❌ do NOT share a pool across different ConcatAdapters
             setHasFixedSize(true)
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
             setItemViewCacheSize(if (commonHorizontal) 8 else 2)
-            isNestedScrollingEnabled = false           // IMPORTANT: outer NSV is the only scroller
+            isNestedScrollingEnabled = false           // outer NSV is the only scroller
             overScrollMode = View.OVER_SCROLL_NEVER
 
             val lm = if (commonHorizontal)
@@ -165,11 +177,9 @@ class HomeFragment : Fragment() {
             else
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
 
-            if (commonHorizontal) {
-                lm.initialPrefetchItemCount = 6
-            } else {
-                lm.isItemPrefetchEnabled = false
-            }
+            if (commonHorizontal) lm.initialPrefetchItemCount = 6
+            else lm.isItemPrefetchEnabled = false
+
             layoutManager = lm
         }
 
@@ -184,6 +194,8 @@ class HomeFragment : Fragment() {
 
         rvFeatured.apply {
             tune(commonHorizontal = true)
+            // ✅ give this RV its own pool
+            setRecycledViewPool(RecyclerView.RecycledViewPool())
             adapter = popularConcat
             attachPreloader(
                 items = { popularItems },
@@ -195,8 +207,9 @@ class HomeFragment : Fragment() {
 
         rvNearMe.apply {
             tune(commonHorizontal = false)
+            // ✅ and a separate pool for this one
+            setRecycledViewPool(RecyclerView.RecycledViewPool())
             adapter = nearConcat
-            // Let it measure to wrap_content; outer NSV will handle scrolling
             attachPreloader(
                 items = { nearItems },
                 skeletonCount = { nearSkeleton.itemCount },
