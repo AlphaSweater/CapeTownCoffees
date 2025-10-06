@@ -1,21 +1,17 @@
 package com.synaptix.capetowncoffees.ui.home
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -67,7 +63,7 @@ class HomeFragment : Fragment() {
     private lateinit var popularAdapter: CoffeePlaceItemAdapter
     private lateinit var nearAdapter: CoffeePlaceItemAdapter
 
-    // Lists for preloader
+    // Data for preloader
     private var popularItems: List<CoffeePlaceLite> = emptyList()
     private var nearItems: List<CoffeePlaceLite> = emptyList()
 
@@ -87,7 +83,7 @@ class HomeFragment : Fragment() {
     // Preloader tuning
     private val PRELOAD_AHEAD = 6
 
-    // Size providers that learn the real ImageView size from the adapter
+    // Learn real ImageView sizes from adapter
     private val popularSizeProvider = ViewPreloadSizeProvider<String>()
     private val nearSizeProvider = ViewPreloadSizeProvider<String>()
 
@@ -102,7 +98,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentHomeNewBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -111,9 +109,7 @@ class HomeFragment : Fragment() {
         start(vm)
         initAdapters()
         setupRecyclerViews()
-        setupScrollHandoff()
         setupCollectors()
-        setupClicks()
         ensureLocation()
     }
 
@@ -161,6 +157,8 @@ class HomeFragment : Fragment() {
             setHasFixedSize(true)
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
             setItemViewCacheSize(if (commonHorizontal) 8 else 2)
+            isNestedScrollingEnabled = false           // IMPORTANT: outer NSV is the only scroller
+            overScrollMode = View.OVER_SCROLL_NEVER
 
             val lm = if (commonHorizontal)
                 LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
@@ -179,6 +177,9 @@ class HomeFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = categoryAdapter
             setHasFixedSize(true)
+            isNestedScrollingEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+            (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         }
 
         rvFeatured.apply {
@@ -195,7 +196,7 @@ class HomeFragment : Fragment() {
         rvNearMe.apply {
             tune(commonHorizontal = false)
             adapter = nearConcat
-            enforceBoundedHeightIfNeeded(this, dp(720))
+            // Let it measure to wrap_content; outer NSV will handle scrolling
             attachPreloader(
                 items = { nearItems },
                 skeletonCount = { nearSkeleton.itemCount },
@@ -205,103 +206,12 @@ class HomeFragment : Fragment() {
         }
     }
 
-    /** Outer/inner scroll handoff to prevent half-section split and jitter. */
-    @SuppressLint("ClickableViewAccessibility")
-    private fun setupScrollHandoff() {
-        val root: NestedScrollView = binding.rootScroll
-        val child: RecyclerView = binding.rvNearMe
-
-        child.isNestedScrollingEnabled = false
-        child.overScrollMode = View.OVER_SCROLL_NEVER
-        root.overScrollMode = View.OVER_SCROLL_NEVER
-
-        root.setOnScrollChangeListener { _: View, _: Int, _: Int, _: Int, _: Int ->
-            val atBottom = !root.canScrollVertically(1)
-            if (atBottom && !child.isNestedScrollingEnabled) {
-                child.isNestedScrollingEnabled = true
-                child.parent?.requestDisallowInterceptTouchEvent(true)
-            } else if (!atBottom && child.isNestedScrollingEnabled) {
-                child.isNestedScrollingEnabled = false
-                child.stopScroll()
-            }
-        }
-
-        var lastY = 0f
-        var lastX = 0f
-        var isClickCandidate = false
-        val touchSlop = ViewConfiguration.get(requireContext()).scaledTouchSlop
-
-        child.setOnTouchListener { v, ev ->
-            when (ev.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    lastY = ev.y
-                    lastX = ev.x
-                    isClickCandidate = true
-                    if (child.isNestedScrollingEnabled) child.parent?.requestDisallowInterceptTouchEvent(true)
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val dy = ev.y - lastY
-                    val dx = ev.x - lastX
-                    if (isClickCandidate && (kotlin.math.abs(dx) > touchSlop || kotlin.math.abs(dy) > touchSlop)) {
-                        isClickCandidate = false
-                    }
-                    lastY = ev.y
-                    lastX = ev.x
-
-                    val atTopOfChild = !child.canScrollVertically(-1)
-                    val draggingDown = dy > 0f
-                    if (child.isNestedScrollingEnabled && atTopOfChild && draggingDown) {
-                        child.isNestedScrollingEnabled = false
-                        child.parent?.requestDisallowInterceptTouchEvent(false)
-                    } else if (!child.isNestedScrollingEnabled && !root.canScrollVertically(1)) {
-                        child.isNestedScrollingEnabled = true
-                        child.parent?.requestDisallowInterceptTouchEvent(true)
-                    }
-                }
-                MotionEvent.ACTION_UP -> {
-                    if (isClickCandidate) v.performClick()
-                    if (!child.isNestedScrollingEnabled) {
-                        child.parent?.requestDisallowInterceptTouchEvent(false)
-                    }
-                    isClickCandidate = false
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    if (!child.isNestedScrollingEnabled) {
-                        child.parent?.requestDisallowInterceptTouchEvent(false)
-                    }
-                    isClickCandidate = false
-                }
-            }
-            false
-        }
-    }
-
-    /** If RV height is wrap_content (or <= 0), set a sensible bounded height in px. */
-    private fun enforceBoundedHeightIfNeeded(rv: RecyclerView, boundedHeightPx: Int) {
-        val lp = rv.layoutParams
-        val needsBound = lp.height <= 0
-        if (needsBound) {
-            lp.height = boundedHeightPx
-            rv.layoutParams = lp
-        }
-    }
-
-    // ───────────────────────── Clicks ─────────────────────────
-
-    private fun setupClicks() = with(binding) {
-        searchBar.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
-        }
-    }
-
     // ───────────────────────── Collectors ─────────────────────────
 
     private fun setupCollectors() {
         collect(vm.effects) { eff ->
-            when (eff) {
-                is Effect.Message -> Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
-                else -> Unit
-            }
+            if (eff is Effect.Message)
+                Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
         }
 
         collect(vm.ui.flow) { ui ->
@@ -416,7 +326,7 @@ class HomeFragment : Fragment() {
         val preloader = RecyclerViewPreloader(
             requestManager,
             provider,
-            sizeProvider, // exact ImageView size provided from adapter.bind()
+            sizeProvider, // actual ImageView size supplied from adapter.bind()
             maxPreload
         )
         addOnScrollListener(preloader)
@@ -425,8 +335,10 @@ class HomeFragment : Fragment() {
     // ───────────────────── Location permissions & fetch ─────────────────────
 
     private fun ensureLocation() {
-        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
         if (fine || coarse) fetchLocation() else requestPerms.launch(
             arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         )
@@ -464,7 +376,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun dp(value: Int): Int =
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value.toFloat(), resources.displayMetrics).toInt()
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            value.toFloat(),
+            resources.displayMetrics
+        ).toInt()
 
     override fun onDestroyView() {
         super.onDestroyView()
