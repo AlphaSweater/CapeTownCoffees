@@ -24,7 +24,6 @@ class ListDetailsFragment : Fragment() {
     private lateinit var ivPrivacy: ImageView
     private lateinit var recycler: RecyclerView
 
-    // 3. Initialize the adapter with the navigation logic
     private val placesAdapter = ListDetailsPlacesAdapter { place ->
         // This code will run when an item is clicked
         Timber.d("Navigating to detail for placeId: ${place.id}")
