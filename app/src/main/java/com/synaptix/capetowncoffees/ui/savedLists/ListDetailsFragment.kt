@@ -24,7 +24,14 @@ class ListDetailsFragment : Fragment() {
     private lateinit var ivPrivacy: ImageView
     private lateinit var recycler: RecyclerView
 
-    private val placesAdapter = ListDetailsPlacesAdapter()
+    private val placesAdapter = ListDetailsPlacesAdapter { place ->
+        // This code will run when an item is clicked
+        Timber.d("Navigating to detail for placeId: ${place.id}")
+        val args = Bundle().apply {
+            putString("placeId", place.id)
+        }
+        findNavController().navigate(R.id.cafeDetailFragment, args)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,7 +67,7 @@ class ListDetailsFragment : Fragment() {
                         return@observe
                     }
                     tvTitle.text = list.name
-                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_ctc_compass else R.drawable.ic_ctc_lock)
+                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_ctc_earth_public else R.drawable.ic_ctc_earth_private)
                     // Load places
                     viewModel.loadPlacesForIds(list.placeIds)
                 }
@@ -75,7 +82,7 @@ class ListDetailsFragment : Fragment() {
         }
 
         // Close button
-        view.findViewById<View>(R.id.btnClose).setOnClickListener {
+        view.findViewById<View>(R.id.btnBack).setOnClickListener {
             findNavController().navigateUp()
         }
 
@@ -89,7 +96,7 @@ class ListDetailsFragment : Fragment() {
                     viewModel.deleteListAndReturn(
                         id = listId,
                         onDone = { findNavController().navigateUp() },
-                        onError = { e -> 
+                        onError = { e ->
                             Timber.e(e, "Failed to delete list")
                             // Show error message
                             android.widget.Toast.makeText(

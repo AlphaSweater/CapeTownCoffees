@@ -20,35 +20,28 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class ListDetailsPlacesAdapter @AssistedInject constructor(
-    @Assisted private val coroutineScope: CoroutineScope,
-    private val photoResolver: ListDetailsPhotoResolver
+class ListDetailsPlacesAdapter(
+    private val onItemClicked: (CoffeePlaceFull) -> Unit
 ) : ListAdapter<CoffeePlaceFull, ListDetailsPlacesAdapter.VH>(Diff()) {
 
-    @AssistedFactory
-    interface Factory {
-        fun create(coroutineScope: CoroutineScope): ListDetailsPlacesAdapter
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        // Keep your existing item layout. Ensure it contains ivImage, tvCafeName, tvDistance, tvCafeRating.
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_near_me, parent, false)
-        return VH(view, coroutineScope, photoResolver)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_near_me, parent, false)
+        return VH(view)
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        holder.itemView.setOnClickListener {
+            onItemClicked(item)
+        }
+        holder.bind(item)
     }
 
-    fun submit(items: List<CoffeePlaceFull>) = submitList(items)
+    fun submit(items: List<CoffeePlaceFull>) {
+        submitList(items)
+    }
 
-    class VH(
-        itemView: View,
-        private val scope: CoroutineScope,
-        private val photoResolver: ListDetailsPhotoResolver
-    ) : RecyclerView.ViewHolder(itemView) {
-
+    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvName: TextView = itemView.findViewById(R.id.tvCafeName)
         private val tvDistance: TextView = itemView.findViewById(R.id.tvDistance)
         private val tvRating: TextView = itemView.findViewById(R.id.tvCafeRating)
@@ -56,28 +49,11 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
 
         fun bind(item: CoffeePlaceFull) {
             tvName.text = item.name ?: "Unknown"
-            tvDistance.text = item.address.orEmpty()
+            tvDistance.text = item.address ?: ""
             val rating = item.rating ?: 0.0
             val count = item.ratingCount ?: 0
             tvRating.text = String.format("%.1f (%d)", rating, count)
-
-            ivImage.setImageResource(R.drawable.featured_placeholder)
-
-            scope.launch {
-                val url = photoResolver.url(item)
-                if (url.isNullOrBlank()) {
-                    ivImage.setImageResource(R.drawable.featured_placeholder)
-                } else {
-                    Glide.with(ivImage)
-                        .load(url)
-                        .thumbnail(0.25f)
-                        .placeholder(R.drawable.featured_placeholder)
-                        .error(R.drawable.featured_placeholder)
-                        .centerCrop()
-                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                        .into(ivImage)
-                }
-            }
+            ivImage.setImageResource(R.drawable.cafe_placeholder)
         }
     }
 
