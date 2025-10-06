@@ -69,13 +69,14 @@ class EditProfileViewModel @Inject constructor(
                     currentUser = user
                     _uiState.value = EditProfileUiState.Success(
                         user = user,
-                        isFormValid = isFormValid()
+                        isFormValid = isFormValid(),
+                        profilePictureUri = profilePictureUri
                     )
                 }.onFailure { exception ->
                     _uiState.value = EditProfileUiState.Error("Failed to load profile: ${exception.message}")
                 }
             } catch (e: Exception) {
-                _uiState.value = EditProfileUiState.Error("An unexpected error occurred")
+                _uiState.value = EditProfileUiState.Error("An error occurred: ${e.message}")
             }
         }
     }
@@ -84,19 +85,12 @@ class EditProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = EditProfileUiState.Loading
             val user = currentUser ?: return@launch
+            
             val updatedUser = user.copy(
                 fullName = user.fullName,
                 updatedAt = CoffeeTimeUtils.nowSeconds()
             )
-            // Update auth credentials if needed
-            if (currentPassword.isNotBlank() && (user.email.isNotBlank() || newPassword.isNotBlank())) {
-                val authResult = updateAuthCredentialsUseCase(currentPassword,
-                    user.email, newPassword)
-                if (authResult.isFailure) {
-                    _uiState.value = EditProfileUiState.Error(authResult.exceptionOrNull()?.message ?: "Auth update failed")
-                    return@launch
-                }
-            }
+            
             try {
                 val params = UpdateUserProfileUseCase.Params(
                     updatedUser = updatedUser,
@@ -105,6 +99,7 @@ class EditProfileViewModel @Inject constructor(
                     newPassword = newPassword.ifBlank { null },
                     context = context
                 )
+                
                 updateProfileUseCase.execute(params).onSuccess {
                     currentPassword = ""
                     newPassword = ""
@@ -112,7 +107,8 @@ class EditProfileViewModel @Inject constructor(
                     _uiState.value = EditProfileUiState.Success(
                         user = updatedUser,
                         isFormValid = true,
-                        successMessage = "Profile updated successfully"
+                        successMessage = "Profile updated successfully",
+                        profilePictureUri = profilePictureUri
                     )
                 }.onFailure { exception ->
                     _uiState.value = EditProfileUiState.Error("Failed to update profile: ${exception.message}")
@@ -132,7 +128,8 @@ class EditProfileViewModel @Inject constructor(
         if (currentState is EditProfileUiState.Success) {
             _uiState.value = currentState.copy(
                 user = currentUser ?: return,
-                isFormValid = isFormValid()
+                isFormValid = isFormValid(),
+                profilePictureUri = profilePictureUri
             )
         }
     }
@@ -143,7 +140,8 @@ sealed class EditProfileUiState {
     data class Success(
         val user: CoffeeUser,
         val isFormValid: Boolean = false,
-        val successMessage: String? = null
+        val successMessage: String? = null,
+        val profilePictureUri: Uri? = null
     ) : EditProfileUiState()
     data class Error(val message: String) : EditProfileUiState()
 }
