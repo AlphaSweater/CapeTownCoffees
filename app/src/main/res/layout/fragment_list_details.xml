@@ -14,13 +14,23 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="60dp"
+        android:layout_marginBottom="24dp"
         android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_ctc_arrow_back"
+            android:contentDescription="@string/action_back"
+            app:tint="@color/text_primary" />
 
         <ImageView
             android:id="@+id/ivPrivacy"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginStart="20dp"
             android:src="@drawable/ic_ctc_lock"
             app:tint="@color/text_primary" />
 
@@ -33,16 +43,6 @@
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:text="Saved List" />
-
-        <ImageButton
-            android:id="@+id/btnClose"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/circle_white_bg"
-            android:contentDescription="Close"
-            android:padding="8dp"
-            android:src="@drawable/ic_ctc_cross"
-            app:tint="@color/icon_primary" />
     </LinearLayout>
 
     <View

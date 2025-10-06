@@ -60,7 +60,7 @@ class ListDetailsFragment : Fragment() {
                         return@observe
                     }
                     tvTitle.text = list.name
-                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_ctc_compass else R.drawable.ic_ctc_lock)
+                    ivPrivacy.setImageResource(if (list.isPublic) R.drawable.ic_ctc_earth_public else R.drawable.ic_ctc_earth_private)
                     // Load places
                     viewModel.loadPlacesForIds(list.placeIds)
                 }
@@ -75,7 +75,7 @@ class ListDetailsFragment : Fragment() {
         }
 
         // Close button
-        view.findViewById<View>(R.id.btnClose).setOnClickListener {
+        view.findViewById<View>(R.id.btnBack).setOnClickListener {
             findNavController().navigateUp()
         }
 
