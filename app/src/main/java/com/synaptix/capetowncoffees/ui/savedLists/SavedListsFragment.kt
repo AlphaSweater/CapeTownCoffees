@@ -101,7 +101,7 @@ class SavedListsFragment : Fragment() {
     private fun selectTab(tab: TextView, underline: View, isSelected: Boolean) {
         tab.setTypeface(null, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
         tab.setTextColor(if (isSelected) 
-            resources.getColor(R.color.coffee_dark, null) 
+            resources.getColor(R.color.coffee_light, null)
         else 
             resources.getColor(R.color.text_primary, null))
         underline.visibility = if (isSelected) View.VISIBLE else View.GONE
