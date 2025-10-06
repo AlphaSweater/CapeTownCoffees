@@ -45,51 +45,45 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
+    /* ╭─────────────────────────── View & VM ───────────────────────────╮ */
     private var _binding: FragmentHomeNewBinding? = null
     private val binding get() = _binding!!
-
     private val vm: HomeViewModel by activityViewModels()
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    private lateinit var categoryAdapter: CategoryAdapter
-
+    /* ╭──────────────────────────── DI / Utils ──────────────────────────╮ */
     @Inject lateinit var coffeePlaceUtils: CoffeePlaceUtilsUseCase
-
     @Inject lateinit var placeItemAdapterFactory: CoffeePlaceItemAdapter.Factory
+    private lateinit var photoCache: PhotoUrlCache
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
+
+    /* ╭──────────────────────────── Adapters ────────────────────────────╮ */
+    private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var popularAdapter: CoffeePlaceItemAdapter
     private lateinit var nearAdapter: CoffeePlaceItemAdapter
 
-    // Data backing the adapters (used for preloading)
+    // Backing lists for preloading
     private var popularItems: List<CoffeePlaceLite> = emptyList()
     private var nearItems: List<CoffeePlaceLite> = emptyList()
 
-    // Skeletons via Concat
+    // Skeletons + Concat
     private lateinit var popularSkeleton: SkeletonAdapter
     private lateinit var nearSkeleton: SkeletonAdapter
-
     private lateinit var popularConcat: ConcatAdapter
     private lateinit var nearConcat: ConcatAdapter
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    // Image preloading config
-    private val PRELOAD_AHEAD = 6
+    /* ╭──────────────────────── Image Preloading ────────────────────────╮ */
     private val popularSizeProvider = ViewPreloadSizeProvider<String>()
     private val nearSizeProvider = ViewPreloadSizeProvider<String>()
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    // Shared photo URL cache / warmer (moved out of the fragment)
-    private lateinit var photoCache: PhotoUrlCache
-
-    // 🔒 Concat isolation config
-    private val concatConfig: ConcatAdapter.Config by lazy {
-        ConcatAdapter.Config.Builder()
-            .setIsolateViewTypes(true)
-            .setStableIdMode(ConcatAdapter.Config.StableIdMode.ISOLATED_STABLE_IDS)
-            .build()
-    }
-
-    // Pull-to-refresh gating
+    /* ╭──────────────────────────── Scroll/Refresh ──────────────────────╮ */
     private var appBarOffset: Int = 0
-    private var lastIsRefreshing: Boolean = false   // detect rising edge
+    private var lastIsRefreshing: Boolean = false
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    // Permissions
+    /* ╭──────────────────────────── Permissions ─────────────────────────╮ */
     private val requestPerms = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
@@ -99,6 +93,27 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), R.string.location_permission_required, Toast.LENGTH_LONG).show()
         }
     }
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
+
+    /* ╭──────────────────────────── Constants ───────────────────────────╮ */
+    private companion object {
+        const val PRELOAD_AHEAD = 6
+        const val POPULAR_SKELETON_COUNT = 5
+        const val NEAR_SKELETON_COUNT = 5
+    }
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
+
+    /* ╭──────────────────────── Shared RV resources ─────────────────────╮ */
+    private val sharedPool by lazy { RecyclerView.RecycledViewPool() }
+    private val concatConfig: ConcatAdapter.Config by lazy {
+        ConcatAdapter.Config.Builder()
+            .setIsolateViewTypes(true)
+            .setStableIdMode(ConcatAdapter.Config.StableIdMode.ISOLATED_STABLE_IDS)
+            .build()
+    }
+    /* ╰──────────────────────────────────────────────────────────────────╯ */
+
+    /* ───────────────────────────── Lifecycle ─────────────────────────── */
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -119,7 +134,12 @@ class HomeFragment : Fragment() {
         ensureLocation()
     }
 
-    // ───────────────────────── Adapters ─────────────────────────
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    /* ─────────────────────────── Adapters Setup ──────────────────────── */
 
     private fun initAdapters() {
         categoryAdapter = CategoryAdapter { category: Category ->
@@ -129,9 +149,8 @@ class HomeFragment : Fragment() {
         val itemClick: (CoffeePlaceItemAdapter.Click) -> Unit = { click ->
             when (click) {
                 is CoffeePlaceItemAdapter.Click.Open -> navigateToCafeDetailsId(click.id)
-                is CoffeePlaceItemAdapter.Click.ToggleFavorite -> {
+                is CoffeePlaceItemAdapter.Click.ToggleFavorite ->
                     Toast.makeText(requireContext(), "Fav ${click.id}: ${click.newValue}", Toast.LENGTH_SHORT).show()
-                }
                 is CoffeePlaceItemAdapter.Click.AddToList -> showAddToListBottomSheet(click.id)
             }
         }
@@ -148,8 +167,8 @@ class HomeFragment : Fragment() {
             showPopularChip = false
         ).also { it.preloadSizeProvider = nearSizeProvider }
 
-        popularSkeleton = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
-        nearSkeleton    = SkeletonAdapter(count = 5, layoutResId = R.layout.item_place_skeleton)
+        popularSkeleton = SkeletonAdapter(count = POPULAR_SKELETON_COUNT, layoutResId = R.layout.item_place_skeleton)
+        nearSkeleton    = SkeletonAdapter(count = NEAR_SKELETON_COUNT, layoutResId = R.layout.item_place_skeleton)
 
         popularAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
         nearAdapter.stateRestorationPolicy    = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -160,25 +179,25 @@ class HomeFragment : Fragment() {
         nearConcat    = ConcatAdapter(concatConfig, nearSkeleton, nearAdapter)
     }
 
-    // ───────────────────────── RecyclerViews ─────────────────────────
+    /* ───────────────────────── RecyclerViews Setup ───────────────────── */
 
     private fun setupRecyclerViews() = with(binding) {
-        fun RecyclerView.tune(commonHorizontal: Boolean) {
+        // generic tuning to avoid repetition
+        fun RecyclerView.tune(horizontal: Boolean) {
             setHasFixedSize(true)
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
-            setItemViewCacheSize(if (commonHorizontal) 8 else 2)
+            setItemViewCacheSize(if (horizontal) 8 else 2)
             isNestedScrollingEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
-
-            val lm = if (commonHorizontal)
-                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            else
-                LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-
-            if (commonHorizontal) lm.initialPrefetchItemCount = 6
-            else lm.isItemPrefetchEnabled = false
-
-            layoutManager = lm
+            layoutManager = LinearLayoutManager(
+                requireContext(),
+                if (horizontal) LinearLayoutManager.HORIZONTAL else LinearLayoutManager.VERTICAL,
+                false
+            ).also { lm ->
+                if (horizontal) lm.initialPrefetchItemCount = 6
+                else lm.isItemPrefetchEnabled = false
+            }
+            setRecycledViewPool(sharedPool)
         }
 
         rvCategories.apply {
@@ -191,8 +210,7 @@ class HomeFragment : Fragment() {
         }
 
         rvFeatured.apply {
-            tune(commonHorizontal = true)
-            setRecycledViewPool(RecyclerView.RecycledViewPool())
+            tune(horizontal = true)
             adapter = popularConcat
 
             ImagePreloadUtil.attachWithSkeleton(
@@ -209,8 +227,7 @@ class HomeFragment : Fragment() {
         }
 
         rvNearMe.apply {
-            tune(commonHorizontal = false)
-            setRecycledViewPool(RecyclerView.RecycledViewPool())
+            tune(horizontal = false)
             adapter = nearConcat
 
             ImagePreloadUtil.attachWithSkeleton(
@@ -227,7 +244,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // ───────────────────────── Pull-to-refresh (swap to skeletons) ─────────────────────────
+    /* ───────────────────── Pull-to-refresh & Skeleton Swap ───────────── */
 
     private fun setupPullToRefresh() = with(binding) {
         swipeRefresh.isEnabled = true
@@ -250,28 +267,35 @@ class HomeFragment : Fragment() {
         }
 
         swipeRefresh.setOnRefreshListener {
-            // Hide spinner immediately; we'll show skeletons instead
             swipeRefresh.isRefreshing = false
-            // Start network refresh UX: show skeletons, hide data items
             startNetworkRefresh()
             vm.pullToRefresh()
         }
     }
 
-    /** Swap UI into "refreshing" state: skeletons on, data off. */
     private fun startNetworkRefresh() {
-        // Show shimmer headers
-        popularSkeleton.show(5)
-        nearSkeleton.show(5)
-        // Hide current data items so only skeletons are visible
+        showSkeletons(POPULAR_SKELETON_COUNT, NEAR_SKELETON_COUNT)
+        clearDataAdapters()
+    }
+
+    private fun showSkeletons(popularCount: Int, nearCount: Int) {
+        popularSkeleton.show(popularCount)
+        nearSkeleton.show(nearCount)
+    }
+
+    private fun hideSkeletons() {
+        popularSkeleton.hide()
+        nearSkeleton.hide()
+    }
+
+    private fun clearDataAdapters() {
         popularAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
         nearAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
-        // Also clear backing lists so preloader counts align
         popularItems = emptyList()
         nearItems = emptyList()
     }
 
-    // ───────────────────────── Collectors ─────────────────────────
+    /* ───────────────────────────── Collectors ────────────────────────── */
 
     private fun setupCollectors() {
         collect(vm.effects) { eff ->
@@ -279,32 +303,27 @@ class HomeFragment : Fragment() {
                 Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
         }
 
-        // Detect refresh start/finish to ensure swap happens even for programmatic refreshes
         collect(vm.ui.flow) { ui ->
             binding.progressBar.isGone = true
             categoryAdapter.updateCategories(ui.categories)
 
-            // Rising edge: false -> true means a real network refresh started
-            if (!lastIsRefreshing && ui.isRefreshing) {
-                startNetworkRefresh()
-            }
+            // Rising edge detection for programmatic refreshes
+            if (!lastIsRefreshing && ui.isRefreshing) startNetworkRefresh()
             lastIsRefreshing = ui.isRefreshing
         }
 
-        // Popular (Featured)
+        // Featured (Popular)
         collectLoadable(vm.featured) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> {
-                    // Initial load path
-                    popularSkeleton.show(5)
+                    popularSkeleton.show(POPULAR_SKELETON_COUNT)
                     binding.rvFeatured.isVisible = true
                 }
                 is Loadable.Data -> {
                     popularItems = loadable.value
                     photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2)
 
-                    // Swap back to data: hide skeletons, push items
-                    popularSkeleton.hide()
+                    hideSkeletonsIfBothResolved(featuredResolved = true, nearResolved = vm.nearMe.value is Loadable.Data)
                     popularAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     binding.rvFeatured.isVisible = loadable.value.isNotEmpty()
                 }
@@ -320,16 +339,17 @@ class HomeFragment : Fragment() {
         collectLoadable(vm.nearMe) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> {
-                    // Initial load path
-                    nearSkeleton.show(5)
+                    nearSkeleton.show(NEAR_SKELETON_COUNT)
                     binding.rvNearMe.isVisible = true
                 }
                 is Loadable.Data -> {
                     nearItems = loadable.value
                     photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2)
 
-                    // Swap back to data
-                    nearSkeleton.hide()
+                    hideSkeletonsIfBothResolved(
+                        featuredResolved = vm.featured.value is Loadable.Data,
+                        nearResolved = true
+                    )
                     nearAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     binding.rvNearMe.isVisible = loadable.value.isNotEmpty()
                 }
@@ -341,16 +361,33 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // ───────────────────── Location permissions & fetch ─────────────────────
+    // Hide both skeletons when both sections have resolved to Data at least once
+    private fun hideSkeletonsIfBothResolved(featuredResolved: Boolean, nearResolved: Boolean) {
+        if (featuredResolved && nearResolved) hideSkeletons()
+    }
+
+    /* ───────────────────── Location Permissions & Fetch ───────────────── */
 
     private fun ensureLocation() {
-        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
+        if (hasLocationPermission()) {
+            fetchLocation()
+        } else {
+            requestPerms.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val ctx = requireContext()
+        val fine = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED
-        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+        val coarse = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED
-        if (fine || coarse) fetchLocation() else requestPerms.launch(
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-        )
+        return fine || coarse
     }
 
     private fun fetchLocation() {
@@ -366,7 +403,7 @@ class HomeFragment : Fragment() {
             }
     }
 
-    // ─────────────────────────── UI helpers ───────────────────────────
+    /* ───────────────────────────── UI Helpers ────────────────────────── */
 
     private fun showAddToListBottomSheet(id: String) {
         AddPlacesToListBottomSheet.new(id)
@@ -380,9 +417,4 @@ class HomeFragment : Fragment() {
 
     private fun dp(value: Int): Int =
         (value * resources.displayMetrics.density).toInt()
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
 }
