@@ -38,6 +38,44 @@
             app:layout_constraintEnd_toEndOf="@id/ivImage"
             app:layout_constraintTop_toTopOf="@id/ivImage"/>
 
+        <!-- Popular / Featured pill -->
+        <LinearLayout
+            android:id="@+id/pillPopular"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:background="@drawable/ctc_label_chip_bg"
+            android:elevation="4dp"
+            android:gravity="center_vertical"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="@id/ivImage"
+            app:layout_constraintTop_toTopOf="@id/ivImage"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp">
+
+            <!-- Optional icon; reuse your star if you don't have a flame icon -->
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="6dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_ctc_flame"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/tvPopular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Popular"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+        </LinearLayout>
+
         <FrameLayout
             android:id="@+id/btnFavorite"
             android:layout_width="40dp"

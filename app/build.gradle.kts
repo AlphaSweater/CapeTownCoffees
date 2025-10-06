@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.swiperefreshlayout)
 
     // --- Dependency Injection (Hilt) ---
     implementation(libs.hilt.android)
@@ -131,6 +132,7 @@ dependencies {
 
     // --- Image loading ---
     implementation(libs.glide)
+    implementation(libs.recyclerview.integration)
     kapt(libs.compiler)
 
     // --- Testing & Logging ---
