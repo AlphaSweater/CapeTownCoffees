@@ -128,7 +128,7 @@ class HomeFragment : Fragment() {
         setupCollectors()
         ensureLocation()
 
-        binding.searchBar.setOnClickListener {
+        binding.searchCard.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
         }
     }
