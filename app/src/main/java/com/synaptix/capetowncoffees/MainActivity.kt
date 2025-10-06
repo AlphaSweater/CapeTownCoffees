@@ -7,9 +7,13 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -33,7 +37,13 @@ class MainActivity : AppCompatActivity() {
         // Ensure that after the splash, we use the main app theme on pre-Android 12
         setTheme(R.style.Theme_CapeTownCoffees)
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+
         setContentView(R.layout.activity_main)
+
+        // ---- Set the spacer height exactly once (no stacking on resumes) ----
+        setStatusSpacerOnce(rootId = R.id.root_container, spacerId = R.id.status_spacer)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -47,9 +57,9 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.signInFragment, R.id.signUpFragment -> bottomNav.visibility =
-                    android.view.View.GONE
+                    View.GONE
 
-                else -> bottomNav.visibility = android.view.View.VISIBLE
+                else -> bottomNav.visibility = View.VISIBLE
             }
         }
     }
@@ -180,5 +190,36 @@ class MainActivity : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+
+    /**
+     * Measures status/cutout inset once at startup and sets the spacer height.
+     * If inset is 0 (Samsung case), spacer remains 0. If > 0 (Pixel emulator), it adds that gap.
+     */
+    private fun setStatusSpacerOnce(rootId: Int, spacerId: Int) {
+        val root = findViewById<View>(rootId) ?: return
+        val spacer = findViewById<View>(spacerId) ?: return
+
+        // One-shot listener: apply then remove so it won't run on every resume/config change.
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val topInset = insets.getInsets(
+                WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.displayCutout()
+            ).top
+
+            // Idempotent: set exact height (no accumulation)
+            spacer.layoutParams = spacer.layoutParams.apply { height = topInset }
+            spacer.requestLayout()
+
+            Timber.tag("E2E-ONCE").i("Startup spacerTop=%d", topInset)
+
+            // Remove listener after first application so it won't re-apply/stack
+            ViewCompat.setOnApplyWindowInsetsListener(root, null)
+
+            // Return insets unchanged
+            insets
+        }
+
+        // Kick off first insets dispatch
+        ViewCompat.requestApplyInsets(root)
     }
 }
