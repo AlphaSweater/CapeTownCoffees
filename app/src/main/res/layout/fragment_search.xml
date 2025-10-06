@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:context=".ui.home.search.SearchFragment">
+
+    <!-- App bar (required for scroll flags to work correctly) -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        app:liftOnScroll="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/topBar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:background="@color/background"
+            app:navigationIcon="@drawable/ic_ctc_arrow_back"
+            app:navigationIconTint="@color/text_primary"
+            app:title="@string/search"
+            app:titleTextColor="@color/text_primary"
+            app:layout_scrollFlags="scroll|enterAlways" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp">
+
+            <!-- SearchBar (anchor for the overlay SearchView) -->
+            <com.google.android.material.search.SearchBar
+                android:id="@+id/searchBar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:hint="@string/search_hint_coffee_shops"
+                app:backgroundTint="@color/surface"
+                app:navigationIcon="@drawable/ic_ctc_search"
+                app:tintNavigationIcon="@color/icon_primary"
+                app:hintTextColor="@color/text_tip"
+                app:titleTextColor="@color/text_primary"/>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="12dp" />
+
+            <!-- Single card that contains header + collapsible content -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/filtersCard"
+                style="@style/Widget.Ctc.ElevatedCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Header row (tap to expand/collapse) -->
+                    <LinearLayout
+                        android:id="@+id/filtersHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:gravity="center_vertical"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_ctc_filter"
+                            app:tint="@color/icon_primary" />
+
+                        <TextView
+                            android:id="@+id/tvFilters"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:text="@string/filters"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <ImageView
+                            android:id="@+id/ivChevron"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:rotation="0"
+                            android:src="@drawable/ic_ctc_arrow_drop_down"
+                            app:tint="@color/icon_primary" />
+                    </LinearLayout>
+
+                    <!-- Subtle divider inside the same card -->
+                    <View
+                        android:id="@+id/filtersDivider"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:alpha="0.15"
+                        android:background="?android:attr/listDivider"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <!-- Collapsible content -->
+                    <LinearLayout
+                        android:id="@+id/filtersContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <!-- Radius row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvRadiusLabel"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/search_radius"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvRadiusValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="10 km"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <!-- Material 3 Slider -->
+                        <com.google.android.material.slider.Slider
+                            android:id="@+id/sliderRadius"
+                            style="@style/Widget.Material3.Slider"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:value="10"
+                            android:valueFrom="5"
+                            android:valueTo="200"
+                            android:stepSize="5"
+                            app:labelBehavior="gone" />
+
+                        <!-- Strict coffee toggle -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingTop="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/strict_coffee_only"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switchStrictCoffee"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true" />
+                        </LinearLayout>
+
+                        <!-- (Future) more sub-sections here -->
+
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Keep your suggestions header/list below if you use them outside SearchView -->
+            <TextView
+                android:id="@+id/tvSuggestionsHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/suggestions"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_tip"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerSuggestionsBelow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingBottom="16dp"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:listitem="@layout/item_search_suggestion" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Overlay SearchView (M3). MUST be a sibling, not inside the ScrollView. -->
+    <com.google.android.material.search.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:searchBar="@id/searchBar">
+
+        <!-- Suggestions inside the SearchView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerSuggestions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            tools:listitem="@layout/item_search_suggestion"
+            tools:itemCount="5"/>
+    </com.google.android.material.search.SearchView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
