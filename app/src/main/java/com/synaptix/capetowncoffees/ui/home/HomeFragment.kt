@@ -154,7 +154,7 @@ class HomeFragment : Fragment() {
         }
 
         // Optional quick filters button (if present in your layout)
-        binding.root.findViewById<View?>(R.id.btnQuickFilter)?.setOnClickListener {
+        binding.root.findViewById<View?>(R.id.btnQuickFilterHit)?.setOnClickListener {
             navigateToSearch(openFilters = true)
         }
 

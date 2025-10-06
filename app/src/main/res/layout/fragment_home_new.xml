@@ -14,7 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/background"
-        android:elevation="0dp">
+        android:elevation="0dp"
+        app:liftOnScroll="false">
 
         <!-- Minimal toolbar (no title). Keeps inset spacing clean. -->
         <com.google.android.material.appbar.MaterialToolbar
@@ -24,7 +25,7 @@
             android:background="@color/background"
             app:titleTextColor="@color/text_primary"
             app:navigationIconTint="@color/text_primary"
-            tools:title="" />
+            app:title="Explore" />
 
         <!-- Faux Search field (tappable to open SearchFragment) -->
         <com.google.android.material.card.MaterialCardView
@@ -68,13 +69,24 @@
                     android:ellipsize="end" />
 
                 <!-- Optional mini filter icon (can open quick radius/strict dialog) -->
-                <ImageView
-                    android:id="@+id/btnQuickFilter"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_ctc_filter"
-                    android:contentDescription="@string/filters"
-                    app:tint="@color/icon_primary" />
+                <FrameLayout
+                android:id="@+id/btnQuickFilterHit"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/filters">
+                    <ImageView
+                        android:id="@+id/btnQuickFilter"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_ctc_filter"
+                        app:tint="@color/icon_primary"
+                        android:importantForAccessibility="no" />
+                </FrameLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </com.google.android.material.appbar.AppBarLayout>
