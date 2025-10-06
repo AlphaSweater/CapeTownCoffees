@@ -33,6 +33,11 @@
         <item name="materialButtonStyle">@style/Widget.App.Button</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.App.Button.Outlined</item>
         <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
+
+        <!-- RatingBars-->
+        <item name="ratingBarStyle">@style/Widget.Ctc.RatingBar</item>
+        <item name="ratingBarStyleSmall">@style/Widget.Ctc.RatingBar.Small</item>
+        <item name="ratingBarStyleIndicator">@style/Widget.Ctc.RatingBar.Indicator</item>
         
         <!-- Card style -->
         <item name="cardViewStyle">@style/Widget.App.CardView</item>
@@ -96,5 +101,34 @@
         <item name="cardElevation">4dp</item>
         <item name="cardCornerRadius">8dp</item>
         <item name="contentPadding">16dp</item>
+    </style>
+
+    <!-- RatingBar Styles -->
+    <style name="Widget.Ctc.RatingBar" parent="Widget.AppCompat.RatingBar">
+        <item name="android:progressTint">@color/star_filled</item>
+        <item name="android:secondaryProgressTint">@color/star_filled</item>
+        <item name="android:progressBackgroundTint">@color/star_empty</item>
+        <item name="android:progressTintMode">src_in</item>
+        <item name="android:secondaryProgressTintMode">src_in</item>
+        <item name="android:progressBackgroundTintMode">src_in</item>
+    </style>
+
+    <style name="Widget.Ctc.RatingBar.Small" parent="Widget.AppCompat.RatingBar.Small">
+        <item name="android:progressTint">@color/star_filled</item>
+        <item name="android:secondaryProgressTint">@color/star_filled</item>
+        <item name="android:progressBackgroundTint">@color/star_empty</item>
+        <item name="android:progressTintMode">src_in</item>
+        <item name="android:secondaryProgressTintMode">src_in</item>
+        <item name="android:progressBackgroundTintMode">src_in</item>
+    </style>
+
+    <style name="Widget.Ctc.RatingBar.Indicator" parent="Widget.AppCompat.RatingBar.Indicator">
+        <item name="android:isIndicator">true</item>
+        <item name="android:progressTint">@color/star_filled</item>
+        <item name="android:secondaryProgressTint">@color/star_filled</item>
+        <item name="android:progressBackgroundTint">@color/star_empty</item>
+        <item name="android:progressTintMode">src_in</item>
+        <item name="android:secondaryProgressTintMode">src_in</item>
+        <item name="android:progressBackgroundTintMode">src_in</item>
     </style>
 </resources>
