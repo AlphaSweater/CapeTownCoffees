@@ -45,8 +45,7 @@ class ListDetailsPlacesAdapter(
             val rating = item.rating ?: 0.0
             val count = item.ratingCount ?: 0
             tvRating.text = String.format("%.1f (%d)", rating, count)
-            // You might want a placeholder for the image here
-            // ivImage.setImageResource(R.drawable.cafe_placeholder)
+            ivImage.setImageResource(R.drawable.cafe_placeholder)
         }
     }
 
