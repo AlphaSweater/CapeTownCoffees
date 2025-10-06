@@ -24,7 +24,7 @@ class HomeViewModel @Inject constructor(
 ) : SimpleViewModel() {
 
     // ─────────── Config ───────────
-    private val MIN_REQUERY_DISTANCE_M = 50.0        // refresh if user moved this much
+    private val MIN_REQUERY_DISTANCE_M = 20.0        // refresh if user moved this much
     private val TTL_MILLIS = 10 * 60 * 1000L         // 10 minutes
 
     data class Ui(
