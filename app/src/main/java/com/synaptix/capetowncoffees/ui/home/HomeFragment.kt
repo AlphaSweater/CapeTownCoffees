@@ -192,7 +192,6 @@ class HomeFragment : Fragment() {
                 if (horizontal) lm.initialPrefetchItemCount = 6
                 else lm.isItemPrefetchEnabled = false
             }
-            setRecycledViewPool(sharedPool)
         }
 
         rvCategories.apply {
