@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -39,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_CapeTownCoffees)
         super.onCreate(savedInstanceState)
 
-//        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         setContentView(R.layout.activity_main)
 
@@ -58,9 +57,9 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.signInFragment, R.id.signUpFragment -> bottomNav.visibility =
-                    android.view.View.GONE
+                    View.GONE
 
-                else -> bottomNav.visibility = android.view.View.VISIBLE
+                else -> bottomNav.visibility = View.VISIBLE
             }
         }
     }
@@ -75,34 +74,6 @@ class MainActivity : AppCompatActivity() {
         if (!permissionDialogShown && !permissionRequestInProgress) {
             checkLocationPermissionOnResume()
         }
-
-        dumpEdgeToEdge("onResume")
-    }
-
-    /** Very small inline debugger: logs flags, colors and current insets. */
-    private fun dumpEdgeToEdge(where: String) {
-        val w = window
-        val v = w.decorView
-        val flags = w.attributes.flags
-        val translucentStatus = (flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS) != 0
-        val translucentNav = (flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION) != 0
-        val noLimits = (flags and WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS) != 0
-
-        val sysUi = v.systemUiVisibility
-        val layoutFullscreen = (sysUi and View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN) != 0
-        val layoutStable = (sysUi and View.SYSTEM_UI_FLAG_LAYOUT_STABLE) != 0
-
-        val rootInsets = ViewCompat.getRootWindowInsets(v)
-        val status = rootInsets?.getInsets(WindowInsetsCompat.Type.statusBars())
-        val nav = rootInsets?.getInsets(WindowInsetsCompat.Type.navigationBars())
-        val cut = rootInsets?.displayCutout?.boundingRects
-
-        Timber.tag("E2E-DUMP").i("[$where] statusBarColor=#%08X navBarColor=#%08X", w.statusBarColor, w.navigationBarColor)
-        Timber.tag("E2E-DUMP").i("[$where] flags: translucentStatus=%s translucentNav=%s noLimits=%s",
-            translucentStatus, translucentNav, noLimits)
-        Timber.tag("E2E-DUMP").i("[$where] sysUi: LAYOUT_FULLSCREEN=%s LAYOUT_STABLE=%s", layoutFullscreen, layoutStable)
-        Timber.tag("E2E-DUMP").i("[$where] insets: statusTop=%d navBottom=%d cutout=%s",
-            status?.top ?: -1, nav?.bottom ?: -1, cut?.toString() ?: "[]")
     }
 
     private fun checkLocationPermissionOnResume() {
