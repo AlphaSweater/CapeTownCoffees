@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 
-// 1. Add a click listener to the constructor
 class ListDetailsPlacesAdapter(
     private val onItemClicked: (CoffeePlaceFull) -> Unit
 ) : ListAdapter<CoffeePlaceFull, ListDetailsPlacesAdapter.VH>(Diff()) {
