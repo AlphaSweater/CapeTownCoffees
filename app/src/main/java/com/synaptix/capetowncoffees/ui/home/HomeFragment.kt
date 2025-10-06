@@ -127,7 +127,12 @@ class HomeFragment : Fragment() {
         setupPullToRefresh()
         setupCollectors()
         ensureLocation()
+
+        binding.searchBar.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
+        }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
