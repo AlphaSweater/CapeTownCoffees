@@ -1,6 +1,5 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists
 
-import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,10 +17,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
 @AndroidEntryPoint
-class SavedListsFragment : Fragment() {
-    private val viewModel: SavedListsViewModel by viewModels()
+class ListsViewFragment : Fragment() {
+    private val viewModel: ListsViewViewModel by viewModels()
     private lateinit var recyclerSaved: RecyclerView
-    private val adapter = SavedListsAdapter { savedList ->
+    private val adapter = ListsViewAdapter { savedList ->
         Timber.d("Clicked on list: ${savedList.name}")
         val args = Bundle().apply { putString("listId", savedList.id) }
         findNavController().navigate(R.id.action_savedListsFragment_to_listDetailsFragment, args)
@@ -33,7 +32,7 @@ class SavedListsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         Timber.d("onCreateView: Initializing SavedListsFragment UI")
-        return inflater.inflate(R.layout.fragment_saved_lists, container, false)
+        return inflater.inflate(R.layout.fragment_lists_view, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

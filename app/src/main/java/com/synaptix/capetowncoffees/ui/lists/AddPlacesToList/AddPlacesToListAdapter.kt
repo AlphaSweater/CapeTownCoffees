@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList
+package com.synaptix.capetowncoffees.ui.lists.AddPlacesToList
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

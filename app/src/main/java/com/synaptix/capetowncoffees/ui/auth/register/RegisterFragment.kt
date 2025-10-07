@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -25,6 +26,13 @@ class RegisterFragment : Fragment() {
 
     private lateinit var signInClient: GoogleSignInClient
 
+    // Toast helper (prevents stacking)
+    private var activeToast: Toast? = null
+    private fun toast(msg: CharSequence) {
+        activeToast?.cancel()
+        activeToast = Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).also { it.show() }
+    }
+
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -32,9 +40,10 @@ class RegisterFragment : Fragment() {
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken ?: throw IllegalStateException("No ID token")
+            toast(getString(R.string.ctc_register_loading)) // "Creating your account…"
             viewModel.registerWithGoogleToken(idToken)
         } catch (e: Exception) {
-            // Optional: surface a message
+            toast(getString(R.string.ctc_register_google_failed))
         }
     }
 
@@ -56,6 +65,7 @@ class RegisterFragment : Fragment() {
             .build()
         signInClient = GoogleSignIn.getClient(requireActivity(), gso)
 
+        // Email/password sign-up
         binding.buttonSignUp.setOnClickListener {
             val name = binding.nameEditText.text.toString()
             val email = binding.emailEditText.text.toString()
@@ -64,43 +74,36 @@ class RegisterFragment : Fragment() {
             viewModel.registerUser(name, email, pass, confirm)
         }
 
+        // Google sign-up
         binding.buttonGoogleRegister.setOnClickListener {
             signInClient.signOut().addOnCompleteListener {
                 googleLauncher.launch(signInClient.signInIntent)
             }
         }
 
-        // Set up click listener for the Sign In text
+        // Swap to Login
         binding.textLoginSwap.setOnClickListener {
             findNavController().navigateUp()
         }
 
-        // Set up click listener for the Sign Up button
-        binding.buttonSignUp.setOnClickListener {
-            val name = binding.nameEditText.text.toString()
-            val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-            val confirmPassword = binding.confirmPasswordEditText.text.toString()
-            viewModel.registerUser(name, email, password, confirmPassword)
-        }
-
-        // TODO: Add error text view to show errors
         // Observe ViewModel state
         viewModel.registerState.observe(viewLifecycleOwner, Observer { state ->
             when (state) {
                 is RegisterUiState.Loading -> {
                     binding.buttonSignUp.isEnabled = false
+                    toast(getString(R.string.ctc_register_loading))
                 }
                 is RegisterUiState.Success -> {
                     binding.buttonSignUp.isEnabled = true
+                    toast(getString(R.string.ctc_register_success))
                     findNavController().navigate(R.id.action_authRegisterFragment_to_homeFragment)
                     viewModel.resetState()
                 }
                 is RegisterUiState.Error -> {
                     binding.buttonSignUp.isEnabled = true
-                    // Show error message (e.g., Toast or errorTextView)
-                    // binding.errorTextView.text = state.message
-                    // binding.errorTextView.visibility = View.VISIBLE
+                    val msg = state.message?.takeIf { it.isNotBlank() }
+                        ?: getString(R.string.ctc_register_error_generic)
+                    toast(msg)
                 }
                 is RegisterUiState.ValidationError -> {
                     binding.buttonSignUp.isEnabled = true
@@ -108,6 +111,7 @@ class RegisterFragment : Fragment() {
                     binding.emailInputLayout.error = state.emailError
                     binding.passwordInputLayout.error = state.passwordError
                     binding.confirmPasswordInputLayout.error = state.confirmPasswordError
+                    toast(getString(R.string.ctc_register_fix_errors))
                 }
                 is RegisterUiState.Idle -> {
                     binding.buttonSignUp.isEnabled = true
@@ -122,6 +126,8 @@ class RegisterFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        activeToast?.cancel()
+        activeToast = null
         _binding = null
     }
 }

@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists.createSavedList
+package com.synaptix.capetowncoffees.ui.lists.createSavedList
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.appbar.MaterialToolbar
+import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentSavedCreateListBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -27,7 +29,11 @@ class CreateListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.btnClose.setOnClickListener { findNavController().navigateUp() }
+
+        // Hook up toolbar back navigation (layout uses MaterialToolbar with navigationIcon)
+        view.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
 
         binding.privacyChip.setOnClickListener {
             val popup = PopupMenu(requireContext(), binding.privacyChip)

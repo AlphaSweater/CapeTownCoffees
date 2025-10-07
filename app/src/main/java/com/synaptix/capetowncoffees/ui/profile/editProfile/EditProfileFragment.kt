@@ -17,16 +17,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.snackbar.Snackbar
 import com.synaptix.capetowncoffees.R
-import com.synaptix.capetowncoffees.databinding.FragmentEditProfileBinding
+import com.synaptix.capetowncoffees.databinding.FragmentProfileEditBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class EditProfileFragment : Fragment() {
 
-    private var _binding: FragmentEditProfileBinding? = null
+    private var _binding: FragmentProfileEditBinding? = null
 
     // This property is only valid between onCreateView and onDestroyView
     private val binding get() = _binding!!
@@ -58,12 +59,17 @@ class EditProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentEditProfileBinding.inflate(inflater, container, false)
+        _binding = FragmentProfileEditBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Hook up toolbar back navigation (layout uses MaterialToolbar with navigationIcon)
+        view.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
 
         setupClickListeners()
         setupTextChangeListeners()
@@ -72,11 +78,12 @@ class EditProfileFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.apply {
-            btnBack.setOnClickListener { findNavController().navigateUp() }
             btnEditPhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
             btnSaveChanges.setOnClickListener {
                 // Pass the context to the ViewModel
                 viewModel.updateProfile(requireContext())
+
+                findNavController().navigateUp()
             }
 
             // Add click listener for the change password button

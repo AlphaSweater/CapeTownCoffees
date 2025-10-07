@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList
+package com.synaptix.capetowncoffees.ui.lists.AddPlacesToList
 
 import androidx.lifecycle.*
 import com.synaptix.capetowncoffees.domain.model.CoffeeList

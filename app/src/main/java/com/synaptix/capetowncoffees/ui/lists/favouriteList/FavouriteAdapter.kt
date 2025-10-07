@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists.favouriteList
 
 import android.view.LayoutInflater
 import android.view.View

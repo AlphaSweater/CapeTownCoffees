@@ -1,74 +1,148 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/listDetailRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
     android:background="@color/background">
 
-    <!-- Header with title and public/private icon -->
-    <LinearLayout
-        android:id="@+id/header"
+    <!-- Pinned app bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="60dp"
-        android:layout_marginBottom="24dp"
-        android:gravity="center_vertical">
+        android:background="@color/background"
+        android:elevation="0dp"
+        app:liftOnScroll="false">
 
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_ctc_arrow_back"
-            android:contentDescription="@string/action_back"
-            app:tint="@color/text_primary" />
+        <!-- Top toolbar (back + optional actions) -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/background"
+            app:navigationIcon="@drawable/ic_ctc_arrow_back"
+            app:navigationIconTint="@color/text_primary"
+            app:title="Saved List"
+            app:titleTextColor="@color/text_primary" />
 
-        <ImageView
-            android:id="@+id/ivPrivacy"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="20dp"
-            android:src="@drawable/ic_ctc_lock"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="0dp"
+        <!-- Pinned title row: privacy icon + list title (does not scroll) -->
+        <LinearLayout
+            android:id="@+id/pinnedHeader"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="12dp">
+
+            <ImageView
+                android:id="@+id/ivPrivacy"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_ctc_lock"
+                app:tint="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Chill Spots"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <!-- Hairline divider under header -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Progress overlay -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <!-- Content (scrolls under app bar; uses RecyclerView for proper behavior) -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:enabled="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_dodgeInsetEdges="bottom"
+        android:fitsSystemWindows="true">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerPlaces"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="80dp"
+            android:paddingBottom="88dp"
+            tools:listitem="@layout/item_list_place"
+            tools:itemCount="6" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Fixed bottom danger bar (always visible) -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/background"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:elevation="8dp"
+        app:layout_insetEdge="bottom">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDeleteList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/delete_list"
+            android:textAllCaps="false"
             android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:text="Saved List" />
+            android:paddingVertical="12dp"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/error_red"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_ctc_cross"
+            app:iconPadding="12dp"
+            app:iconTint="@android:color/white" />
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="8dp" />
-
-    <!-- Places RecyclerView using item_near_me -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerPlaces"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp" />
-
-    <!-- Delete button at the bottom -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDeleteList"
+    <!-- Optional empty state card (overlay style; toggle visibility as needed) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/emptyStateCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Delete List"
-        android:textColor="@color/white"
-        app:backgroundTint="@color/error_red"
-        app:cornerRadius="8dp"
-        android:paddingVertical="12dp"
-        android:textStyle="bold" />
+        android:layout_gravity="center"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp">
+        <!-- …your empty state inner layout… -->
+    </com.google.android.material.card.MaterialCardView>
 
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

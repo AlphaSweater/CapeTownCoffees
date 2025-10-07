@@ -52,7 +52,7 @@
         android:id="@+id/homeFragment"
         android:name="com.synaptix.capetowncoffees.ui.home.HomeFragment"
         android:label="Home"
-        tools:layout="@layout/fragment_home_new">
+        tools:layout="@layout/fragment_home">
 
         <action
             android:id="@+id/action_homeFragment_self"
@@ -105,9 +105,9 @@
 
     <fragment
         android:id="@+id/savedFragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.SavedListsFragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.ListsViewFragment"
         android:label="Saved"
-        tools:layout="@layout/fragment_saved_lists">
+        tools:layout="@layout/fragment_lists_view">
 
         <action
             android:id="@+id/action_savedListsFragment_to_createListFragment"
@@ -129,7 +129,7 @@
 
     <fragment
         android:id="@+id/listDetailsFragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.ListDetailsFragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.listDetails.ListDetailsFragment"
         android:label="List Details"
         tools:layout="@layout/fragment_list_details">
         <argument
@@ -169,37 +169,37 @@
 
     <fragment
         android:id="@+id/createListFragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.createSavedList.CreateListFragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.createSavedList.CreateListFragment"
         android:label="Create List"
         tools:layout="@layout/fragment_saved_create_list" />
 
     <fragment
         android:id="@+id/favouritesFragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.FavouritesFragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.favouriteList.FavouritesFragment"
         android:label="Favourites"
         tools:layout="@layout/fragment_favourites" />
 
     <fragment
         android:id="@+id/reviewStep1Fragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.review.ReviewStep1Fragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewStep1Fragment"
         android:label="Review Step 1"
         tools:layout="@layout/fragment_review_step1" />
 
     <fragment
         android:id="@+id/reviewStep2Fragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.review.ReviewStep2Fragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewStep2Fragment"
         android:label="Review Step 2"
         tools:layout="@layout/fragment_review_step2" />
 
     <fragment
         android:id="@+id/reviewStep3Fragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.review.ReviewStep3Fragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewStep3Fragment"
         android:label="Review Step 3"
         tools:layout="@layout/fragment_review_step3" />
 
     <fragment
         android:id="@+id/reviewCompleteFragment"
-        android:name="com.synaptix.capetowncoffees.ui.savedLists.review.ReviewCompleteFragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewCompleteFragment"
         android:label="Review Complete"
         tools:layout="@layout/fragment_review_complete" />
 
@@ -219,7 +219,7 @@
 
     <fragment
         android:id="@+id/privacyPolicyFragment"
-        android:name="com.synaptix.capetowncoffees.ui.privacy.PrivacyPolicyFragment"
+        android:name="com.synaptix.capetowncoffees.ui.settings.privacy.PrivacyPolicyFragment"
         android:label="Privacy Policy"
         tools:layout="@layout/fragment_settings_privacy_policy"/>
 

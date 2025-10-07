@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SavedListsViewModel @Inject constructor(
+class ListsViewViewModel @Inject constructor(
     internal val repository: ICoffeeListRepository,
     private val getUserProfileUseCase: GetUserProfileUseCase
 ) : ViewModel() {

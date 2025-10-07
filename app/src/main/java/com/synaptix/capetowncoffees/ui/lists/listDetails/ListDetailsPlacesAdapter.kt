@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists.listDetails
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,21 +10,31 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.Locale
 
 class ListDetailsPlacesAdapter @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
     @Assisted private val onItemClicked: (CoffeePlaceFull) -> Unit,
-    private val photoResolver: ListDetailsPhotoResolver
+    private val photoResolver: ListDetailsPhotoResolver,
 ) : ListAdapter<CoffeePlaceFull, ListDetailsPlacesAdapter.VH>(Diff()) {
+
+    private var userLocation: LatLng? = null
+
+    fun setUserLocation(loc: LatLng?) {
+        userLocation = loc
+        notifyDataSetChanged() // Distance values rely on user location
+    }
 
     @AssistedFactory
     interface Factory {
@@ -34,67 +44,84 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
         ): ListDetailsPlacesAdapter
     }
 
-    init {
-        setHasStableIds(true)
-    }
+    init { setHasStableIds(true) }
 
-    override fun getItemId(position: Int): Long =
-        getItem(position).id.hashCode().toLong()
+    override fun getItemId(position: Int): Long = getItem(position).id.hashCode().toLong()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_coffee_near_me, parent, false)
-        return VH(view, coroutineScope, photoResolver, onItemClicked)
+            .inflate(R.layout.item_list_place, parent, false)
+        return VH(view, coroutineScope, photoResolver, ::onClick, ::distanceFor)
     }
 
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bind(getItem(position))
-    }
+    override fun onBindViewHolder(holder: VH, position: Int) { holder.bind(getItem(position)) }
 
     fun submit(items: List<CoffeePlaceFull>) = submitList(items)
+
+    private fun onClick(place: CoffeePlaceFull) = onItemClicked(place)
+
+    private fun distanceFor(place: CoffeePlaceFull): String? {
+        val meters = LocationFormattingUtil.distanceMeters(userLocation, place.location)
+        if (!meters.isFinite()) return null
+        return LocationFormattingUtil.distanceAndEtaLabel(meters)
+    }
 
     class VH(
         itemView: View,
         private val scope: CoroutineScope,
         private val photoResolver: ListDetailsPhotoResolver,
-        private val onItemClicked: (CoffeePlaceFull) -> Unit
+        private val onItemClicked: (CoffeePlaceFull) -> Unit,
+        private val distanceProvider: (CoffeePlaceFull) -> String?
     ) : RecyclerView.ViewHolder(itemView) {
 
-        private val tvName: TextView = itemView.findViewById(R.id.tvCafeName)
-        private val tvAddress: TextView = itemView.findViewById(R.id.tvDistance)
-        private val tvRating: TextView = itemView.findViewById(R.id.tvCafeRating)
-        private val ivImage: ImageView = itemView.findViewById(R.id.ivImage)
+        // Correct IDs matching item_list_place.xml
+        private val tvName: TextView = itemView.findViewById(R.id.tvName)
+        private val tvAddress: TextView = itemView.findViewById(R.id.tvAddress)
+        private val tvRating: TextView = itemView.findViewById(R.id.tvRating)
+        private val imageThumb: ImageView = itemView.findViewById(R.id.ivThumb)
+        // Optional distance view (could be used later)
+        private val tvDistance: TextView? = itemView.findViewById(R.id.tvDistance)
 
         fun bind(item: CoffeePlaceFull) {
-            tvName.text = item.name ?: "Unknown"
+            tvName.text = item.name ?: itemView.context.getString(R.string.unknown)
             tvAddress.text = item.address.orEmpty()
 
             val rating = item.rating ?: 0.0
             val count = item.ratingCount ?: 0
-            tvRating.text = String.format("%.1f (%d)", rating, count)
+            tvRating.text = String.format(Locale.getDefault(), "%.1f (%d)", rating, count)
+
+            // Distance label
+            val distanceLabel = distanceProvider(item)
+            if (distanceLabel != null) {
+                tvDistance?.visibility = View.VISIBLE
+                tvDistance?.text = distanceLabel
+            } else {
+                tvDistance?.visibility = View.GONE
+            }
 
             // Placeholder first
-            ivImage.setImageResource(R.drawable.featured_placeholder)
+            imageThumb.setImageResource(R.drawable.featured_placeholder)
 
-            // Load image
+            // Load image (async)
+            @Suppress("DEPRECATION")
             scope.launch {
                 val url = photoResolver.url(item)
                 if (url.isNullOrBlank()) {
-                    ivImage.setImageResource(R.drawable.featured_placeholder)
+                    imageThumb.setImageResource(R.drawable.featured_placeholder)
                 } else {
-                    Glide.with(ivImage)
+                    Glide.with(imageThumb)
                         .load(url)
                         .thumbnail(0.25f)
                         .placeholder(R.drawable.featured_placeholder)
                         .error(R.drawable.featured_placeholder)
                         .centerCrop()
                         .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-                        .into(ivImage)
+                        .into(imageThumb)
                 }
             }
 
             itemView.setOnClickListener { onItemClicked(item) }
-            ivImage.setOnClickListener  { onItemClicked(item) }
+            imageThumb.setOnClickListener { onItemClicked(item) }
         }
     }
 
@@ -104,7 +131,7 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
     }
 }
 
-//helper for images
+// helper for images
 class ListDetailsPhotoResolver @Inject constructor(
     private val coffeePlaceUtils: CoffeePlaceUtilsUseCase
 ) {
