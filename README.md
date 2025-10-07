@@ -163,9 +163,9 @@ https://developer.android.com/studio
 |-----------------|------------------------|-------------------|-----------------|
 | <img src="https://i.postimg.cc/V6BhJT5p/Login-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/cLnXKjb5/Register-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/vmyL4m9c/Home-Page-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/FKzC4Gjz/cafe-Screen-Cape-Town-Coffees.jpg" width="200"/> |
 
-| List Screen | Saved Cafes | Category Reports | Transactions |
+| List Screen | Saved Cafes | Profile Page | Settings Page |
 |-----------------|-------------------|--------------------|-----------|
-| <img src="https://i.postimg.cc/d0g6KFQF/saved-Lists-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/g0Lys7Vq/list-Screen-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/B68RGRxz/Screenshot-20250609-205340-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/hts3HK7s/Screenshot-20250609-205343-Budget-Buddy.jpg" width="200"/> |
+| <img src="https://i.postimg.cc/d0g6KFQF/saved-Lists-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/g0Lys7Vq/list-Screen-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/0jZ5j3ds/Profile-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/1XWPsFss/Settings-Cape-Town-Coffees.jpg" width="200"/> |
 </div>
 
 
@@ -201,7 +201,8 @@ https://developer.android.com/studio
 - https://www.youtube.com/watch?v=KwDSkSBDyfQ
 - ChatGPT was used to help with the design and planning. As well as assisted with finding and fixing errors in the code.
 - ChatGPT also helped with the forming of comments for the code.
-
+##
+![Cost Breakdown](https://i.postimg.cc/sx2d627M/wee.png)
 ##
 ![App Demo](https://i.postimg.cc/HWtLyjr6/kerchoo-kachow.gif)
 ##
