@@ -25,20 +25,19 @@ class HomeViewModel @Inject constructor(
     private val searchParams: SearchParamsUseCase
 ) : SimpleViewModel() {
 
-    /* ╭──────────────────────────── Config ──────────────────────────────╮ */
+    // ─────────── Config ───────────
+    // Tunables for caching, sorting, and section sizes.
     private companion object {
-        const val MIN_REQUERY_DISTANCE_M = 20.0
-        const val TTL_MILLIS = 10 * 60 * 1000L
+        private const val MIN_REQUERY_DISTANCE_M = 20.0
+        private const val TTL_MILLIS = 10 * 60 * 1000L
 
-        // Section caps/sorts (radius + strict come from SearchParamsUseCase)
-        const val NEAR_MAX_RESULTS = 32
-        const val NEAR_SORT_BY_DISTANCE = true
+        private const val NEAR_MAX_RESULTS = 32
+        private const val NEAR_SORT_BY_DISTANCE = true
 
-        const val FEATURED_MAX_RESULTS = 20
-        const val FEATURED_SORT_BY_DISTANCE = false
+        private const val FEATURED_MAX_RESULTS = 20
+        private const val FEATURED_SORT_BY_DISTANCE = false
 
-        // Categories
-        val DEFAULT_CATEGORIES = listOf(
+        private val DEFAULT_CATEGORIES = listOf(
             Category(1, "All", R.drawable.ic_ctc_medal),
             Category(2, "Popular", R.drawable.ic_ctc_star),
             Category(3, "Pet Friendly", R.drawable.ic_ctc_pet),
@@ -46,9 +45,9 @@ class HomeViewModel @Inject constructor(
             Category(5, "Dates", R.drawable.ic_ctc_heart)
         )
     }
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
-    /* ╭──────────────────────────── UI State ────────────────────────────╮ */
+    // ─────────── UI State ───────────
+    // Single source of truth for simple flags and selection.
     data class Ui(
         val categories: List<Category> = DEFAULT_CATEGORIES,
         val selectedCategory: Category = DEFAULT_CATEGORIES.first(),
@@ -60,11 +59,12 @@ class HomeViewModel @Inject constructor(
     }
     val ui = state(Ui())
 
-    // Lists exposed to the Fragment
-    val nearMe   = loadableState<List<CoffeePlaceLite>>()  // vertical list (nearest)
-    val featured = loadableState<List<CoffeePlaceLite>>()  // horizontal carousel (popular)
+    // Lists bound by the Fragment; Loadable wraps loading/error/data.
+    val nearMe = loadableState<List<CoffeePlaceLite>>()
+    val featured = loadableState<List<CoffeePlaceLite>>()
 
-    /* ╭──────────────────────────── Caches ──────────────────────────────╮ */
+    // ─────────── Caches ───────────
+    // We keep raw results + the center and a timestamp to gate re-queries.
     private data class CacheEntry(
         val baseItems: List<CoffeePlaceLite>,
         val center: LatLng,
@@ -73,16 +73,16 @@ class HomeViewModel @Inject constructor(
     private var nearCache: CacheEntry? = null
     private var featuredCache: CacheEntry? = null
 
-    /* ╭──────────────────── In-flight jobs (cancel on re-run) ───────────╮ */
+    // ─────────── In-flight Jobs ───────────
+    // Each section cancels its previous query before starting another.
     private var nearJob: Job? = null
     private var featuredJob: Job? = null
 
-    /* ───────────────────────────── Public API ────────────────────────── */
-
+    // ─────────── Public API ───────────
+    // Location arrival paints from cache (if valid) and kicks refreshes independently.
     fun onUserLocation(loc: LatLng) {
         ui.update { it.copy(currentLocation = loc) }
 
-        // Paint from cache immediately if valid
         if (hasFreshEnough(nearCache, loc)) {
             nearCache?.let { cache ->
                 nearMe.data(filterByCategory(ui.value.selectedCategory, cache.baseItems, loc))
@@ -92,11 +92,11 @@ class HomeViewModel @Inject constructor(
             featuredCache?.let { cache -> featured.data(cache.baseItems) }
         }
 
-        // Independently refresh each section if its cache is stale or too far
         if (!hasFreshEnough(nearCache, loc)) refreshNear(force = true)
         if (!hasFreshEnough(featuredCache, loc)) refreshFeatured(force = true)
     }
 
+    // Category selection filters the NEAR list locally; Featured stays as-is.
     fun onCategorySelected(category: Category) {
         ui.update { it.copy(selectedCategory = category) }
         val loc = ui.value.currentLocation ?: return
@@ -105,21 +105,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // Pull-to-refresh always refetches both sections.
     fun pullToRefresh() {
         refreshNear(force = true)
         refreshFeatured(force = true)
     }
 
+    // External refresh entry point; respects force flag.
     fun refresh(force: Boolean = false) {
         refreshNear(force)
         refreshFeatured(force)
     }
 
-    /**
-     * Fragment should call this in onResume().
-     * Returns true if radius/strict changed since last apply; Fragment can show skeletons and call refresh().
-     * This method does NOT trigger network calls by itself.
-     */
+    // Detects changes in shared search params (e.g., radius/strict) and remembers them.
     fun shouldRefreshForSearchParamsChange(): Boolean {
         val keyNow = paramsKeyFromUseCase()
         val changed = lastAppliedKey != keyNow
@@ -127,8 +125,8 @@ class HomeViewModel @Inject constructor(
         return changed
     }
 
-    /* ──────────────────────────── Refresh: NEAR ──────────────────────── */
-
+    // ─────────── Refresh: NEAR ───────────
+    // Uses current location + shared params; filters by current category locally.
     fun refreshNear(force: Boolean) {
         val loc = ui.value.currentLocation ?: run {
             main { send(Effect.Message("Location not available yet")) }
@@ -149,8 +147,6 @@ class HomeViewModel @Inject constructor(
             nearJob?.cancelAndJoin()
             nearJob = launch {
                 val now = System.currentTimeMillis()
-
-                // Build params from shared use case (inherits radius + strict, ignores query)
                 val params = searchParams.forNear(
                     maxResults = NEAR_MAX_RESULTS,
                     sortByDistance = NEAR_SORT_BY_DISTANCE
@@ -173,8 +169,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /* ───────────────────────── Refresh: FEATURED ─────────────────────── */
-
+    // ─────────── Refresh: FEATURED ───────────
+    // Uses current location + shared params; renders as returned (server-driven).
     fun refreshFeatured(force: Boolean) {
         val loc = ui.value.currentLocation ?: run {
             main { send(Effect.Message("Location not available yet")) }
@@ -193,8 +189,6 @@ class HomeViewModel @Inject constructor(
             featuredJob?.cancelAndJoin()
             featuredJob = launch {
                 val now = System.currentTimeMillis()
-
-                // Build params from shared use case (inherits radius + strict, ignores query)
                 val params = searchParams.forFeatured(
                     maxResults = FEATURED_MAX_RESULTS,
                     sortByDistance = FEATURED_SORT_BY_DISTANCE
@@ -216,8 +210,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /* ─────────────────────────── Helpers & Policy ────────────────────── */
-
+    // ─────────── Helpers & Policy ───────────
+    // Cache is valid only if not expired and user hasn't moved too far.
     private fun hasFreshEnough(entry: CacheEntry?, loc: LatLng): Boolean {
         if (entry == null) return false
         val fresh = (System.currentTimeMillis() - entry.timestamp) <= TTL_MILLIS
@@ -228,7 +222,7 @@ class HomeViewModel @Inject constructor(
     private fun distance(a: LatLng, b: LatLng): Double =
         LocationFormattingUtil.distanceMeters(a, b).toDouble()
 
-    // local sorting/filtering for the NEAR list only (Featured is server-driven)
+    // Local sorting/filtering applied to NEAR section based on the selected category.
     private fun filterByCategory(
         category: Category,
         source: List<CoffeePlaceLite>,
@@ -245,7 +239,7 @@ class HomeViewModel @Inject constructor(
         else      -> source
     }
 
-    /* Track last applied radius/strict so we can refetch on change */
+    // Track the last applied (radius, strict) to decide if we need a refetch.
     private data class ParamsKey(val radiusM: Int, val strict: Boolean)
     private var lastAppliedKey: ParamsKey? = null
     private fun paramsKeyFromUseCase(): ParamsKey {
