@@ -23,14 +23,20 @@ import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.transition.platform.MaterialSharedAxis
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.*
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collectLoadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.start
 import com.synaptix.capetowncoffees.ui.common.SkeletonAdapter
-import com.synaptix.capetowncoffees.ui.home.adapter.*
+import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
+import com.synaptix.capetowncoffees.ui.home.adapter.CoffeePlaceItemAdapter
 import com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList.AddPlacesToListBottomSheet
 import com.synaptix.capetowncoffees.util.ImagePreloadUtil
 import com.synaptix.capetowncoffees.util.PhotoUrlCache
@@ -91,10 +97,16 @@ class HomeFragment : Fragment() {
     /* ╰──────────────────────────────────────────────────────────────────╯ */
 
     /* ╭──────────────────────────── Constants ───────────────────────────╮ */
-    private companion object {
+    companion object {
         const val PRELOAD_AHEAD = 6
         const val POPULAR_SKELETON_COUNT = 5
         const val NEAR_SKELETON_COUNT = 5
+
+        // Search args
+        const val ARG_OPEN_FILTERS  = "open_filters"
+        const val ARG_PREFILL_QUERY = "prefill_query"
+        const val ARG_RADIUS_KM     = "radius_km"
+        const val ARG_STRICT_ONLY   = "strict_only"
     }
     /* ╰──────────────────────────────────────────────────────────────────╯ */
 
@@ -109,6 +121,14 @@ class HomeFragment : Fragment() {
     /* ╰──────────────────────────────────────────────────────────────────╯ */
 
     /* ───────────────────────────── Lifecycle ─────────────────────────── */
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Smooth screen-to-screen lift
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward = */ true)
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, /* forward = */ false)
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -128,8 +148,20 @@ class HomeFragment : Fragment() {
         setupCollectors()
         ensureLocation()
 
-        binding.searchBar.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_searchFragment)
+        // OPEN SEARCH (default — filters closed)
+        binding.searchCard.setOnClickListener {
+            navigateToSearch(openFilters = false)
+        }
+
+        // Optional quick filters button (if present in your layout)
+        binding.root.findViewById<View?>(R.id.btnQuickFilterHit)?.setOnClickListener {
+            navigateToSearch(openFilters = true)
+        }
+
+        // Optional: long-press search card to open with filters expanded
+        binding.searchCard.setOnLongClickListener {
+            navigateToSearch(openFilters = true)
+            true
         }
     }
 
@@ -423,6 +455,24 @@ class HomeFragment : Fragment() {
     }
 
     /* ───────────────────────────── UI Helpers ────────────────────────── */
+
+    private fun navigateToSearch(
+        openFilters: Boolean = false,
+        prefill: String? = null,
+        radiusKm: Int? = null,
+        strictOnly: Boolean? = null
+    ) {
+        val args = Bundle().apply {
+            putBoolean(ARG_OPEN_FILTERS, openFilters)
+            prefill?.let { putString(ARG_PREFILL_QUERY, it) }
+            radiusKm?.let { putInt(ARG_RADIUS_KM, it) }
+            strictOnly?.let { putBoolean(ARG_STRICT_ONLY, it) }
+        }
+        // If you use Safe Args, call the generated Direction instead:
+        // findNavController().navigate(HomeFragmentDirections.toSearch(openFilters, prefill, radiusKm ?: -1, strictOnly ?: false))
+        findNavController().navigate(R.id.searchFragment, args)
+    }
+
 
     private fun showAddToListBottomSheet(id: String) {
         AddPlacesToListBottomSheet.new(id)

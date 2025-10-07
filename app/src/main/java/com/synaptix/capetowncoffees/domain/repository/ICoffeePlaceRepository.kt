@@ -17,7 +17,7 @@ interface ICoffeePlaceRepository {
         userLatLng: LatLng
     ): Result<List<CoffeePlaceLite>>
     suspend fun getSuggestions(
-        query: String,
+        params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceSuggestion>>
 }

@@ -1,5 +1,6 @@
 package com.synaptix.capetowncoffees.data.repository
 
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.CircularBounds
@@ -30,7 +31,6 @@ class PlacesApiRepository @Inject constructor(
     // -----------------------------
     // Search nearby coffee places
     // -----------------------------
-    // Search nearby coffee places using the user's current location.
     override suspend fun searchNearbyCoffeePlaces(
         params: CoffeeSearchParameters,
         userLatLng: LatLng
@@ -54,10 +54,9 @@ class PlacesApiRepository @Inject constructor(
         val searchArea = CircularBounds.newInstance(userLatLng, params.radiusMeters.toDouble())
         return SearchNearbyRequest.builder(searchArea, liteFields)
             .apply {
-                val includedPrimaries = if (params.strictCoffeeOnly)
-                    IPlacesApiRepository.BaseSearchParams.strictPrimaryAllowed
-                else
-                    IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed
+                val includedPrimaries =
+                    if (params.strictCoffeeOnly) IPlacesApiRepository.BaseSearchParams.strictPrimaryAllowed
+                    else IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed
 
                 val excludedPrimaries = IPlacesApiRepository.BaseSearchParams.primaryBlacklist
 
@@ -69,14 +68,15 @@ class PlacesApiRepository @Inject constructor(
                 )
                 setMaxResultCount(params.maxResults.coerceAtMost(20))
 
-                // Include coffee subtypes in lax mode
+                // Include coffee subtypes in relaxed mode
                 if (!params.strictCoffeeOnly) {
                     val coffeeSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes
                     val excludedSubTypes = IPlacesApiRepository.BaseSearchParams.excludedSubtypes
                     setIncludedTypes(coffeeSubTypes.toList())
                     if (excludedSubTypes.isNotEmpty()) setExcludedTypes(excludedSubTypes.toList())
                 }
-            }.build()
+            }
+            .build()
     }
 
     // -----------------------------
@@ -109,52 +109,102 @@ class PlacesApiRepository @Inject constructor(
         }
     }
 
-    // TODO: Make sure results somewhat follow Base params
     // -----------------------------
     // Autocomplete suggestions
     // -----------------------------
-    // Get autocomplete suggestions using the user's current location.
-    override suspend fun getSuggestions(query: String, userLatLng: LatLng): Result<List<CoffeePlaceSuggestion>> {
+    override suspend fun getSuggestions(
+        params: CoffeeSearchParameters,
+        userLatLng: LatLng
+    ): Result<List<CoffeePlaceSuggestion>> {
         return try {
-            val request = buildAutocompleteRequest(query, userLatLng)
+            val request = buildAutocompleteRequest(params, userLatLng)
             val response = placesClient.findAutocompletePredictions(request).await()
+
             val suggestions = response.autocompletePredictions
-                .filter(::isCoffeeRelatedPrediction)
-                .take(5)
+                .asSequence()
+                .filter { isCoffeeRelatedPrediction(it, params) }
+                .take(params.maxResults.coerceIn(1, 5))
                 .map { prediction ->
                     CoffeePlaceSuggestion(
                         id = prediction.placeId,
-                        name = prediction.getPrimaryText(null).toString()
+                        name = prediction.getPrimaryText(null).toString(),
+                        address = prediction.getSecondaryText(null).toString()
                     )
                 }
+                .toList()
+
             Result.success(suggestions)
+        }  catch (e: ApiException) {
+            Timber.e(e, "Places API error ${e.statusCode} during autocomplete")
+            Result.failure(e)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch autocomplete suggestions for query='$query'")
+            Timber.e(e, "Failed to get autocomplete suggestions")
             Result.failure(e)
         }
     }
 
     /**
-     * Helper to determine if a prediction is coffee-related.
+     * Coffee relevance: allow relaxed primaries, coffee subtypes, or coffee-y names;
+     * exclude obvious nightlife/alcoholic venues via excluded subtypes.
      */
-    private fun isCoffeeRelatedPrediction(prediction: AutocompletePrediction): Boolean {
-        val primaryType = prediction.types.firstOrNull()
-        val allTypes = prediction.types.orEmpty()
-        val allowedSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes
-        return primaryType in IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed ||
-                allTypes.any { it in allowedSubTypes }
+    private fun isCoffeeRelatedPrediction(
+        prediction: AutocompletePrediction,
+        params: CoffeeSearchParameters
+    ): Boolean {
+        val allTypes = prediction.types.orEmpty().map { it.toString().lowercase() }
+
+        val allowedPrimaries =
+            if (params.strictCoffeeOnly)
+                IPlacesApiRepository.BaseSearchParams.strictPrimaryAllowed
+            else
+                IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed
+
+        var allowedSubTypes = emptySet<String>()
+        var excludedSubTypes = emptySet<String>()
+        // Include coffee subtypes in relaxed mode
+        if (!params.strictCoffeeOnly) {
+            allowedSubTypes = IPlacesApiRepository.BaseSearchParams.coffeeSubTypes
+            excludedSubTypes = IPlacesApiRepository.BaseSearchParams.excludedSubtypes
+        }
+
+        val isExcluded = allTypes.any { it in excludedSubTypes }
+        val hasAllowedPrimary = allTypes.any { it in allowedPrimaries }
+        val hasCoffeeSubtype = allTypes.any { it in allowedSubTypes }
+
+        return !isExcluded && (hasAllowedPrimary || hasCoffeeSubtype)
     }
 
     /**
-     * Build an autocomplete request for coffee places using user's location if available.
+     * Build an autocomplete request using CoffeeSearchParameters and user location.
      */
-    private fun buildAutocompleteRequest(query: String, location: LatLng?): FindAutocompletePredictionsRequest {
-        val builder = FindAutocompletePredictionsRequest.builder()
-            .setQuery(query)
-            .setCountries("ZA") // restrict to South Africa
-            .setTypesFilter(IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed.toList())
+    private fun buildAutocompleteRequest(
+        params: CoffeeSearchParameters,
+        userLatLng: LatLng
+    ): FindAutocompletePredictionsRequest {
+        val includedPrimaries =
+            if (params.strictCoffeeOnly) IPlacesApiRepository.BaseSearchParams.strictPrimaryAllowed
+            else IPlacesApiRepository.BaseSearchParams.relaxedPrimaryAllowed
 
-        location?.let { builder.setOrigin(it) }
+        val builder = FindAutocompletePredictionsRequest.builder()
+            .setQuery(params.query ?: CoffeeSearchParameters.DEFAULT_QUERY)
+            .setCountries("ZA") // restrict to South Africa
+            .setOrigin(userLatLng)
+
+        // Prefer explicit primary types to avoid internal mapping issues.
+        if (includedPrimaries.isNotEmpty()) {
+            // ✅ use the setter, keep ≤5 in your base lists
+            builder.typesFilter = includedPrimaries.toList()
+            Timber.d("Autocomplete primary types (strict=${params.strictCoffeeOnly}): $includedPrimaries")
+        }
+
+        val r = params.radiusMeters
+        if (r <= 50_000) {
+            // ✅ inclusive within radius
+            builder.setLocationRestriction(CircularBounds.newInstance(userLatLng, r.toDouble()))
+        } else {
+            // fallback: bias capped to 50km (Autocomplete can't restrict >50km)
+            builder.setLocationBias(CircularBounds.newInstance(userLatLng, 50_000.0))
+        }
 
         return builder.build()
     }

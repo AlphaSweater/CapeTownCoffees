@@ -3,6 +3,7 @@
 // =============================
 package com.synaptix.capetowncoffees.domain.model
 
+import androidx.compose.ui.graphics.vector.Path
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
@@ -123,13 +124,15 @@ data class CoffeePlaceLite(
 // Model for search/autocomplete suggestions.
 data class CoffeePlaceSuggestion(
     val id: String,
-    val name: String?
+    val name: String?,
+    val address: String? = null,
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceSuggestion> {
         override val fields = listOf(
             Place.Field.ID,
-            Place.Field.DISPLAY_NAME
+            Place.Field.DISPLAY_NAME,
+            Place.Field.FORMATTED_ADDRESS
         )
         override fun fromPlace(place: Place) = CoffeePlaceMapper.toSuggestion(place)
     }
