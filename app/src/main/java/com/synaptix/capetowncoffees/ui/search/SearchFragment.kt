@@ -2,6 +2,7 @@ package com.synaptix.capetowncoffees.ui.search
 
 import android.os.Bundle
 import android.transition.AutoTransition
+import android.transition.Transition
 import android.transition.TransitionManager
 import android.view.KeyEvent
 import android.view.View
@@ -15,8 +16,11 @@ import androidx.core.content.getSystemService
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.whenStarted
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -43,7 +47,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class SearchFragment : Fragment(R.layout.fragment_search) {
 
-    private val vm: SearchViewModel by viewModels()
+    private val vm: SearchViewModel by activityViewModels()
 
     @Inject lateinit var locationUtils: LocationUtil
 
@@ -68,6 +72,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private lateinit var rvSuggestions: RecyclerView
     private val suggestionsAdapter by lazy { SuggestionsAdapter(::onSuggestionClicked) }
 
+    // ── Filters ────────────────────────────────────────────────
+    companion object {
+        const val FILTERS_TOGGLE = 0
+        const val FILTERS_OPEN   = 1
+        const val FILTERS_CLOSE  = 2
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.Y, true)
@@ -77,7 +88,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         bindViews(view)
         setupToolbar()
-        setupFilters(view as ViewGroup)
+        setupFilters()
         getCurrentLocation()
         setupSuggestionsList()
 
@@ -110,24 +121,32 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             }
         }
 
-        // Effects (e.g., submit navigation)
+        // Effects (navigation + messages)
         collect(vm.effects) { eff ->
             when (eff) {
-                is Effect.Navigate -> if (eff.route == "search.submit") {
-                    hideKeyboard(etSearch)
-                    findNavController().navigate(R.id.action_searchFragment_to_cafeDetailFragment, eff.args)
+                is Effect.Navigate -> when (eff.route) {
+                    "search.openPlace" -> {
+                        hideKeyboard(etSearch)
+                        findNavController().navigate(
+                            R.id.action_searchFragment_to_cafeDetailFragment,
+                            eff.args
+                        )
+                    }
                 }
-                is Effect.Message -> { /* snackbar(eff.text) */ }
+                is Effect.Message -> { /* optional snackbar */ }
             }
         }
 
-        // ── Hooks ───────────────────────────────────────────────────────────
+        // ── IME “Search” → close filters after IME settles ─────────────────
         etSearch.addTextChangedListener { s -> vm.onQueryTyping(s?.toString().orEmpty()) }
-
         etSearch.setOnEditorActionListener { _, actionId, event ->
             val imeGo = actionId == EditorInfo.IME_ACTION_SEARCH ||
                     (actionId == EditorInfo.IME_NULL && event?.keyCode == KeyEvent.KEYCODE_ENTER)
-            if (imeGo) { vm.submitSearch(); true } else false
+            if (imeGo) {
+                hideKeyboard(etSearch)
+                etSearch.clearFocus()
+                true
+            } else false
         }
     }
 
@@ -149,15 +168,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     }
 
     private fun getCurrentLocation() {
-        // Fetch and let the VM compute distance text
         viewLifecycleOwner.lifecycleScope.launch {
-            @Suppress("MissingPermission")
-            runCatching { locationUtils.getCurrentLatLng().getOrNull() }
-                .onSuccess { location -> location?.let { vm.setUserLocation(it) } }
-                .onFailure {
-                    Timber.e(it, "Failed to get current location")
-                    // VM will hide distance when it can't compute it next tick
-                }
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                @Suppress("MissingPermission")
+                runCatching { locationUtils.getCurrentLatLng().getOrNull() }
+                    .onSuccess { loc -> loc?.let { vm.setUserLocation(it) } }
+                    .onFailure { Timber.e(it, "Failed to get current location") }
+            }
         }
     }
 
@@ -167,12 +184,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-    private fun setupFilters(container: ViewGroup) {
-        // Expand/collapse
-        filtersHeader.setOnClickListener { toggleFilters(container) }
+    private fun setupFilters() {
+        // Header click toggles
+        filtersHeader.setOnClickListener { setFilters(FILTERS_TOGGLE) }
 
-        // Radius label
-        fun updateRadiusLabel(meters: Float) { tvRadiusValue.text = LocationFormattingUtil.formatDistance(meters) }
+        fun updateRadiusLabel(meters: Float) {
+            tvRadiusValue.text = LocationFormattingUtil.formatDistance(meters)
+        }
         updateRadiusLabel(sliderRadius.value * 1000)
 
         sliderRadius.addOnChangeListener { _, value, fromUser ->
@@ -185,12 +203,32 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-    private fun toggleFilters(container: ViewGroup) {
-        val expand = filtersContent.visibility != View.VISIBLE
-        TransitionManager.beginDelayedTransition(container, AutoTransition().apply { duration = 180 })
-        filtersDivider.isVisible = expand
-        filtersContent.isVisible = expand
-        ivChevron.animate().rotation(if (expand) 90f else 0f).setDuration(180).start()
+    /**
+     * Filters controller: action = 0(toggle), 1(open), 2(close)
+     */
+    private fun setFilters(action: Int) {
+        val currentlyExpanded = filtersContent.isVisible
+        val targetExpanded = when (action) {
+            FILTERS_OPEN  -> true
+            FILTERS_CLOSE -> false
+            else          -> !currentlyExpanded
+        }
+
+        if (currentlyExpanded == targetExpanded) return
+
+        // Smooth transition
+        TransitionManager.beginDelayedTransition(filtersCard, AutoTransition().apply { duration = 180 })
+
+        // Apply state
+        filtersDivider.isVisible = targetExpanded
+        filtersContent.isVisible = targetExpanded
+
+        // Chevron rotation
+        ivChevron.animate().cancel()
+        ivChevron.rotation = if (targetExpanded) 90f else 0f
+        ivChevron.animate().rotation(ivChevron.rotation).setDuration(0).start()
+
+        filtersCard.requestLayout()
     }
 
     private fun setupSuggestionsList() {
@@ -205,11 +243,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         rvSuggestions.isVisible = show
     }
 
+    // Only navigate with placeId
     private fun onSuggestionClicked(item: CoffeePlaceSuggestion) {
-        val text = item.name.orEmpty()
-        etSearch.setText(text)
-        etSearch.setSelection(text.length)
-        vm.submitSearch()
+        vm.onSuggestionClicked(item)
     }
 
     private fun showKeyboard(v: View) {

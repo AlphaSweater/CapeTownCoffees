@@ -14,28 +14,21 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * SearchViewModel
- * - Holds query, radius, strict flags
- * - Debounces query and streams suggestions via use case
- * - Emits navigation effect on submit
- */
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val getSuggestions: GetCoffeePlaceSuggestionsUseCase
 ) : SimpleViewModel() {
 
     // ── Inputs/State ───────────────────────────────────────────────────────────
-    val query    = state("")
+    val query   = state("")
     val radiusM = state(30_000)
-    val strict   = state(true)
-    val userLoc  = state<LatLng?>(null)
+    val strict  = state(true)
+    val userLoc = state<LatLng?>(null)
 
-    // Output
+    // Outputs
     val suggestions = loadableState<List<CoffeePlaceSuggestion>>()
 
     private var streamJob: Job? = null
-
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun start(args: Bundle?) {
@@ -48,14 +41,12 @@ class SearchViewModel @Inject constructor(
             flow = combinedInput()
                 .flatMapLatest { input ->
                     val (params, loc) = input
-                    Timber.d("Fetching suggestions for: $params")
+                    Timber.d("Fetching suggestions for: %s", params)
                     if (params.query.isNullOrBlank() || loc == null) {
                         flowOf(emptyList())
                     } else {
                         flow {
-                            Timber.d("Fetching suggestions for: $params")
                             val result = getSuggestions(params, loc)
-                            Timber.d("Suggestions: $result")
                             emit(result.getOrElse { throw it })
                         }
                     }
@@ -68,32 +59,44 @@ class SearchViewModel @Inject constructor(
     @OptIn(FlowPreview::class)
     private fun combinedInput(): Flow<ParamsAndLoc> =
         combine(query.flow, radiusM.flow, strict.flow, userLoc.flow) { q, rM, isStrict, loc ->
-            val meters = (rM ).coerceIn(100, 50_000)
+            val meters = rM.coerceIn(100, 50_000)
             val params = CoffeeSearchParameters.builder()
                 .query(q.trim())
                 .radiusMeters(meters)
-                .maxResults(5)          // UI wants ≤5 suggestions
-                .sortByDistance(true)   // good default for suggestions
+                .maxResults(5)       // ≤5 suggestions
+                .sortByDistance(true)
                 .strictCoffeeOnly(isStrict)
                 .build()
             ParamsAndLoc(params, loc)
         }
-            .debounce(220)      // debounce typing
-            .distinctUntilChanged()          // uses data-class equality
+            .debounce(220)    // debounce typing/slider/toggle noise
+            .distinctUntilChanged()        // avoid duplicate fetches when inputs unchanged
 
     // ── UI events ──────────────────────────────────────────────────────────────
-
     fun onQueryTyping(text: String) = query.set(text)
-    fun onRadiusChanged(m: Int) = radiusM.set(m)
+    fun onRadiusChanged(m: Int)     = radiusM.set(m)
     fun onStrictChanged(only: Boolean) = strict.set(only)
     fun setUserLocation(latLng: LatLng?) = userLoc.set(latLng)
 
+    // Suggestion selected → navigate to detail with ONLY the placeId
+    fun onSuggestionClicked(item: CoffeePlaceSuggestion) {
+        val id = item.id
+        main {
+            send(
+                Effect.Navigate(
+                    route = "search.openPlace",
+                    args = Bundle().apply { putString("placeId", id) }
+                )
+            )
+        }
+    }
+
+    // Optional: keep IME Search behavior (if you still want to deep-link to detail using a query result)
     fun submitSearch() {
-        val q = query.value.trim()
+        val q   = query.value.trim()
         val loc = userLoc.value
         if (q.isEmpty() || loc == null) return
 
-        // hop to Main and call the suspend send()
         main {
             send(
                 Effect.Navigate(
@@ -109,7 +112,6 @@ class SearchViewModel @Inject constructor(
             )
         }
     }
-
 }
 
 private data class ParamsAndLoc(
