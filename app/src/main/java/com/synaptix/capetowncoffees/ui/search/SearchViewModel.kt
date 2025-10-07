@@ -3,6 +3,7 @@ package com.synaptix.capetowncoffees.ui.search
 import android.os.Bundle
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
+import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.GetCoffeePlaceSuggestionsUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -25,11 +27,11 @@ class SearchViewModel @Inject constructor(
 
     // ── Inputs/State ───────────────────────────────────────────────────────────
     val query    = state("")
-    val radiusKm = state(5)        // kept for future filtering if you pass it down later
-    val strict   = state(false)
+    val radiusM = state(30_000)
+    val strict   = state(true)
     val userLoc  = state<LatLng?>(null)
 
-    // Suggestions list (Loadable for skeleton/error)
+    // Output
     val suggestions = loadableState<List<CoffeePlaceSuggestion>>()
 
     private var streamJob: Job? = null
@@ -39,40 +41,50 @@ class SearchViewModel @Inject constructor(
     override fun start(args: Bundle?) {
         super.start(args)
 
-        // (Optional) prefill:
-        // args?.getString(HomeFragment.ARG_PREFILL_QUERY)?.let { query.set(it) }
-
         // Stream: query + filters + location → suggestions
         streamJob?.cancel()
         streamJob = observeInto(
             target = suggestions,
             flow = combinedInput()
-                .flatMapLatest { (q, loc, _radius, _strict) ->
-                    if (q.isBlank() || loc == null) {
+                .flatMapLatest { input ->
+                    val (params, loc) = input
+                    Timber.d("Fetching suggestions for: $params")
+                    if (params.query.isNullOrBlank() || loc == null) {
                         flowOf(emptyList())
                     } else {
                         flow {
-                            val result = getSuggestions(q, loc)
+                            Timber.d("Fetching suggestions for: $params")
+                            val result = getSuggestions(params, loc)
+                            Timber.d("Suggestions: $result")
                             emit(result.getOrElse { throw it })
                         }
                     }
-                }
-                .distinctUntilChanged(),
+                },
             label = "place_suggestions"
         )
     }
 
-    /** Combine inputs and debounce query typing. */
+    // Build CoffeeSearchParameters from UI state and emit when any input changes
     @OptIn(FlowPreview::class)
-    private fun combinedInput(): Flow<Quadruple<String, LatLng?, Int, Boolean>> =
-        combine(query.flow, userLoc.flow, radiusKm.flow, strict.flow) { q, loc, r, s ->
-            Quadruple(q, loc, r, s)
-        }.debounce(220)
+    private fun combinedInput(): Flow<ParamsAndLoc> =
+        combine(query.flow, radiusM.flow, strict.flow, userLoc.flow) { q, rM, isStrict, loc ->
+            val meters = (rM ).coerceIn(100, 50_000)
+            val params = CoffeeSearchParameters.builder()
+                .query(q.trim())
+                .radiusMeters(meters)
+                .maxResults(5)          // UI wants ≤5 suggestions
+                .sortByDistance(true)   // good default for suggestions
+                .strictCoffeeOnly(isStrict)
+                .build()
+            ParamsAndLoc(params, loc)
+        }
+            .debounce(220)                   // debounce typing
+            .distinctUntilChanged()          // uses data-class equality
 
     // ── UI events ──────────────────────────────────────────────────────────────
 
     fun onQueryTyping(text: String) = query.set(text)
-    fun onRadiusChanged(km: Int)    = radiusKm.set(km)
+    fun onRadiusChanged(m: Int) = radiusM.set(m)
     fun onStrictChanged(only: Boolean) = strict.set(only)
     fun setUserLocation(latLng: LatLng?) = userLoc.set(latLng)
 
@@ -88,7 +100,7 @@ class SearchViewModel @Inject constructor(
                     route = "search.submit",
                     args = Bundle().apply {
                         putString("q", q)
-                        putInt("radiusKm", radiusKm.value)
+                        putInt("radiusM", radiusM.value)
                         putBoolean("strictOnly", strict.value)
                         putDouble("lat", loc.latitude)
                         putDouble("lng", loc.longitude)
@@ -100,5 +112,7 @@ class SearchViewModel @Inject constructor(
 
 }
 
-//** Tiny value holder since Kotlin doesn’t have a built-in Quadruple. */
-private data class Quadruple<A,B,C,D>(val first: A, val second: B, val third: C, val fourth: D)
+private data class ParamsAndLoc(
+    val params: CoffeeSearchParameters,
+    val loc: LatLng?
+)

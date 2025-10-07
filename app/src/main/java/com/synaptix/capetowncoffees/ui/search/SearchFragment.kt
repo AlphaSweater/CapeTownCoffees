@@ -174,11 +174,11 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
         // Radius label
         fun updateRadiusLabel(v: Float) { tvRadiusValue.text = locationUtils.formatDistance(v) }
-        updateRadiusLabel(sliderRadius.value)
+        updateRadiusLabel(sliderRadius.value * 1000)
 
         sliderRadius.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) updateRadiusLabel(value)
-            vm.onRadiusChanged(value.toInt())
+            if (fromUser) updateRadiusLabel(value * 1000)
+            vm.onRadiusChanged(value.toInt() * 1000)
         }
 
         switchStrictCoffee.setOnCheckedChangeListener { _, checked ->

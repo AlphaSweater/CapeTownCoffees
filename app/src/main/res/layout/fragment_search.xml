@@ -172,7 +172,7 @@
                             android:id="@+id/tvRadiusValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10 km"
+                            android:text="30 km"
                             android:textColor="@color/text_secondary"
                             android:textSize="14sp"/>
                     </LinearLayout>
@@ -183,10 +183,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:value="10"
-                        android:valueFrom="5"
-                        android:valueTo="200"
-                        android:stepSize="5"
+                        android:value="30"
+                        android:valueFrom="1"
+                        android:valueTo="50"
+                        android:stepSize="1"
                         app:labelBehavior="gone"/>
 
                     <LinearLayout
