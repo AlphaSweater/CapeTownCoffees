@@ -162,7 +162,7 @@ https://developer.android.com/studio
 - ChatGPT also helped with the forming of comments for the code.
 
 ##
-![App Demo]()
+![App Demo](https://i.postimg.cc/HWtLyjr6/kerchoo-kachow.gif)
 ##
 
 
