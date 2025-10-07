@@ -1,5 +1,5 @@
 
-![Logo](.png)
+![Logo](https://i.postimg.cc/L6MYhpN8/Logo-With-Title.png)
 
 
 <h1 align="center">📊 Cape Town Coffees</h1>
@@ -16,12 +16,12 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 ## 📚 Table of Contents
 - [Features](#-features)
-- [Own Features](#own-features)
+- [Security Features](#security-features)
+- [Tech Stack](#-tech-stack)
 - [Security Features](#-security-features)
 - [Prerequisites](#️-prerequisites)
 - [How to Compile and Run](#-how-to-compile-and-run-the-application)
 - [Video Demonstration](#-video-demo)
-- [Tech Stack](#-tech-stack)
 - [Screenshots](#-screenshots)
 - [Contributors](#-contributors)
 - [Learning Outcomes](#-learning-outcomes)
@@ -29,7 +29,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 ## 🌟 Features
 
-- SignUp and Login: Users can securely create an account and log in to access their personal budget data from anywhere. This ensures that all personal information is protected and personalized for each user.
+- SignUp and Login: Users can securely create an account and log in. This ensures that all personal information is protected and personalized for each user.
 
 - Google SignUp: Users can choose to sign up through Google's secure authentication.
 
@@ -39,11 +39,69 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 - Favourites List: For ease of access users can save their favourite cafés for quick access later on.
 
+- Downloads List: Allows users to download cafes to be accessed when the app is offline.
+
 - Detailed View: Users can see a detailed overview of different coffee shops, showing information such as the shop's rating, description, distance away, etc.
 
 ## 🔐 Security Features
 - Firebase Authentication for secure login and identity management.
 - Input validation and protection against improper input.
+
+## 🔧 Tech Stack
+### Core
+
+- [Kotlin](https://kotlinlang.org/)
+- [Jetpack Compose](https://developer.android.com/jetpack/compose)
+- [Material3 design](https://m3.material.io/) (UI components)
+- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) (structured concurrency)
+- [Kotlin Flow](https://kotlinlang.org/docs/flow.html)
+- [Hilt](https://dagger.dev/hilt/) (Dependency Injection)
+
+### Database
+- [Firestore](https://console.firebase.google.com) (firebase no-sql database)
+- [FireBase Authentication](https://console.firebase.google.com) (Google SSO sign in, Email & Password)
+
+### Build & CI
+- [Gradle KTS](https://docs.gradle.org/current/userguide/kotlin_dsl.html)
+- [Gradle version catalogs](https://developer.android.com/build/migrate-to-catalogs) (dependencies versions)
+- [GitHub Actions](https://github.com/AlphaSweater/BudgetBuddy-Project/actions)
+
+### API
+- [Google Places](https://developers.google.com/maps/documentation/places/android-sdk?hl=en) (for grabbing cafes based on location) (new places API through SDK)
+
+## 🏗️ Architecture
+
+<pre>
+app/
+├─ data/
+│  ├─ common/        # networking/config helpers, result wrappers
+│  ├─ mapper/        # DTO ↔ domain model mappers
+│  ├─ model/         # DTOs from Places/Firebase responses
+│  └─ repository/    # Repository implementations (Places, Firestore, Auth)
+│
+├─ di/               # Hilt modules (binds repositories, SDK providers)
+│
+├─ domain/
+│  ├─ model/         # Pure domain models (UI-agnostic)
+│  ├─ repository/    # Repository interfaces (ports)
+│  └─ usecase/       # Interactors (single responsibility operations)
+│
+├─ ui/
+│  ├─ auth/          # Sign-in/Sign-up screens, AuthViewModel
+│  ├─ coffeeDetail/  # Detail screen (ratings, distance, open-hours)
+│  ├─ common/        # BaseAdapter, View utils, composables/views
+│  ├─ home/          # Home feed, sections, skeletons
+│  ├─ profile/       # Profile & account management
+│  ├─ review/        # Add/read reviews flows
+│  ├─ savedLists/    # Favorites / downloads (offline)
+│  ├─ search/        # Search UI, suggestions, filters
+│  └─ settings/      # App settings (permissions, privacy)
+│
+├─ util/             # Cross-cutting utilities (e.g., LocationUtil)
+│
+├─ CapeTownCoffeesApp  # Application class (Hilt entry)
+└─ MainActivity        # NavHost, edge-to-edge, theming bridge
+</pre>
 
 ## 🛠️ Prerequisites 
 
@@ -76,7 +134,7 @@ https://developer.android.com/studio
 
 - Ensure you have the correct SDK versions installed:
 
-- Minimum SDK version needed is 25 (35+ recommended)
+- Minimum SDK version needed is 26 (36+ recommended)
 (You can check or install SDKs via SDK Manager in Android Studio.)
 
 4. Connect a device to run the app:
@@ -92,47 +150,29 @@ https://developer.android.com/studio
 
 ## 🎥 Video Demo
 
-📺 **Watch the full walkthrough of BudgetBuddy on YouTube:**
-👉 [Click here to view]()
+📺 **Watch the full walkthrough of Cape Town Coffees on YouTube:**
+👉 [Click here to view](https://youtu.be/dnFBR1-XPvo?si=4kqEIKo2v5o-dgIs)
 - 
-
-
-## 🔧 Tech Stack
-### Core
-
-- 100% [Kotlin](https://kotlinlang.org/)
-- 100% [Jetpack Compose](https://developer.android.com/jetpack/compose)
-- [Material3 design](https://m3.material.io/) (UI components)
-- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) (structured concurrency)
-- [Kotlin Flow](https://kotlinlang.org/docs/flow.html)
-- [Hilt](https://dagger.dev/hilt/) (DI)
-
-### Database
-- [Firestore](https://console.firebase.google.com) (firebase no-sql database)
-- [Imgur API](https://console.firebase.google.com) (Image uploading and storage)
-
-### Build & CI
-- [Gradle KTS](https://docs.gradle.org/current/userguide/kotlin_dsl.html)
-- [Gradle version catalogs](https://developer.android.com/build/migrate-to-catalogs) (dependencies versions)
-- [GitHub Actions](https://github.com/AlphaSweater/BudgetBuddy-Project/actions)
 
 
 ## 📸 Screenshots
 
 <div align="center">
   
-| Landing Page | Sign Up | Login | Home page |
+| Login | Sign Up | Home Page | Cafe Details |
 |-----------------|------------------------|-------------------|-----------------|
-| <img src="https://i.postimg.cc/tT1634RM/Screenshot-20250609-152724-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/BnLt7Vfj/Screenshot-20250609-152740-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/nc8DbxTv/Screenshot-20250609-153217-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/3Jp1HYzp/Screenshot-20250609-210010-Budget-Buddy.jpg" width="200"/> |
+| <img src="https://i.postimg.cc/V6BhJT5p/Login-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/cLnXKjb5/Register-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/vmyL4m9c/Home-Page-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/FKzC4Gjz/cafe-Screen-Cape-Town-Coffees.jpg" width="200"/> |
 
-| Wallet Overview | Budget Overview | Category Reports | Transactions |
+| List Screen | Saved Cafes | Profile Page | Settings Page |
 |-----------------|-------------------|--------------------|-----------|
-| <img src="https://i.postimg.cc/52M7R67D/Screenshot-20250609-205611-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/tCmRdGB1/Screenshot-20250609-205330-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/B68RGRxz/Screenshot-20250609-205340-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/hts3HK7s/Screenshot-20250609-205343-Budget-Buddy.jpg" width="200"/> |
+| <img src="https://i.postimg.cc/d0g6KFQF/saved-Lists-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/g0Lys7Vq/list-Screen-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/0jZ5j3ds/Profile-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/1XWPsFss/Settings-Cape-Town-Coffees.jpg" width="200"/> |
 </div>
 
 
 ## 👥 contributors
-
+<a href="https://github.com/AlphaSweater/BudgetBuddy-Project/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=AlphaSweater/BudgetBuddy-Project" />
+</a>
 
 - Chad Fairlie ST10269509
 - Dhiren Ruthenavelu ST10256859
@@ -141,11 +181,12 @@ https://developer.android.com/studio
 
 ## 🧠 Learning Outcomes
 
-- Advanced use of Jetpack Compose for UI
 - Integration of Firestore for real-time data syncing
 - Creating custom mappers between database entities and domain models
 - Building responsive layouts and implementing state-driven UIs with Kotlin StateFlow
 - Using and managing coroutines for efficient thread utilization
+- Calling APIs and routing API data throughout the application
+- Making use of caching to reduce API calls and improve application efficiency 
 
 ## 📚 References
 
@@ -157,11 +198,13 @@ https://developer.android.com/studio
 - https://www.geeksforgeeks.org/cardview-in-android-with-example/
 - https://www.geeksforgeeks.org/switch-in-kotlin/
 - https://www.geeksforgeeks.org/spinner-in-kotlin/
+- https://www.youtube.com/watch?v=KwDSkSBDyfQ
 - ChatGPT was used to help with the design and planning. As well as assisted with finding and fixing errors in the code.
 - ChatGPT also helped with the forming of comments for the code.
-
 ##
-![App Demo]()
+![Cost Breakdown](https://i.postimg.cc/sx2d627M/wee.png)
+##
+![App Demo](https://i.postimg.cc/HWtLyjr6/kerchoo-kachow.gif)
 ##
 
 
