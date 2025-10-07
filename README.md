@@ -125,9 +125,9 @@ https://developer.android.com/studio
 
 <div align="center">
   
-| Landing Page | Sign Up | Login | Home page |
+| Login | Sign Up | Home Page | Home page |
 |-----------------|------------------------|-------------------|-----------------|
-| <img src="https://i.postimg.cc/tT1634RM/Screenshot-20250609-152724-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/BnLt7Vfj/Screenshot-20250609-152740-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/nc8DbxTv/Screenshot-20250609-153217-Budget-Buddy.jpg" width="200"/> | <img src="https://i.postimg.cc/3Jp1HYzp/Screenshot-20250609-210010-Budget-Buddy.jpg" width="200"/> |
+| <img src="https://i.postimg.cc/V6BhJT5p/Login-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/cLnXKjb5/Register-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/vmyL4m9c/Home-Page-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/3Jp1HYzp/Screenshot-20250609-210010-Budget-Buddy.jpg" width="200"/> |
 
 | Wallet Overview | Budget Overview | Category Reports | Transactions |
 |-----------------|-------------------|--------------------|-----------|
