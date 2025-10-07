@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.lists.ListDetails
+package com.synaptix.capetowncoffees.ui.lists.listDetails
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

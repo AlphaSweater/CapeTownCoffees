@@ -129,7 +129,7 @@
 
     <fragment
         android:id="@+id/listDetailsFragment"
-        android:name="com.synaptix.capetowncoffees.ui.lists.ListDetails.ListDetailsFragment"
+        android:name="com.synaptix.capetowncoffees.ui.lists.listDetails.ListDetailsFragment"
         android:label="List Details"
         tools:layout="@layout/fragment_list_details">
         <argument

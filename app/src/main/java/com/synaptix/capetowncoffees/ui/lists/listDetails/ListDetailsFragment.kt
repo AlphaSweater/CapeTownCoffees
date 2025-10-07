@@ -1,5 +1,6 @@
-package com.synaptix.capetowncoffees.ui.lists.ListDetails
+package com.synaptix.capetowncoffees.ui.lists.listDetails
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,10 +16,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.google.android.material.appbar.MaterialToolbar
 import com.synaptix.capetowncoffees.R
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import timber.log.Timber
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ListDetailsFragment : Fragment() {
@@ -31,6 +35,7 @@ class ListDetailsFragment : Fragment() {
 
     // Inject the Assisted factory for the adapter
     @Inject lateinit var listDetailsAdapterFactory: ListDetailsPlacesAdapter.Factory
+    @Inject lateinit var locationUtil: LocationUtil
     private lateinit var placesAdapter: ListDetailsPlacesAdapter
 
     override fun onCreateView(
@@ -39,12 +44,18 @@ class ListDetailsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View = inflater.inflate(R.layout.fragment_list_details, container, false)
 
+    @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         tvTitle   = view.findViewById(R.id.tvTitle)
         ivPrivacy = view.findViewById(R.id.ivPrivacy)
         recycler  = view.findViewById(R.id.recyclerPlaces)
+
+        // Hook up toolbar back navigation (layout uses MaterialToolbar with navigationIcon)
+        view.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
 
         // Create adapter with lifecycle-aware scope + click navigation
         placesAdapter = listDetailsAdapterFactory.create(
@@ -62,9 +73,15 @@ class ListDetailsFragment : Fragment() {
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         }
 
-        // Back button in header
-        view.findViewById<View>(R.id.btnBack).setOnClickListener {
-            findNavController().navigateUp()
+        // Fetch user location (optional) and provide to adapter for distance display
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = locationUtil.getCurrentLatLng()
+            result.onSuccess { latLng ->
+                Timber.d("Got user location: $latLng")
+                placesAdapter.setUserLocation(latLng)
+            }.onFailure { e ->
+                Timber.i(e, "Could not obtain user location (permissions?); distances hidden")
+            }
         }
 
         val listId = arguments?.getString("listId")

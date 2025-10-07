@@ -140,4 +140,16 @@
     <string name="filters">Filters</string>
     <string name="strict_coffee_only">Strict Coffee Places</string>
     <string name="suggestions">Suggestions</string>
+    <string name="delete_list">Delete List</string>
+    <string name="cafe_photo">Place Photo</string>
+    <string name="remove_from_list">Remove item from list</string>
+    <string name="unknown">Unknown</string>
+    <string name="list_name">List Name</string>
+    <string name="list_name_hint">Eg. Cool Study Spots</string>
+    <string name="required_field">Required Field</string>
+    <string name="description_hint">Eg. Love the vibe of these places for studying</string>
+    <string name="privacy_level">Visibility</string>
+    <string name="privacy_public_dropdown">Private</string>
+    <string name="save">Save</string>
+    <string name="create_list">Create List</string>
 </resources>
