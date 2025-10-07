@@ -1,18 +1,26 @@
 package com.synaptix.capetowncoffees.ui.search
 
 import android.os.Bundle
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.GetCoffeePlaceSuggestionsUseCase
-import com.synaptix.capetowncoffees.ui.common.viewmodel.*
+import com.synaptix.capetowncoffees.domain.usecase.search.SearchParamsUseCase
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
+import com.synaptix.capetowncoffees.ui.common.viewmodel.loadableState
+import com.synaptix.capetowncoffees.ui.common.viewmodel.state
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -20,20 +28,15 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val getSuggestions: GetCoffeePlaceSuggestionsUseCase,
-    private val savedState: SavedStateHandle
+    private val searchParams: SearchParamsUseCase
 ) : SimpleViewModel() {
 
-    /* ─────────────────── Persisted Keys ─────────────────── */
-    private companion object {
-        const val K_QUERY   = "search.query"
-        const val K_RADIUS  = "search.radiusM"
-        const val K_STRICT  = "search.strict"
-    }
+    /* ─────────────────── Inputs / State (UI-facing) ─────────────────── */
+    private val seed = searchParams.current()
 
-    /* ─────────────────── Inputs / State (cached) ─────────────────── */
-    val query   = state(savedState.get<String>(K_QUERY) ?: "")
-    val radiusM = state(savedState.get<Int>(K_RADIUS) ?: 30_000)
-    val strict  = state(savedState.get<Boolean>(K_STRICT) ?: true)
+    val query   = state(seed.query.orEmpty())
+    val radiusM = state(seed.radiusMeters)
+    val strict  = state(seed.strictCoffeeOnly)
     val userLoc = state<LatLng?>(null)
 
     /* ─────────────────── Outputs ─────────────────── */
@@ -42,16 +45,10 @@ class SearchViewModel @Inject constructor(
     private var streamJob: Job? = null
 
     init {
-        // Mirror state → SavedStateHandle so it restores automatically
-        viewModelScope.launch {
-            query.flow.collect { savedState[K_QUERY] = it }
-        }
-        viewModelScope.launch {
-            radiusM.flow.collect { savedState[K_RADIUS] = it }
-        }
-        viewModelScope.launch {
-            strict.flow.collect { savedState[K_STRICT] = it }
-        }
+        // Mirror UI state → shared use case
+        viewModelScope.launch { query.flow.collect   { searchParams.setQuery(it) } }
+        viewModelScope.launch { radiusM.flow.collect { searchParams.setRadius(it) } }
+        viewModelScope.launch { strict.flow.collect  { searchParams.setStrict(it) } }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -61,8 +58,7 @@ class SearchViewModel @Inject constructor(
         streamJob = observeInto(
             target = suggestions,
             flow = combinedInput()
-                .flatMapLatest { input ->
-                    val (params, loc) = input
+                .flatMapLatest { (params, loc) ->
                     Timber.tag("CTC-Flow").d("Fetching suggestions for: %s", params)
                     if (params.query.isNullOrBlank() || loc == null) {
                         flowOf(emptyList())
@@ -92,22 +88,20 @@ class SearchViewModel @Inject constructor(
                 .build()
             ParamsAndLoc(params, loc)
         }
-            .debounce(220)
-            .distinctUntilChanged()
+            .debounce(220) // OK on a combined Flow; not applied directly to a StateFlow
 
     /* ─────────────── UI events ─────────────── */
-    fun onQueryTyping(text: String) = query.set(text)
-    fun onRadiusChanged(m: Int) = radiusM.set(m)
-    fun onStrictChanged(only: Boolean) = strict.set(only)
-    fun setUserLocation(latLng: LatLng?) = userLoc.set(latLng)
+    fun onQueryTyping(text: String)            = query.set(text)
+    fun onRadiusChanged(m: Int)                = radiusM.set(m)
+    fun onStrictChanged(only: Boolean)         = strict.set(only)
+    fun setUserLocation(latLng: LatLng?)       = userLoc.set(latLng)
 
     fun onSuggestionClicked(item: CoffeePlaceSuggestion) {
-        val id = item.id
         main {
             send(
                 Effect.Navigate(
                     route = "search.openPlace",
-                    args = Bundle().apply { putString("placeId", id) }
+                    args = Bundle().apply { putString("placeId", item.id) }
                 )
             )
         }

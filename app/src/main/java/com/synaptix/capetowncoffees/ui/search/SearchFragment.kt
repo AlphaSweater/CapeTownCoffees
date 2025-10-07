@@ -69,7 +69,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private lateinit var rvSuggestions: RecyclerView
     private val suggestionsAdapter by lazy { SuggestionsAdapter(::onSuggestionClicked) }
 
-    // ── Filters ────────────────────────────────────────────────
     companion object {
         const val FILTERS_TOGGLE = 0
         const val FILTERS_OPEN   = 1
@@ -194,27 +193,25 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     /** Restore UI controls from VM first, then attach listeners */
     private fun setupFiltersRestoreThenWire() {
-        // 1) Restore values FROM ViewModel (cached via SavedStateHandle)
+        // 1) Restore values FROM ViewModel (which is seeded from SearchParamsUseCase)
         etSearch.setText(vm.query.value)
         etSearch.setSelection(etSearch.text?.length ?: 0)
 
-        // Slider shows KM in UI (value), VM stores meters
         val km = (vm.radiusM.value / 1000f).coerceIn(sliderRadius.valueFrom, sliderRadius.valueTo)
         if (sliderRadius.value != km) sliderRadius.value = km
 
         switchStrictCoffee.isChecked = vm.strict.value
 
-        // Keep radius label accurate on first render
-        tvRadiusValue.text = LocationFormattingUtil
-            .formatDistance(vm.radiusM.value.toFloat())
+        tvRadiusValue.text = LocationFormattingUtil.formatDistance(vm.radiusM.value.toFloat())
 
-        // 2) Wire listeners AFTER restoring values
+        // 2) Wire listeners AFTER restoring values (forward events to VM only)
         filtersHeader.setOnClickListener { setFilters(FILTERS_TOGGLE) }
 
         sliderRadius.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                tvRadiusValue.text = LocationFormattingUtil.formatDistance(value * 1000f)
-                vm.onRadiusChanged(value.toInt() * 1000)
+                val meters = value.toInt() * 1000
+                tvRadiusValue.text = LocationFormattingUtil.formatDistance(meters.toFloat())
+                vm.onRadiusChanged(meters)
             }
         }
         switchStrictCoffee.setOnCheckedChangeListener { _, checked ->
@@ -222,9 +219,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-    /**
-     * Filters controller: action = 0(toggle), 1(open), 2(close)
-     */
+    /** Filters controller: action = 0(toggle), 1(open), 2(close) */
     private fun setFilters(action: Int) {
         val currentlyExpanded = filtersContent.isVisible
         val targetExpanded = when (action) {
@@ -232,17 +227,12 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             FILTERS_CLOSE -> false
             else          -> !currentlyExpanded
         }
-
         if (currentlyExpanded == targetExpanded) return
 
-        // Smooth transition
         TransitionManager.beginDelayedTransition(filtersCard, AutoTransition().apply { duration = 180 })
-
-        // Apply state
         filtersDivider.isVisible = targetExpanded
         filtersContent.isVisible = targetExpanded
 
-        // Chevron rotation
         ivChevron.animate().cancel()
         ivChevron.rotation = if (targetExpanded) 90f else 0f
         ivChevron.animate().rotation(ivChevron.rotation).setDuration(0).start()
@@ -260,7 +250,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private var lastSuggestionsSignature: String? = null
 
     private fun listSignature(items: List<CoffeePlaceSuggestion>): String {
-        // size + first few ids gives a cheap, stable signature for meaningful changes
         val head = items.take(3).joinToString("|") { it.id }
         return "${items.size}#$head"
     }
@@ -276,7 +265,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         rvSuggestions.isVisible = show
     }
 
-    // Only navigate with placeId
     private fun onSuggestionClicked(item: CoffeePlaceSuggestion) {
         vm.onSuggestionClicked(item)
     }
