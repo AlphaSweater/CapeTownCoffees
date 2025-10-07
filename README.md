@@ -69,6 +69,40 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 ### API
 - [Google Places](https://developers.google.com/maps/documentation/places/android-sdk?hl=en) (for grabbing cafes based on location) (new places API through SDK)
 
+## 🏗️ Architecture
+
+<pre>
+app/
+├─ data/
+│  ├─ common/        # networking/config helpers, result wrappers
+│  ├─ mapper/        # DTO ↔ domain model mappers
+│  ├─ model/         # DTOs from Places/Firebase responses
+│  └─ repository/    # Repository implementations (Places, Firestore, Auth)
+│
+├─ di/               # Hilt modules (binds repositories, SDK providers)
+│
+├─ domain/
+│  ├─ model/         # Pure domain models (UI-agnostic)
+│  ├─ repository/    # Repository interfaces (ports)
+│  └─ usecase/       # Interactors (single responsibility operations)
+│
+├─ ui/
+│  ├─ auth/          # Sign-in/Sign-up screens, AuthViewModel
+│  ├─ coffeeDetail/  # Detail screen (ratings, distance, open-hours)
+│  ├─ common/        # BaseAdapter, View utils, composables/views
+│  ├─ home/          # Home feed, sections, skeletons
+│  ├─ profile/       # Profile & account management
+│  ├─ review/        # Add/read reviews flows
+│  ├─ savedLists/    # Favorites / downloads (offline)
+│  ├─ search/        # Search UI, suggestions, filters
+│  └─ settings/      # App settings (permissions, privacy)
+│
+├─ util/             # Cross-cutting utilities (e.g., LocationUtil)
+│
+├─ CapeTownCoffeesApp  # Application class (Hilt entry)
+└─ MainActivity        # NavHost, edge-to-edge, theming bridge
+</pre>
+
 ## 🛠️ Prerequisites 
 
 1. **Ensure that you have Android Studio downloaded or you won't be able to run the project.**
