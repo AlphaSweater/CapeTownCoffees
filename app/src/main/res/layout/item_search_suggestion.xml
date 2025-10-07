@@ -1,40 +1,92 @@
-<!-- res/layout/item_search_suggestion.xml -->
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_marginVertical="6dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="@color/surface"
     app:cardCornerRadius="14dp"
-    app:cardElevation="0dp"
-    android:foreground="?attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true">
+    app:cardElevation="0dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="14dp">
+        android:layout_height="wrap_content"
+        android:minHeight="64dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
 
+        <!-- Leading icon -->
         <ImageView
+            android:id="@+id/ivLeading"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:src="@drawable/ic_ctc_search"
-            app:tint="@color/icon_primary" />
+            app:tint="@color/icon_primary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
+        <!-- Distance pill (right) -->
+        <TextView
+            android:id="@+id/tvDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:background="@drawable/bg_pill_outline"
+            android:visibility="gone"
+            tools:text="1.2 km"
+            tools:visibility="visible"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tvTitle"
+            app:layout_constraintBottom_toBottomOf="@id/tvSubtitle" />
+
+        <!-- Title -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:layout_weight="1"
             android:textColor="@color/text_primary"
-            android:textSize="15sp"
+            android:textSize="15.5sp"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="Truth Coffee Roasting" />
-    </LinearLayout>
+            tools:text="Truth Coffee Roasting"
+            app:layout_constraintStart_toEndOf="@id/ivLeading"
+            app:layout_constraintEnd_toStartOf="@id/tvDistance"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Subtitle (address) -->
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/text_tip"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone"
+            tools:text="36 Buitenkant St, Cape Town City Centre"
+            tools:visibility="visible"
+            app:layout_constraintStart_toEndOf="@id/ivLeading"
+            app:layout_constraintEnd_toStartOf="@id/tvDistance"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
