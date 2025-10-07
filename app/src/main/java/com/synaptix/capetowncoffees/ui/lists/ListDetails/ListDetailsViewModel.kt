@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists.ListDetails
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -7,7 +7,6 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
-import com.synaptix.capetowncoffees.domain.model.CoffeeUser
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
@@ -52,8 +51,8 @@ class ListDetailsViewModel @Inject constructor(
         }
     }
 
-    private val _places = MutableLiveData<kotlin.collections.List<CoffeePlaceFull>>()
-    val places: LiveData<kotlin.collections.List<CoffeePlaceFull>> get() = _places
+    private val _places = MutableLiveData<List<CoffeePlaceFull>>()
+    val places: LiveData<List<CoffeePlaceFull>> get() = _places
 
     fun loadPlacesForIds(ids: List<String>) {
         if (ids.isEmpty()) {

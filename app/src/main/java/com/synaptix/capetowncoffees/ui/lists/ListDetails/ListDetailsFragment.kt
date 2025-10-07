@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists.ListDetails
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -99,7 +101,7 @@ class ListDetailsFragment : Fragment() {
 
         // Delete list
         view.findViewById<View>(R.id.btnDeleteList).setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            AlertDialog.Builder(requireContext())
                 .setTitle("Delete List")
                 .setMessage("Are you sure you want to delete this list? This action cannot be undone.")
                 .setPositiveButton("Delete") { _, _ ->
@@ -108,10 +110,10 @@ class ListDetailsFragment : Fragment() {
                         onDone = { findNavController().navigateUp() },
                         onError = { e ->
                             Timber.e(e, "Failed to delete list")
-                            android.widget.Toast.makeText(
+                            Toast.makeText(
                                 requireContext(),
                                 "Failed to delete list: ${e.message}",
-                                android.widget.Toast.LENGTH_SHORT
+                                Toast.LENGTH_SHORT
                             ).show()
                         }
                     )

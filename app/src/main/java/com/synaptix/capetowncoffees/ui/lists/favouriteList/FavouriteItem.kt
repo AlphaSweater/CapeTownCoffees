@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists.favouriteList
 
 data class FavouriteItem(
     val name: String,

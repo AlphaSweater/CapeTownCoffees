@@ -1,5 +1,5 @@
 // ui/saved/savelist/CreateListViewModel.kt
-package com.synaptix.capetowncoffees.ui.savedLists.createSavedList
+package com.synaptix.capetowncoffees.ui.lists.createSavedList
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

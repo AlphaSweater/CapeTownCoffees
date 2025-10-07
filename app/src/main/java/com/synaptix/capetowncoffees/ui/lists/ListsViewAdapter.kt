@@ -1,4 +1,4 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+package com.synaptix.capetowncoffees.ui.lists
 
 import android.view.LayoutInflater
 import android.view.View
@@ -11,9 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
 
-class SavedListsAdapter(
+class ListsViewAdapter(
     private val onItemClick: (CoffeeList) -> Unit = {}
-) : ListAdapter<CoffeeList, SavedListsAdapter.ViewHolder>(DiffCallback()) {
+) : ListAdapter<CoffeeList, ListsViewAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)

@@ -37,7 +37,7 @@ import com.synaptix.capetowncoffees.ui.common.viewmodel.start
 import com.synaptix.capetowncoffees.ui.common.SkeletonAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CategoryAdapter
 import com.synaptix.capetowncoffees.ui.home.adapter.CoffeePlaceItemAdapter
-import com.synaptix.capetowncoffees.ui.savedLists.AddPlacesToList.AddPlacesToListBottomSheet
+import com.synaptix.capetowncoffees.ui.lists.AddPlacesToList.AddPlacesToListBottomSheet
 import com.synaptix.capetowncoffees.util.ImagePreloadUtil
 import com.synaptix.capetowncoffees.util.PhotoUrlCache
 import dagger.hilt.android.AndroidEntryPoint
