@@ -51,20 +51,23 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 ### Core
 
 - 100% [Kotlin](https://kotlinlang.org/)
-- 100% [Jetpack Compose](https://developer.android.com/jetpack/compose)
+- [Jetpack Compose](https://developer.android.com/jetpack/compose)
 - [Material3 design](https://m3.material.io/) (UI components)
 - [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) (structured concurrency)
 - [Kotlin Flow](https://kotlinlang.org/docs/flow.html)
-- [Hilt](https://dagger.dev/hilt/) (DI)
+- [Hilt](https://dagger.dev/hilt/) (Dependency Injection)
 
 ### Database
 - [Firestore](https://console.firebase.google.com) (firebase no-sql database)
-- [FireBase Authentication](https://console.firebase.google.com) (Google SSO sign in)
+- [FireBase Authentication](https://console.firebase.google.com) (Google SSO sign in, Email & Password)
 
 ### Build & CI
 - [Gradle KTS](https://docs.gradle.org/current/userguide/kotlin_dsl.html)
 - [Gradle version catalogs](https://developer.android.com/build/migrate-to-catalogs) (dependencies versions)
 - [GitHub Actions](https://github.com/AlphaSweater/BudgetBuddy-Project/actions)
+
+### API
+- [Google Places](https://developers.google.com/maps/documentation/places/android-sdk?hl=en) (for grabbing cafes based on location) (new places API through SDK)
 
 ## 🛠️ Prerequisites 
 
@@ -149,6 +152,8 @@ https://developer.android.com/studio
 - Creating custom mappers between database entities and domain models
 - Building responsive layouts and implementing state-driven UIs with Kotlin StateFlow
 - Using and managing coroutines for efficient thread utilization
+- Calling APIs and routing API data throughout the application
+- Making use of caching to reduce API calls and improve application efficiency 
 
 ## 📚 References
 
