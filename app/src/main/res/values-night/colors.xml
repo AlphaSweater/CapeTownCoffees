@@ -20,6 +20,7 @@
     <color name="text_on_primary">#FFFFFF</color>
     <color name="text_favourite">#d4ae96</color>
     <color name="text_alt">#3E2723</color>
+    <color name="text_login">#1f1c1b</color>
 
     <!-- Navigation Bar Colors -->
     <color name="nav_bar_pill">#382a23</color>
@@ -34,6 +35,8 @@
     <color name="button_text">#FFFFFF</color>
     <color name="button_category">#e1c1ad</color>
     <color name="button_download">#FFFFFFFF</color>
+    <color name="button_login">#e1c1ad</color>
+
 
     <!-- Input Fields -->
     <color name="input_background">#121212</color>
