@@ -83,10 +83,10 @@ class CoffeePlaceRepository @Inject constructor(
     // Autocomplete suggestions (Google-only for now)
     // -----------------------------
     override suspend fun getSuggestions(
-        query: String,
+        params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceSuggestion>> =
-        placesApiRepository.getSuggestions(query, userLatLng)
+        placesApiRepository.getSuggestions(params, userLatLng)
             .onFailure { Timber.e(it, "Failed to get suggestions") }
             .map { it.orEmpty() }
 

@@ -38,7 +38,7 @@ interface IPlacesApiRepository {
      * Get autocomplete suggestions (for search box).
      */
     suspend fun getSuggestions(
-        query: String,
+        params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceSuggestion>>
 
@@ -64,11 +64,7 @@ interface IPlacesApiRepository {
             "cafe",
             "bakery",
             "restaurant",
-            "breakfast_restaurant",
-            "brunch_restaurant",
-            "tea_house",
-            "dessert_shop",
-            "dessert_restaurant"
+            "tea_house"
         )
 
         // Blacklist: primary types that should never be included

@@ -12,8 +12,8 @@ data class CoffeeSearchParameters(
     val strictCoffeeOnly: Boolean = true
 ) {
     companion object {
-        const val DEFAULT_RADIUS_METERS = 2000
-        const val DEFAULT_QUERY = "coffee"
+        const val DEFAULT_RADIUS_METERS = 30_000
+        const val DEFAULT_QUERY = ""
         const val DEFAULT_MAX_RESULTS = 20
 
         fun builder() = Builder()
@@ -33,7 +33,7 @@ data class CoffeeSearchParameters(
         fun strictCoffeeOnly(value: Boolean) = apply { strictCoffeeOnly = value }
 
         fun build(): CoffeeSearchParameters {
-            require(radiusMeters in 100..10000) { "Radius must be between 100 and 10,000 meters." }
+            require(radiusMeters in 100..50_000) { "Radius must be between 100 and 50,000 meters." }
             require(maxResults in 1..100) { "Max results must be between 1 and 100." }
             return CoffeeSearchParameters(
                 radiusMeters,

@@ -23,11 +23,11 @@ import com.synaptix.capetowncoffees.databinding.FragmentCoffeeDetailBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.Effect
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.Loadable
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.collect
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.collectLoadable
-import com.synaptix.capetowncoffees.ui._simple.viewmodel.start
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collectLoadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.start
 import com.synaptix.capetowncoffees.ui.coffeeDetail.adapters.ReviewsAdapter
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
