@@ -133,8 +133,9 @@ https://developer.android.com/studio
 
 
 ## 👥 contributors
-
-
+<a href="https://github.com/AlphaSweater/BudgetBuddy-Project/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=AlphaSweater/BudgetBuddy-Project" />
+</a>
 - Chad Fairlie ST10269509
 - Dhiren Ruthenavelu ST10256859
 - Kayla Ferreira ST10259527
