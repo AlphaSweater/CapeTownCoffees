@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -20,19 +19,23 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
+
+    // ─────────── Dependencies & State ───────────
+    // View binding follows Fragment view lifecycle; gate access via 'binding'
     private var _binding: FragmentAuthRegisterBinding? = null
     private val binding get() = _binding!!
+
+    // VM that drives registration flow (DI provided)
     private val viewModel: RegisterViewModel by viewModels()
 
+    // Google sign-in client is configured after view is created
     private lateinit var signInClient: GoogleSignInClient
 
-    // Toast helper (prevents stacking)
+    // Keep a single toast instance so messages don't stack
     private var activeToast: Toast? = null
-    private fun toast(msg: CharSequence) {
-        activeToast?.cancel()
-        activeToast = Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).also { it.show() }
-    }
 
+    // ─────────── Activity Result Launchers ───────────
+    // Handles Google sign-in result and forwards token to VM
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -40,13 +43,14 @@ class RegisterFragment : Fragment() {
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken ?: throw IllegalStateException("No ID token")
-            toast(getString(R.string.ctc_register_loading)) // "Creating your account…"
+            toast(getString(R.string.ctc_register_loading))
             viewModel.registerWithGoogleToken(idToken)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             toast(getString(R.string.ctc_register_google_failed))
         }
     }
 
+    // ─────────── Lifecycle ───────────
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -59,12 +63,15 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // ─────────── Init Google Sign-In ───────────
+        // Request ID token + email; token is exchanged in VM
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         signInClient = GoogleSignIn.getClient(requireActivity(), gso)
 
+        // ─────────── UI Wiring ───────────
         // Email/password sign-up
         binding.buttonSignUp.setOnClickListener {
             val name = binding.nameEditText.text.toString()
@@ -74,7 +81,7 @@ class RegisterFragment : Fragment() {
             viewModel.registerUser(name, email, pass, confirm)
         }
 
-        // Google sign-up
+        // Google sign-up (sign out first to force account chooser)
         binding.buttonGoogleRegister.setOnClickListener {
             signInClient.signOut().addOnCompleteListener {
                 googleLauncher.launch(signInClient.signInIntent)
@@ -86,8 +93,9 @@ class RegisterFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        // Observe ViewModel state
-        viewModel.registerState.observe(viewLifecycleOwner, Observer { state ->
+        // ─────────── Observers ───────────
+        // React to registration state and update UI/feedback
+        viewModel.registerState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is RegisterUiState.Loading -> {
                     binding.buttonSignUp.isEnabled = false
@@ -121,7 +129,7 @@ class RegisterFragment : Fragment() {
                     binding.confirmPasswordInputLayout.error = null
                 }
             }
-        })
+        }
     }
 
     override fun onDestroyView() {
@@ -129,5 +137,12 @@ class RegisterFragment : Fragment() {
         activeToast?.cancel()
         activeToast = null
         _binding = null
+    }
+
+    // ─────────── Helpers ───────────
+    // Small toast helper that cancels any prior toast before showing a new one
+    private fun toast(msg: CharSequence) {
+        activeToast?.cancel()
+        activeToast = Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).also { it.show() }
     }
 }
