@@ -150,7 +150,7 @@ https://developer.android.com/studio
 
 ## 🎥 Video Demo
 
-📺 **Watch the full walkthrough of BudgetBuddy on YouTube:**
+📺 **Watch the full walkthrough of Cape Town Coffees on YouTube:**
 👉 [Click here to view](https://youtu.be/dnFBR1-XPvo?si=4kqEIKo2v5o-dgIs)
 - 
 
