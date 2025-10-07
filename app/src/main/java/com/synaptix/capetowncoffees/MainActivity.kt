@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // ---- Set the spacer height exactly once (no stacking on resumes) ----
-//        setStatusSpacerOnce(rootId = R.id.root_container, spacerId = R.id.status_spacer)
+        setStatusSpacerOnce(rootId = R.id.root_container, spacerId = R.id.status_spacer)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
