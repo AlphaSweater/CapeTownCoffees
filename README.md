@@ -147,7 +147,6 @@ https://developer.android.com/studio
 
 ## 🧠 Learning Outcomes
 
-- Advanced use of Jetpack Compose for UI
 - Integration of Firestore for real-time data syncing
 - Creating custom mappers between database entities and domain models
 - Building responsive layouts and implementing state-driven UIs with Kotlin StateFlow
