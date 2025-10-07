@@ -187,4 +187,5 @@
     <string name="ctc_register_google_failed">Google sign-up failed. Please try again.</string>
     <string name="private_label">Private</string>
     <string name="public_label">Public</string>
+    <string name="profile_edit_image_load_failed">Failed to load profile image</string>
 </resources>

@@ -8,11 +8,13 @@ import androidx.appcompat.widget.AppCompatRatingBar
 import androidx.recyclerview.widget.RecyclerView
 import com.synaptix.capetowncoffees.R
 
-class ReviewAdapter(
+public class ReviewAdapter(
     private val items: List<ReviewItem>
 ) : RecyclerView.Adapter<ReviewAdapter.ReviewVH>() {
 
-    class ReviewVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    // ─────────── ViewHolder ───────────
+    // Holds references to row views so binds are cheap.
+    public class ReviewVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvCafeName: TextView = itemView.findViewById(R.id.tvCafeName)
         val tvDate: TextView = itemView.findViewById(R.id.tvDate)
         val ratingBar: AppCompatRatingBar = itemView.findViewById(R.id.ratingBar)
@@ -20,11 +22,15 @@ class ReviewAdapter(
         val tvLikes: TextView = itemView.findViewById(R.id.tvLikes)
     }
 
+    // ─────────── Adapter Lifecycle ───────────
+    // Inflates the row layout; no heavy work here.
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewVH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_review, parent, false)
-        return ReviewVH(v)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_review, parent, false)
+        return ReviewVH(view)
     }
 
+    // Binds one review to views; pure data → UI mapping.
     override fun onBindViewHolder(holder: ReviewVH, position: Int) {
         val item = items[position]
         holder.tvCafeName.text = item.cafeName
@@ -34,5 +40,6 @@ class ReviewAdapter(
         holder.tvLikes.text = item.likes.toString()
     }
 
+    // Keeps RecyclerView sizing stable.
     override fun getItemCount(): Int = items.size
 }
