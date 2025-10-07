@@ -15,6 +15,7 @@ import com.synaptix.capetowncoffees.ui.common.viewmodel.fetchResultInto
 import com.synaptix.capetowncoffees.ui.common.viewmodel.loadableState
 import com.synaptix.capetowncoffees.ui.common.viewmodel.state
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -26,9 +27,8 @@ import timber.log.Timber
 
 @HiltViewModel
 class CafeDetailViewModel @Inject constructor(
-    private val getCoffeePlaceDetailsUseCase: GetCoffeePlaceDetailsUseCase,      // suspend (id) -> Result<CoffeePlaceFull>
-    private val getCoffeeReviewsForPlaceUseCase: GetCoffeeReviewsForPlaceUseCase, // suspend (id) -> Result<List<CoffeeReview>>
-    private val locationUtil: LocationUtil
+    private val getCoffeePlaceDetailsUseCase: GetCoffeePlaceDetailsUseCase,
+    private val getCoffeeReviewsForPlaceUseCase: GetCoffeeReviewsForPlaceUseCase
 ) : SimpleViewModel() {
 
     object ScreenArgs { const val PLACE_ID = "placeId" }
@@ -182,8 +182,8 @@ class CafeDetailViewModel @Inject constructor(
         val user = userLocation
         val cafe = placeLocation
         if (user != null && cafe != null) {
-            val distance = locationUtil.distanceMeters(user, cafe)
-            val text = locationUtil.distanceAndEtaLabel(distance)
+            val distance = LocationFormattingUtil.distanceMeters(user, cafe)
+            val text = LocationFormattingUtil.distanceAndEtaLabel(distance)
             ui.update { it.copy(showDistance = true, distanceText = text) }
         } else {
             ui.update { it.copy(showDistance = false, distanceText = null) }

@@ -82,6 +82,14 @@
         android:name="com.synaptix.capetowncoffees.ui.search.SearchFragment"
         android:label="Search"
         tools:layout="@layout/fragment_search">
+
+        <action
+            android:id="@+id/action_searchFragment_to_cafeDetailFragment"
+            app:destination="@id/cafeDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment

@@ -4,15 +4,15 @@ import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
-import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
+import com.synaptix.capetowncoffees.domain.usecase.search.SearchParamsUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
 import com.synaptix.capetowncoffees.ui.common.viewmodel.loadableState
 import com.synaptix.capetowncoffees.ui.common.viewmodel.state
 import com.synaptix.capetowncoffees.ui.common.viewmodel.toUiError
-import com.synaptix.capetowncoffees.util.LocationUtil
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val searchNearby: SearchNearbyCoffeePlacesUseCase,
-    private val locationUtil: LocationUtil
+    private val searchParams: SearchParamsUseCase
 ) : SimpleViewModel() {
 
     /* ╭──────────────────────────── Config ──────────────────────────────╮ */
@@ -30,13 +30,10 @@ class HomeViewModel @Inject constructor(
         const val MIN_REQUERY_DISTANCE_M = 20.0
         const val TTL_MILLIS = 10 * 60 * 1000L
 
-        // Nearby config
-        const val NEAR_RADIUS_M = 5_000
+        // Section caps/sorts (radius + strict come from SearchParamsUseCase)
         const val NEAR_MAX_RESULTS = 32
         const val NEAR_SORT_BY_DISTANCE = true
 
-        // Featured config (popular within radius)
-        const val FEATURED_RADIUS_M = 5_000
         const val FEATURED_MAX_RESULTS = 20
         const val FEATURED_SORT_BY_DISTANCE = false
 
@@ -64,9 +61,8 @@ class HomeViewModel @Inject constructor(
     val ui = state(Ui())
 
     // Lists exposed to the Fragment
-    val nearMe   = loadableState<List<CoffeePlaceLite>>()  // vertical list (first 20 nearest)
+    val nearMe   = loadableState<List<CoffeePlaceLite>>()  // vertical list (nearest)
     val featured = loadableState<List<CoffeePlaceLite>>()  // horizontal carousel (popular)
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
     /* ╭──────────────────────────── Caches ──────────────────────────────╮ */
     private data class CacheEntry(
@@ -76,12 +72,10 @@ class HomeViewModel @Inject constructor(
     )
     private var nearCache: CacheEntry? = null
     private var featuredCache: CacheEntry? = null
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
     /* ╭──────────────────── In-flight jobs (cancel on re-run) ───────────╮ */
     private var nearJob: Job? = null
     private var featuredJob: Job? = null
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
 
     /* ───────────────────────────── Public API ────────────────────────── */
 
@@ -121,6 +115,18 @@ class HomeViewModel @Inject constructor(
         refreshFeatured(force)
     }
 
+    /**
+     * Fragment should call this in onResume().
+     * Returns true if radius/strict changed since last apply; Fragment can show skeletons and call refresh().
+     * This method does NOT trigger network calls by itself.
+     */
+    fun shouldRefreshForSearchParamsChange(): Boolean {
+        val keyNow = paramsKeyFromUseCase()
+        val changed = lastAppliedKey != keyNow
+        if (changed) lastAppliedKey = keyNow
+        return changed
+    }
+
     /* ──────────────────────────── Refresh: NEAR ──────────────────────── */
 
     fun refreshNear(force: Boolean) {
@@ -136,20 +142,19 @@ class HomeViewModel @Inject constructor(
             return
         }
 
-        // Only show loading if nothing is on screen yet
         if (nearMe.value !is Loadable.Data) nearMe.loading()
         ui.update { it.copy(isRefreshingNear = true) }
 
-        // cancel previous and launch fresh
         io {
             nearJob?.cancelAndJoin()
             nearJob = launch {
                 val now = System.currentTimeMillis()
-                val params = CoffeeSearchParameters.Builder()
-                    .radiusMeters(NEAR_RADIUS_M)
-                    .maxResults(NEAR_MAX_RESULTS)
-                    .sortByDistance(NEAR_SORT_BY_DISTANCE)
-                    .build()
+
+                // Build params from shared use case (inherits radius + strict, ignores query)
+                val params = searchParams.forNear(
+                    maxResults = NEAR_MAX_RESULTS,
+                    sortByDistance = NEAR_SORT_BY_DISTANCE
+                )
 
                 searchNearby(params = params, userLatLng = loc)
                     .onSuccess { list ->
@@ -188,11 +193,12 @@ class HomeViewModel @Inject constructor(
             featuredJob?.cancelAndJoin()
             featuredJob = launch {
                 val now = System.currentTimeMillis()
-                val params = CoffeeSearchParameters.Builder()
-                    .radiusMeters(FEATURED_RADIUS_M)
-                    .maxResults(FEATURED_MAX_RESULTS)
-                    .sortByDistance(FEATURED_SORT_BY_DISTANCE) // server provides “popular” sort
-                    .build()
+
+                // Build params from shared use case (inherits radius + strict, ignores query)
+                val params = searchParams.forFeatured(
+                    maxResults = FEATURED_MAX_RESULTS,
+                    sortByDistance = FEATURED_SORT_BY_DISTANCE
+                )
 
                 searchNearby(params = params, userLatLng = loc)
                     .onSuccess { list ->
@@ -220,7 +226,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun distance(a: LatLng, b: LatLng): Double =
-        locationUtil.distanceMeters(a, b).toDouble()
+        LocationFormattingUtil.distanceMeters(a, b).toDouble()
 
     // local sorting/filtering for the NEAR list only (Featured is server-driven)
     private fun filterByCategory(
@@ -231,11 +237,19 @@ class HomeViewModel @Inject constructor(
         "popular" -> source.sortedByDescending { it.ratingCount ?: 0 }
         "rated"   -> source.sortedByDescending { it.rating ?: 0.0 }
         "nearby"  -> if (user == null) source else source.sortedBy {
-            it.location?.let { ll -> locationUtil.distanceMeters(user, ll).toFloat() } ?: Float.MAX_VALUE
+            it.location?.let { ll -> LocationFormattingUtil.distanceMeters(user, ll) } ?: Float.MAX_VALUE
         }
         "dates"   -> source.sortedByDescending {
             (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f)
         }
         else      -> source
+    }
+
+    /* Track last applied radius/strict so we can refetch on change */
+    private data class ParamsKey(val radiusM: Int, val strict: Boolean)
+    private var lastAppliedKey: ParamsKey? = null
+    private fun paramsKeyFromUseCase(): ParamsKey {
+        val p = searchParams.current()
+        return ParamsKey(p.radiusMeters, p.strictCoffeeOnly)
     }
 }

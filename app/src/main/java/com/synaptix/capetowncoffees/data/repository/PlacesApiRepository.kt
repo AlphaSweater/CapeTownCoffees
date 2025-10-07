@@ -123,12 +123,13 @@ class PlacesApiRepository @Inject constructor(
             val suggestions = response.autocompletePredictions
                 .asSequence()
                 .filter { isCoffeeRelatedPrediction(it, params) }
-                .take(params.maxResults.coerceIn(1, 5))
+                .take(params.maxResults.coerceIn(1, params.maxResults))
                 .map { prediction ->
                     CoffeePlaceSuggestion(
                         id = prediction.placeId,
                         name = prediction.getPrimaryText(null).toString(),
-                        address = prediction.getSecondaryText(null).toString()
+                        address = prediction.getSecondaryText(null).toString(),
+                        distance = prediction.distanceMeters
                     )
                 }
                 .toList()

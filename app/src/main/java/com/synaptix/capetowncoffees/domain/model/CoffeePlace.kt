@@ -126,6 +126,7 @@ data class CoffeePlaceSuggestion(
     val id: String,
     val name: String?,
     val address: String? = null,
+    val distance: Int? = null
 ) : CoffeePlaceBase {
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceSuggestion> {
