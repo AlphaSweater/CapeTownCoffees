@@ -176,4 +176,13 @@
     <string name="logout_confirm_message">Logout now?</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
+    <string name="ctc_login_invalid_creds">Invalid credentials. Please try again.</string>
+    <string name="ctc_login_success">Welcome back!</string>
+    <string name="ctc_login_loading">Signing in...</string>
+    <string name="ctc_login_google_failed">Google sign-in failed. Please try again.</string>
+    <string name="ctc_register_loading">Creating your account...</string>
+    <string name="ctc_register_success">Account created! Welcome 👋</string>
+    <string name="ctc_register_error_generic">Could not create account. Please try again.</string>
+    <string name="ctc_register_fix_errors">Please fix the highlighted fields.</string>
+    <string name="ctc_register_google_failed">Google sign-up failed. Please try again.</string>
 </resources>
