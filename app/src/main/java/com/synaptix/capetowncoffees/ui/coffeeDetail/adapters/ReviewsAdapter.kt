@@ -24,40 +24,33 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 
-/**
- * ReviewsAdapter
- *
- * Photos mosaic rules:
- *   0 -> hidden
- *   1 -> full width
- *   2 -> split halves (left/right)
- *   3 -> left tall, right split (top/bottom)
- *   4+ -> 2x2 grid with "+N" badge on bottom-right
- *
- * In-App reviews show actions (like/dislike); Google reviews are read-only.
- */
+// ─────────── Adapter ───────────
+// Renders a list of reviews with an optional photo mosaic and simple in-app actions.
 class ReviewsAdapter @AssistedInject constructor(
-    @Assisted private val coroutineScope: CoroutineScope,
-    @Assisted private val onClick: (Click) -> Unit,
-    private val locationUtil: LocationUtil
+    @Assisted private val coroutineScope: CoroutineScope,                  // kept in signature for assisted construction
+    @Assisted private val onClick: (Click) -> Unit,                        // bubble up user interactions
+    private val locationUtil: LocationUtil                                 // kept for future geo-aware features
 ) : BaseAdapter<CoffeeReview, ItemCoffeeReviewBinding>(
     diff = simpleDiff(
         sameItem = { o, n -> (o.id ?: o.safeReviewKey()) == (n.id ?: n.safeReviewKey()) },
         sameContent = { o, n -> o == n },
         payload = { _, _ -> null }
     ),
-    // Keep stable ids; namespace if you like: 0x20_0000_0000L xor it.stableId()
-    idProvider = { it.stableId() }
+    idProvider = { it.stableId() }                                         // stable item ids to reduce RV churn
 ) {
-    // ✅ with the new BaseAdapter, override this hook (not getItemViewType)
-    override fun itemViewTypeFor(position: Int): Int = R.layout.item_coffee_review
 
+    public override fun itemViewTypeFor(position: Int): Int = R.layout.item_coffee_review
+
+    // ─────────── Click Events ───────────
+    // Encapsulates all user events the host can react to.
     sealed interface Click {
         data class Like(val reviewId: String) : Click
         data class Dislike(val reviewId: String) : Click
         data class OpenPhoto(val reviewId: String, val startIndex: Int, val urls: List<String>) : Click
     }
 
+    // ─────────── Factory ───────────
+    // Assisted Factory to supply runtime deps (scope, handlers).
     @AssistedFactory
     interface Factory {
         fun create(
@@ -66,58 +59,58 @@ class ReviewsAdapter @AssistedInject constructor(
         ): ReviewsAdapter
     }
 
-    fun updateItems(items: List<CoffeeReview>) = submitList(items)
+    // External update entry to keep naming consistent with other adapters.
+    public fun updateItems(items: List<CoffeeReview>) = submitList(items)
 
-    override fun onCreateBinding(inflater: LayoutInflater, parent: ViewGroup): ItemCoffeeReviewBinding =
+    // ─────────── Binding Creation ───────────
+    public override fun onCreateBinding(inflater: LayoutInflater, parent: ViewGroup): ItemCoffeeReviewBinding =
         ItemCoffeeReviewBinding.inflate(inflater, parent, false)
 
-    override fun onCreateVH(binding: ItemCoffeeReviewBinding) =
+    public override fun onCreateVH(binding: ItemCoffeeReviewBinding) =
         object : BaseViewHolder<CoffeeReview, ItemCoffeeReviewBinding>(binding) {
 
-            override fun bind(item: CoffeeReview) = with(vb) {
-                // ─── Source Chip ────────────────────────────────────────
+            // ─────────── Bind (Full) ───────────
+            // Binds all fields; uses small helpers for photo mosaic.
+            public override fun bind(item: CoffeeReview) = with(vb) {
+                // Source chip tells if this is an in-app or Google review
                 tvSourceChip.text = if (item.isInApp)
                     root.context.getString(R.string.coffee_review_chip_in_app)
                 else
                     root.context.getString(R.string.coffee_review_chip_google)
 
-                // ─── Author / Avatar ───────────────────────────────────
+                // Author & avatar (supports ByteArray/URL via avatarModelOrNull)
                 tvAuthor.text = item.authorName.orEmpty()
-
                 Glide.with(ivAvatar)
-                    .load(item.avatarModelOrNull()) // ByteArray or URL
+                    .load(item.avatarModelOrNull())
                     .placeholder(R.drawable.ic_ctc_person)
                     .error(R.drawable.ic_ctc_person)
                     .circleCrop()
                     .into(ivAvatar)
 
-                // ─── Rating (number & bar) ─────────────────────────────
+                // Rating (both numeric label and visual bar)
                 val rating = item.rating
                 tvRating.text = rating?.let { String.format("%.1f", it) } ?: ""
                 tvRating.isGone = rating == null
-
                 ratingBar.isGone = rating == null
                 ratingBar.rating = (rating ?: 0.0).toFloat()
 
-                // ─── Date ──────────────────────────────────────────────
-                val dateText = CoffeeTimeUtils.formatRelativeTime(item.publishTime)
-                tvDate.text = dateText
+                // Relative date for readability
+                tvDate.text = CoffeeTimeUtils.formatRelativeTime(item.publishTime)
                 tvDate.isGone = tvDate.text.isNullOrBlank()
 
-                // ─── Body ──────────────────────────────────────────────
+                // Review body shown only when present
                 tvBody.text = item.text.orEmpty()
                 tvBody.isVisible = !item.text.isNullOrBlank()
 
-                // ─── Photos mosaic (optional) ──────────────────────────
+                // Photo mosaic with tap-to-open gallery behavior
                 val urls = item.photoUrlsOrEmpty()
                 bindMosaic(reviewId = item.safeReviewKey(), urls = urls)
 
-                // ─── Actions (In-App only) ─────────────────────────────
-                val isInApp = item.isInApp
-                actionsContainer.isVisible = isInApp
-                dividerActions.isVisible = isInApp
-
-                if (isInApp) {
+                // In-app reviews expose like/dislike; Google is read-only
+                val inApp = item.isInApp
+                actionsContainer.isVisible = inApp
+                dividerActions.isVisible = inApp
+                if (inApp) {
                     val key = item.safeReviewKey()
                     btnLike.setOnClickListener { onClick(Click.Like(key)) }
                     btnDislike.setOnClickListener { onClick(Click.Dislike(key)) }
@@ -127,10 +120,10 @@ class ReviewsAdapter @AssistedInject constructor(
                 }
             }
 
-            override fun bind(item: CoffeeReview, payloads: List<Any>) = bind(item)
+            public override fun bind(item: CoffeeReview, payloads: List<Any>) = bind(item)
 
-            // ───────────────────────── helpers ─────────────────────────
-
+            // ─────────── Mosaic Helpers ───────────
+            // Computes a responsive layout in a ConstraintLayout for 0..N photos.
             private fun ItemCoffeeReviewBinding.bindMosaic(
                 reviewId: String,
                 urls: List<String>
@@ -140,8 +133,7 @@ class ReviewsAdapter @AssistedInject constructor(
                 if (count == 0) return
 
                 fun load(targetId: Int, url: String) {
-                    val iv =
-                        root.findViewById<com.google.android.material.imageview.ShapeableImageView>(targetId)
+                    val iv = root.findViewById<com.google.android.material.imageview.ShapeableImageView>(targetId)
                     Glide.with(iv)
                         .load(url)
                         .placeholder(R.drawable.featured_placeholder)
@@ -150,7 +142,7 @@ class ReviewsAdapter @AssistedInject constructor(
                         .into(iv)
                 }
 
-                // Reset visibilities
+                // Reset photo views before applying layout
                 ivPhoto1.isVisible = false
                 ivPhoto2.isVisible = false
                 ivPhoto3.isVisible = false
@@ -158,8 +150,7 @@ class ReviewsAdapter @AssistedInject constructor(
                 moreScrim.isVisible = false
                 tvMoreBadge.isVisible = false
 
-                val cs = ConstraintSet()
-                cs.clone(photosMosaic)
+                val cs = ConstraintSet().apply { clone(photosMosaic) }
 
                 fun clearAll() {
                     listOf(R.id.ivPhoto1, R.id.ivPhoto2, R.id.ivPhoto3, R.id.photo4Container).forEach { cs.clear(it) }
@@ -235,7 +226,7 @@ class ReviewsAdapter @AssistedInject constructor(
                         ivPhoto3.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 2, urls)) }
                     }
                     else -> {
-                        // 4+
+                        // 4+ => 2x2 grid with "+N" indicator
                         clearAll()
                         ivPhoto1.isVisible = true
                         ivPhoto2.isVisible = true
@@ -247,7 +238,6 @@ class ReviewsAdapter @AssistedInject constructor(
                         load(R.id.ivPhoto3, urls[2])
                         load(R.id.ivPhoto4, urls[3])
 
-                        // Use 2x2 grid
                         cs.connect(R.id.ivPhoto1, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
                         cs.connect(R.id.ivPhoto1, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
                         cs.connect(R.id.ivPhoto1, ConstraintSet.END, R.id.gVert50, ConstraintSet.START)
@@ -269,9 +259,10 @@ class ReviewsAdapter @AssistedInject constructor(
                         cs.connect(R.id.photo4Container, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
 
                         val more = urls.size - 4
-                        moreScrim.isVisible = more > 0
-                        tvMoreBadge.isVisible = more > 0
-                        if (more > 0) tvMoreBadge.text = "+$more"
+                        val hasMore = more > 0
+                        moreScrim.isVisible = hasMore
+                        tvMoreBadge.isVisible = hasMore
+                        if (hasMore) tvMoreBadge.text = "+$more"
 
                         ivPhoto1.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 0, urls)) }
                         ivPhoto2.setOnClickListener { onClick(Click.OpenPhoto(reviewId, 1, urls)) }

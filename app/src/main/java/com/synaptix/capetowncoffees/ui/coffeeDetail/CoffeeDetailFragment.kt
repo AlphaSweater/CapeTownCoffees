@@ -37,16 +37,33 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class CoffeeDetailFragment : Fragment() {
+
+    // ─────────── Constants ───────────
+    // Keep magic numbers/ids here for clarity and reuse.
+    private companion object {
+        private const val PHOTO_MAX_WIDTH_DP = 1000
+        private const val EFFECT_OPEN_MAP = "action_open_external_map"
+        private const val EFFECT_DIAL = "action_dial_phone"
+        private const val EFFECT_OPEN_REVIEW_GALLERY = "action_open_review_gallery"
+    }
+
+    // ─────────── Injected Dependencies ───────────
+    // Provided by Hilt; we delegate work to domain/util layers.
     @Inject lateinit var locationUtil: LocationUtil
     @Inject lateinit var coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase
-
     @Inject lateinit var reviewsAdapterFactory: ReviewsAdapter.Factory
-    private lateinit var reviewsAdapter: ReviewsAdapter
 
+    // ─────────── UI & State ───────────
+    // VM owns business/UI state; Fragment binds and handles Android-only work.
     private val vm: CafeDetailViewModel by viewModels()
+
     private var _binding: FragmentCoffeeDetailBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var reviewsAdapter: ReviewsAdapter
+
+    // ─────────── Lifecycle: View Creation ───────────
+    // Inflate view binding and return root for rendering.
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -56,25 +73,20 @@ class CoffeeDetailFragment : Fragment() {
         return binding.root
     }
 
+    // ─────────── Lifecycle: View Bound ───────────
+    // Wire adapters, listeners, and reactive collectors.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // SimpleVM lifecycle entry point
-        start(vm)
-
+        start(vm) // enter SimpleVM lifecycle
         setupRecyclers()
-
         setupUiListeners()
         setupCollectors()
-
-        // Ask for user location to enable distance once available
-        getCurrentLocation()
+        getCurrentLocation() // kick off distance once location is available
     }
 
-    // ───────────────────────── Recycler & Adapter ─────────────────────────
-
+    // ─────────── Recycler & Adapter ───────────
+    // Sets up the reviews list and routes item interactions to the VM.
     private fun setupRecyclers() = with(binding) {
-        reviewsAdapter = reviewsAdapterFactory.create(
-            viewLifecycleOwner.lifecycleScope
-        ) { click ->
+        reviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope) { click ->
             when (click) {
                 is ReviewsAdapter.Click.Like      -> vm.onReviewLike(click.reviewId)
                 is ReviewsAdapter.Click.Dislike   -> vm.onReviewDislike(click.reviewId)
@@ -88,67 +100,52 @@ class CoffeeDetailFragment : Fragment() {
 
         rvReviews.layoutManager = LinearLayoutManager(requireContext())
         rvReviews.adapter = reviewsAdapter
-        rvReviews.addItemDecoration(
-            DividerItemDecoration(
-                requireContext(),
-                DividerItemDecoration.VERTICAL
-            )
-        )
+        rvReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
     }
 
-    // ───────────────────────── UI listeners (platform only) ─────────────────────────
-
+    // ─────────── UI Listeners ───────────
+    // Only platform-level clicks here; view-model events are collected reactively.
     private fun setupUiListeners() = with(binding) {
         btnBack.setOnClickListener { findNavController().navigateUp() }
-        tvDistance.setOnClickListener { getCurrentLocation() } // user can tap to refresh distance
-        // Phone/address clicks are delegated to VM via collectors (only when available)
+        tvDistance.setOnClickListener { getCurrentLocation() } // quick refresh for distance
     }
 
-    // ─────────────────────────────── Collectors ───────────────────────────────
-
+    // ─────────── Collectors (Effects & State) ───────────
+    // Consume one-shot effects and state streams from the VM.
     private fun setupCollectors() {
-        // One-shot effects: do Android things here (intents/nav)
         collect(vm.effects) { eff ->
             when (eff) {
                 is Effect.Message  -> Toast.makeText(requireContext(), eff.text, Toast.LENGTH_SHORT).show()
                 is Effect.Navigate -> when (eff.route) {
-                    // External map intent
-                    "action_open_external_map" -> {
-                        val args = eff.args ?: return@collect
-                        val mapUrl = args.getString("map_url") ?: return@collect
-                        val intent = Intent(Intent.ACTION_VIEW, mapUrl.toUri())
-                        startActivity(intent)
+                    EFFECT_OPEN_MAP -> {
+                        val mapUrl = eff.args?.getString("map_url") ?: return@collect
+                        startActivity(Intent(Intent.ACTION_VIEW, mapUrl.toUri()))
                     }
-                    // Dial intent
-                    "action_dial_phone" -> {
-                        val phone = eff.args?.getString("phone") ?: return@collect
-                        val dial = Intent(Intent.ACTION_DIAL, "tel:${phone.filter { it.isDigit() }}".toUri())
-                        startActivity(dial)
+                    EFFECT_DIAL -> {
+                        val digits = eff.args?.getString("phone")?.filter { it.isDigit() } ?: return@collect
+                        startActivity(Intent(Intent.ACTION_DIAL, "tel:$digits".toUri()))
                     }
-                    // Open a simple photo viewer route (adapt to your NavGraph or show a bottom sheet)
-                    "action_open_review_gallery" -> {
+                    EFFECT_OPEN_REVIEW_GALLERY -> {
                         val urls = eff.args?.getStringArrayList("urls").orEmpty()
                         val start = eff.args?.getInt("start") ?: 0
-                        // Example: open external viewer for the tapped photo; replace with your gallery
                         val uri = urls.getOrNull(start)?.toUri() ?: return@collect
-                        startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        startActivity(Intent(Intent.ACTION_VIEW, uri)) // basic viewer; replace with in-app gallery when ready
                     }
-                    // Fallback: use NavController if route is a nav graph destination
                     else -> findNavController().navigate(eff.route.toUri(), null)
                 }
             }
         }
 
-        // Loadable place: VM owns derivation, Fragment binds image + loading
+        // Place loadable: drive image and loading indicator.
         collectLoadable(vm.place) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized -> showLoading(false)
-                Loadable.Loading -> showLoading(true)
-                is Loadable.Data -> {
+                Loadable.Loading       -> showLoading(true)
+                is Loadable.Data       -> {
                     showLoading(false)
                     updateImage(loadable.value)
                 }
-                is Loadable.Error -> {
+                is Loadable.Error      -> {
                     showLoading(false)
                     Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                     Timber.e("Place load error: ${loadable.error.message}")
@@ -156,11 +153,11 @@ class CoffeeDetailFragment : Fragment() {
             }
         }
 
-        // UI-ready state: just bind values (no logic here)
+        // UI-ready fields: bind straightforwardly with light view logic.
         collect(vm.ui.flow) { ui ->
             binding.tvCafeName.text = ui.name
 
-            // Address text + click decoration
+            // Address text + underline when clickable
             binding.tvCafeAddress.text = ui.address
             binding.tvCafeAddress.paintFlags = if (ui.addressClickable)
                 binding.tvCafeAddress.paintFlags or Paint.UNDERLINE_TEXT_FLAG
@@ -171,35 +168,32 @@ class CoffeeDetailFragment : Fragment() {
                 if (ui.addressClickable) View.OnClickListener { vm.onAddressClicked() } else null
             )
 
-            // Opening hours (already formatted)
-            binding.tvOpeningHours.text = if (ui.hasOpeningHours)
-                ui.openingHoursText
-            else
-                getString(R.string.no_opening_hours_available)
+            // Opening hours text is pre-formatted by the VM
+            binding.tvOpeningHours.text = if (ui.hasOpeningHours) ui.openingHoursText
+            else getString(R.string.no_opening_hours_available)
 
-            // Phone
+            // Phone (visible only when provided)
             binding.tvPhone.isVisible = ui.phoneNumber != null
             binding.tvPhone.text = ui.phoneNumber.orEmpty()
             binding.tvPhone.setOnClickListener(
                 if (ui.phoneNumber != null) View.OnClickListener { vm.onPhoneClicked() } else null
             )
 
-            // Rating
+            // Rating block toggles as a unit
             binding.ratingBar.isVisible = ui.showRating
             binding.tvRating.isVisible = ui.showRating
             if (ui.showRating) {
                 binding.ratingBar.rating = ui.rating?.toFloat() ?: 0f
-                // Prefer count badge if present, else numeric rating
                 binding.tvRating.text = ui.ratingCountText ?: ui.rating?.toString() ?: ""
             }
 
-            // Distance (computed in VM when both locations known)
+            // Distance (computed when user + place locations are known)
             binding.tvDistance.isVisible = ui.showDistance
             binding.ivPin.isVisible = ui.showDistance
             binding.tvDistance.text = ui.distanceText.orEmpty()
         }
 
-        // Reviews remain a Loadable; render as you like
+        // Reviews: show skeleton while loading, list or error otherwise.
         collectLoadable(vm.reviews) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> showReviewsSkeleton()
@@ -209,25 +203,22 @@ class CoffeeDetailFragment : Fragment() {
         }
     }
 
-    // ───────────────────────────── Render helpers ─────────────────────────────
-
+    // ─────────── Render Helpers ───────────
+    // Small view helpers to keep collectors tidy.
     private fun renderReviews(list: List<CoffeeReview>) = with(binding) {
-        // Optional empty-state view if you have one
         reviewsEmpty.isVisible = list.isEmpty()
         rvReviews.isVisible = list.isNotEmpty()
         reviewsAdapter.updateItems(list)
     }
 
     private fun showReviewsSkeleton() = with(binding) {
-        // Toggle your shimmer/skeleton views if present
         reviewsEmpty.isVisible = false
-        // Optionally show a shimmer container here
+        // Hook shimmer/skeleton view here when available
     }
 
     private fun showReviewsError(msg: String, retry: () -> Unit) {
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-        // If you have a dedicated error view with a retry button, wire it here
-        // binding.reviewsError.retryButton.setOnClickListener { retry() }
+        // Wire a retry button if a dedicated error view exists
     }
 
     private fun updateImage(cafe: CoffeePlaceFull) {
@@ -235,7 +226,7 @@ class CoffeeDetailFragment : Fragment() {
         val placeholderRes = R.drawable.featured_placeholder
         cafe.images?.firstOrNull()?.let { meta ->
             viewLifecycleOwner.lifecycleScope.launch {
-                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(meta, maxWidthDp = 1000)
+                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(meta, maxWidthDp = PHOTO_MAX_WIDTH_DP)
                 if (uri != null) {
                     Glide.with(imageView.context)
                         .load(uri)
@@ -252,27 +243,25 @@ class CoffeeDetailFragment : Fragment() {
         binding.progressBar.isVisible = isLoading
     }
 
-    // ───────────────────────────── Location plumbing ─────────────────────────────
-
+    // ─────────── Location ───────────
+    // Requests a single current location and forwards it to the VM for distance calc.
     private fun getCurrentLocation() {
-        // Fetch and let the VM compute distance text
         viewLifecycleOwner.lifecycleScope.launch {
             @Suppress("MissingPermission")
             runCatching { locationUtil.getCurrentLatLng().getOrNull() }
-                .onSuccess { location -> location?.let { vm.onUserLocation(it) } }
+                .onSuccess { it?.let(vm::onUserLocation) }
                 .onFailure {
                     Timber.e(it, "Failed to get current location")
-                    // VM will hide distance when it can't compute it next tick
+                    // VM will hide distance if it cannot compute it
                 }
         }
     }
 
-    // ───────────────────────────── Intents ─────────────────────────────
-
-    @Deprecated ("Use Effect.Navigate instead")
+    // ─────────── Intents (Legacy) ───────────
+    // Left for reference; new flows should emit Effect.Navigate instead.
+    @Deprecated("Use Effect.Navigate instead")
     private fun openMaps(location: LatLng, address: String) {
-        val gmmIntentUri =
-            "geo:${location.latitude},${location.longitude}?q=${Uri.encode(address)}".toUri()
+        val gmmIntentUri = "geo:${location.latitude},${location.longitude}?q=${Uri.encode(address)}".toUri()
         val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
             setPackage("com.google.android.apps.maps")
         }
@@ -287,8 +276,8 @@ class CoffeeDetailFragment : Fragment() {
         }
     }
 
-    // ───────────────────────────── Lifecycle ─────────────────────────────
-
+    // ─────────── Lifecycle: Teardown ───────────
+    // Clear binding references to avoid leaks.
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
