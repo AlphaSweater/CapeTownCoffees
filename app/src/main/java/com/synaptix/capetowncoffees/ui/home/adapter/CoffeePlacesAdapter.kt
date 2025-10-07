@@ -22,6 +22,7 @@ import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsU
 import com.synaptix.capetowncoffees.ui.common.BaseAdapter
 import com.synaptix.capetowncoffees.ui.common.BaseViewHolder
 import com.synaptix.capetowncoffees.ui.common.simpleDiff
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -226,8 +227,8 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         }
 
         private fun ItemCoffeeNearMeBinding.renderDistance(item: CoffeePlaceLite) {
-            val meters = locationUtil.distanceMeters(getCurrentLocation(), item.location)
-            val label = if (meters < 1) null else locationUtil.distanceAndEtaLabel(meters)
+            val meters = LocationFormattingUtil.distanceMeters(getCurrentLocation(), item.location)
+            val label = if (meters < 1) null else LocationFormattingUtil.distanceAndEtaLabel(meters)
             tvDistance.isGone = label.isNullOrBlank()
             if (!label.isNullOrBlank()) tvDistance.text = label
         }
