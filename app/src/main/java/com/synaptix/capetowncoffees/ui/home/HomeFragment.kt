@@ -25,7 +25,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.transition.platform.MaterialSharedAxis
 import com.synaptix.capetowncoffees.R
-import com.synaptix.capetowncoffees.databinding.FragmentHomeNewBinding
+import com.synaptix.capetowncoffees.databinding.FragmentHomeBinding
 import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
@@ -47,7 +47,7 @@ import javax.inject.Inject
 class HomeFragment : Fragment() {
 
     /* ╭─────────────────────────── View & VM ───────────────────────────╮ */
-    private var _binding: FragmentHomeNewBinding? = null
+    private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val vm: HomeViewModel by activityViewModels()
     /* ╰──────────────────────────────────────────────────────────────────╯ */
@@ -132,7 +132,7 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentHomeNewBinding.inflate(inflater, container, false)
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
