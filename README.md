@@ -50,7 +50,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 ## 🔧 Tech Stack
 ### Core
 
-- 100% [Kotlin](https://kotlinlang.org/)
+- [Kotlin](https://kotlinlang.org/)
 - [Jetpack Compose](https://developer.android.com/jetpack/compose)
 - [Material3 design](https://m3.material.io/) (UI components)
 - [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) (structured concurrency)
