@@ -1,13 +1,28 @@
-package com.synaptix.capetowncoffees.ui.privacy
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT assisted in designing and structuring this Fragment, including lifecycle
+//handling, navigation setup, and interaction with the ViewModel.
+//* It also provided guidance on ConstraintLayout usage and UI event handling.
+//* It also helped generate useful comments
+//======================================================================================
+
+package com.synaptix.capetowncoffees.ui.settings.privacy
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.synaptix.capetowncoffees.BuildConfig
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.appbar.MaterialToolbar
 import com.synaptix.capetowncoffees.R
 
 class PrivacyPolicyFragment : Fragment() {
@@ -21,8 +36,9 @@ class PrivacyPolicyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<ImageView>(R.id.btnBack).setOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+        // Toolbar back
+        view.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+            findNavController().navigateUp()
         }
     }
 }

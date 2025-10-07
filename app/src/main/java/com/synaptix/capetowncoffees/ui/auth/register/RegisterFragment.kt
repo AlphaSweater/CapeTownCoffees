@@ -1,13 +1,29 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT assisted in designing and structuring this Fragment, including lifecycle
+//handling, navigation setup, and interaction with the ViewModel.
+//* It also provided guidance on ConstraintLayout usage and UI event handling.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.auth.register
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -19,12 +35,23 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
+
+    // ─────────── Dependencies & State ───────────
+    // View binding follows Fragment view lifecycle; gate access via 'binding'
     private var _binding: FragmentAuthRegisterBinding? = null
     private val binding get() = _binding!!
+
+    // VM that drives registration flow (DI provided)
     private val viewModel: RegisterViewModel by viewModels()
 
+    // Google sign-in client is configured after view is created
     private lateinit var signInClient: GoogleSignInClient
 
+    // Keep a single toast instance so messages don't stack
+    private var activeToast: Toast? = null
+
+    // ─────────── Activity Result Launchers ───────────
+    // Handles Google sign-in result and forwards token to VM
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -32,12 +59,14 @@ class RegisterFragment : Fragment() {
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken ?: throw IllegalStateException("No ID token")
+            toast(getString(R.string.ctc_register_loading))
             viewModel.registerWithGoogleToken(idToken)
-        } catch (e: Exception) {
-            // Optional: surface a message
+        } catch (_: Exception) {
+            toast(getString(R.string.ctc_register_google_failed))
         }
     }
 
+    // ─────────── Lifecycle ───────────
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -50,12 +79,16 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // ─────────── Init Google Sign-In ───────────
+        // Request ID token + email; token is exchanged in VM
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         signInClient = GoogleSignIn.getClient(requireActivity(), gso)
 
+        // ─────────── UI Wiring ───────────
+        // Email/password sign-up
         binding.buttonSignUp.setOnClickListener {
             val name = binding.nameEditText.text.toString()
             val email = binding.emailEditText.text.toString()
@@ -64,43 +97,37 @@ class RegisterFragment : Fragment() {
             viewModel.registerUser(name, email, pass, confirm)
         }
 
+        // Google sign-up (sign out first to force account chooser)
         binding.buttonGoogleRegister.setOnClickListener {
             signInClient.signOut().addOnCompleteListener {
                 googleLauncher.launch(signInClient.signInIntent)
             }
         }
 
-        // Set up click listener for the Sign In text
+        // Swap to Login
         binding.textLoginSwap.setOnClickListener {
             findNavController().navigateUp()
         }
 
-        // Set up click listener for the Sign Up button
-        binding.buttonSignUp.setOnClickListener {
-            val name = binding.nameEditText.text.toString()
-            val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
-            val confirmPassword = binding.confirmPasswordEditText.text.toString()
-            viewModel.registerUser(name, email, password, confirmPassword)
-        }
-
-        // TODO: Add error text view to show errors
-        // Observe ViewModel state
-        viewModel.registerState.observe(viewLifecycleOwner, Observer { state ->
+        // ─────────── Observers ───────────
+        // React to registration state and update UI/feedback
+        viewModel.registerState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is RegisterUiState.Loading -> {
                     binding.buttonSignUp.isEnabled = false
+                    toast(getString(R.string.ctc_register_loading))
                 }
                 is RegisterUiState.Success -> {
                     binding.buttonSignUp.isEnabled = true
+                    toast(getString(R.string.ctc_register_success))
                     findNavController().navigate(R.id.action_authRegisterFragment_to_homeFragment)
                     viewModel.resetState()
                 }
                 is RegisterUiState.Error -> {
                     binding.buttonSignUp.isEnabled = true
-                    // Show error message (e.g., Toast or errorTextView)
-                    // binding.errorTextView.text = state.message
-                    // binding.errorTextView.visibility = View.VISIBLE
+                    val msg = state.message?.takeIf { it.isNotBlank() }
+                        ?: getString(R.string.ctc_register_error_generic)
+                    toast(msg)
                 }
                 is RegisterUiState.ValidationError -> {
                     binding.buttonSignUp.isEnabled = true
@@ -108,6 +135,7 @@ class RegisterFragment : Fragment() {
                     binding.emailInputLayout.error = state.emailError
                     binding.passwordInputLayout.error = state.passwordError
                     binding.confirmPasswordInputLayout.error = state.confirmPasswordError
+                    toast(getString(R.string.ctc_register_fix_errors))
                 }
                 is RegisterUiState.Idle -> {
                     binding.buttonSignUp.isEnabled = true
@@ -117,11 +145,20 @@ class RegisterFragment : Fragment() {
                     binding.confirmPasswordInputLayout.error = null
                 }
             }
-        })
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        activeToast?.cancel()
+        activeToast = null
         _binding = null
+    }
+
+    // ─────────── Helpers ───────────
+    // Small toast helper that cancels any prior toast before showing a new one
+    private fun toast(msg: CharSequence) {
+        activeToast?.cancel()
+        activeToast = Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).also { it.show() }
     }
 }

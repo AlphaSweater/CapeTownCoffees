@@ -22,33 +22,8 @@ import kotlinx.coroutines.withTimeout
 import java.util.Locale
 
 /* ──────────────────────────────────────────────────────────────────────────────
- * LOCATION UTIL — Public API overview
+ * LOCATION UTIL — Fetch user location
  * ────────────────────────────────────────────────────────────────────────────── */
-
-/**
- * Small location utility tailored for a coffee-finder UX.
- *
- * When to use:
- * - You need a quick "best effort" user position: try fresh fix with timeout, else last known.
- * - You want simple, UI-friendly distance/ETA formatting without pulling extra libs.
- *
- * Guarantees:
- * - Public fetchers return a `Result<LatLng>`: never throw; callers handle success/failure.
- * - Fetch strategy: **fresh with timeout → last known**. Quality is checked by age/accuracy.
- *
- * Details:
- * - Requires either `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION`.
- * - If `highAccuracyWhenFine=true` and FINE is granted, requests high-accuracy; else balanced/low power.
- * - Quality gate is controlled via `maxAgeMs` and `maxAccuracyM` parameters.
- *
- * Edge cases:
- * - Timeout on fresh fix returns fallback last known (if it passes quality); otherwise `failure`.
- * - Lack of permissions returns `failure(SecurityException)`.
- *
- * Gotchas:
- * - `lastLocation` can be `null` (first launch, location disabled, Play services cleanup).
- * - Setting overly strict `maxAccuracyM`/`maxAgeMs` may reject otherwise useful fixes.
- */
 class LocationUtil @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val fused: FusedLocationProviderClient
@@ -61,23 +36,9 @@ class LocationUtil @Inject constructor(
     /**
      * Get current user coordinates using **fresh→fallback** strategy.
      *
-     * Strategy:
-     * - Try `getCurrentLocation()` with a timeout.
-     * - If success but not "good enough", fall back to `lastLocation`.
-     * - Apply quality gates: `maxAgeMs` and `maxAccuracyM`.
-     *
-     * ### Examples
-     * ```kotlin
-     * val result = locationUtil.getCurrentLatLng()
-     * result.onSuccess { latLng -> /* render map pin */ }
-     *       .onFailure { /* prompt for permission or retry */ }
-     * ```
-     *
-     * @param timeoutMs Max time for the fresh fix before attempting fallback.
-     * @param highAccuracyWhenFine Use high accuracy only when FINE is granted.
-     * @param maxAgeMs Accept fixes at most this old (ms).
-     * @param maxAccuracyM Require this accuracy (meters) or better.
-     * @return `Result.success(LatLng)` on good fix; `Result.failure` otherwise.
+     * 1) Try fresh fix with timeout.
+     * 2) If not good enough, fall back to last known.
+     * 3) Apply freshness/accuracy gates.
      */
     @RequiresPermission(
         anyOf = [
@@ -112,22 +73,6 @@ class LocationUtil @Inject constructor(
     /* ─────────────────────────────────────────────────────────────────────
      * Public: Fetch user's LatLng (callback variant)
      * ───────────────────────────────────────────────────────────────────── */
-
-    /**
-     * Callback variant of [getCurrentLatLng].
-     *
-     * Use when you are already in a `CoroutineScope` (e.g., `viewModelScope`) and want a simple
-     * callback without manual `launch`. Returns the underlying `Deferred<Result<LatLng>>` if you
-     * need to await/cancel upstream.
-     *
-     * ### Examples
-     * ```kotlin
-     * locationUtil.getCurrentLatLng(viewModelScope) { result ->
-     *   result.onSuccess { latLng -> /* render */ }
-     *         .onFailure { /* request permission or show snackbar */ }
-     * }
-     * ```
-     */
     @RequiresPermission(
         anyOf = [
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -164,7 +109,7 @@ class LocationUtil @Inject constructor(
 
     /**
      * Attempt a fresh location fix with timeout and dynamic priority.
-     * - FINE + `highAccuracyWhenFine` → HIGH_ACCURACY
+     * - FINE + highAccuracyWhenFine → HIGH_ACCURACY
      * - FINE only → BALANCED_POWER_ACCURACY
      * - COARSE only → LOW_POWER
      */
@@ -228,39 +173,31 @@ class LocationUtil @Inject constructor(
 
     /** Convert `Location` to `LatLng`. */
     private fun Location.toLatLng(): LatLng = LatLng(latitude, longitude)
+}
 
-    /* ─────────────────────────────────────────────────────────────────────
-     * Public UI helpers
-     * ───────────────────────────────────────────────────────────────────── */
+/* ──────────────────────────────────────────────────────────────────────────────
+ * LOCATION FORMATTING
+ * ────────────────────────────────────────────────────────────────────────────── */
+object LocationFormattingUtil {
 
     /** Unit system for display. */
     enum class UnitSystem { METRIC, IMPERIAL }
 
     /** Travel mode with nominal speeds for rough ETAs. */
     enum class TravelMode(val metersPerSecond: Float) {
-        WALK(1.4f),   // ≈ 5 km/h (average walking speed)
-        DRIVE(13.9f), // ≈ 50 km/h (urban driving average)
-        BIKE(4.1f),   // ≈ 15 km/h (optional, for completeness)
-        RUN(3.0f);    // ≈ 10.8 km/h (optional, for completeness)
+        WALK(1.4f),   // ≈ 5 km/h
+        DRIVE(13.9f), // ≈ 50 km/h
+        BIKE(4.1f),   // ≈ 15 km/h
+        RUN(3.0f)     // ≈ 10.8 km/h
     }
 
-
-    /**
-     * Choose unit system from locale (`US`, `LR`, `MM` → imperial; otherwise metric).
-     */
+    /** Choose unit system from locale (`US`, `LR`, `MM` → imperial; else metric). */
     fun preferredUnitSystem(locale: Locale = Locale.getDefault()): UnitSystem =
         if (locale.country in setOf("US", "LR", "MM")) UnitSystem.IMPERIAL else UnitSystem.METRIC
 
     /**
-     * Format a human-friendly distance label.
-     * - Metric: `"850 m"`, `"1.2 km"`.
-     * - Imperial: `"900 ft"`, `"0.6 mi"`.
-     * - Optional `~` prefix for approximate values when using decimals.
-     *
-     * @param metersInput Negative/NaN/Inf coerced to `0f`.
-     * @param unit Preferred display system; defaults from [preferredUnitSystem].
-     * @param includeSuffix Append `" away"` or custom suffix.
-     * @param approx If true, prefix `"~ "` for fractional km/mi.
+     * Format a human-friendly distance.
+     * Metric: "850 m" / "1.2 km"; Imperial: "900 ft" / "0.6 mi".
      */
     fun formatDistance(
         metersInput: Float,
@@ -302,9 +239,7 @@ class LocationUtil @Inject constructor(
         return if (includeSuffix) "$label $suffix" else label
     }
 
-    /**
-     * Compute distance in meters between two `LatLng` points.
-     */
+    /** Compute distance in meters between two `LatLng` points. */
     fun distanceMeters(a: LatLng?, b: LatLng?): Float {
         if (a == null || b == null) return Float.NaN
         val out = FloatArray(1)
@@ -313,13 +248,7 @@ class LocationUtil @Inject constructor(
     }
 
     /**
-     * Build a quick ETA label (assumes straight-line and nominal speed).
-     * - `<1 min` when under a minute.
-     * - `"12 min"` for under an hour.
-     * - `"1 hr 5 min"` for 60+ minutes.
-     *
-     * @param distanceMeters Negative/NaN/Inf coerced to `0f`.
-     * @param mode Pick a nominal speed profile (walk/drive).
+     * Quick ETA label (straight-line + nominal speed): "<1 min", "12 min", "1 hr 5 min".
      */
     fun etaLabel(
         distanceMeters: Float,
@@ -341,9 +270,7 @@ class LocationUtil @Inject constructor(
         }
     }
 
-    /**
-     * Convenience combo for list rows, e.g., `"1.2 km • 15 min"`.
-     */
+    /** Convenience combo for list rows, e.g., "1.2 km • 15 min". */
     fun distanceAndEtaLabel(
         meters: Float,
         locale: Locale = Locale.getDefault(),

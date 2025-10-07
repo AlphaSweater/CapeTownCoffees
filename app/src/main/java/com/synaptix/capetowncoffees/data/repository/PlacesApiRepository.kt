@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT was used to clarify repository patterns, data source integration, and best
+//practices for separating data access logic from UI components.
+//* It also provided suggestions to improve maintainability and consistency.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.data.repository
 
 import com.google.android.gms.common.api.ApiException
@@ -123,12 +139,13 @@ class PlacesApiRepository @Inject constructor(
             val suggestions = response.autocompletePredictions
                 .asSequence()
                 .filter { isCoffeeRelatedPrediction(it, params) }
-                .take(params.maxResults.coerceIn(1, 5))
+                .take(params.maxResults.coerceIn(1, params.maxResults))
                 .map { prediction ->
                     CoffeePlaceSuggestion(
                         id = prediction.placeId,
                         name = prediction.getPrimaryText(null).toString(),
-                        address = prediction.getSecondaryText(null).toString()
+                        address = prediction.getSecondaryText(null).toString(),
+                        distance = prediction.distanceMeters
                     )
                 }
                 .toList()

@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT assisted in designing and structuring this Fragment, including lifecycle
+//handling, navigation setup, and interaction with the ViewModel.
+//* It also provided guidance on ConstraintLayout usage and UI event handling.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.settings
 
 import android.content.res.Configuration
@@ -5,183 +21,198 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Switch
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.snackbar.Snackbar
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.ThemeManager
+import com.synaptix.capetowncoffees.databinding.FragmentSettingsBinding
 import com.synaptix.capetowncoffees.domain.usecase.auth.AuthManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
-    @Inject
-    lateinit var authManager: AuthManager
+    @Inject lateinit var authManager: AuthManager
+
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
+
+    private val uiScope = CoroutineScope(Dispatchers.Main + Job())
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_settings, container, false)
+    ): View {
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set up back button click listener
-        view.findViewById<View>(R.id.btnBack)?.setOnClickListener {
+        // Toolbar back
+        binding.root.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
 
-        // Appearance toggle: ON = Dark, OFF = Light
-        val switchDark = view.findViewById<Switch>(R.id.switchDarkMode)
-        switchDark?.let { sw ->
-            val saved = ThemeManager.getSavedMode(requireContext())
-            val isSystemDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            val initialChecked = when (saved) {
-                ThemeManager.ThemeMode.DARK -> true
-                ThemeManager.ThemeMode.LIGHT -> false
-                ThemeManager.ThemeMode.SYSTEM -> isSystemDark
-            }
-            sw.isChecked = initialChecked
-
-            sw.setOnCheckedChangeListener { _, checked ->
-                val mode = if (checked) ThemeManager.ThemeMode.DARK else ThemeManager.ThemeMode.LIGHT
-                ThemeManager.setTheme(requireContext(), mode)
+        // --- Toggles ---
+        // Dark mode (ON = dark, OFF = light; keep SYSTEM by long-press if you want later)
+        val darkSwitch: MaterialSwitch = binding.switchDarkMode
+        darkSwitch.isChecked = when (ThemeManager.getSavedMode(requireContext())) {
+            ThemeManager.ThemeMode.DARK -> true
+            ThemeManager.ThemeMode.LIGHT -> false
+            ThemeManager.ThemeMode.SYSTEM -> {
+                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                        Configuration.UI_MODE_NIGHT_YES
             }
         }
-
-        // Set up logout button
-        view.findViewById<View>(R.id.layoutLogout)?.setOnClickListener {
-            showLogoutConfirmation()
+        darkSwitch.setOnCheckedChangeListener { _, checked ->
+            ThemeManager.setTheme(
+                requireContext(),
+                if (checked) ThemeManager.ThemeMode.DARK else ThemeManager.ThemeMode.LIGHT
+            )
         }
 
-        // Set up delete account button
-        view.findViewById<View>(R.id.layoutDeleteAccount)?.setOnClickListener {
-            showDeleteAccountConfirmation()
+        // Push notifications (wire to your pref/FCM manager if needed)
+        val pushSwitch: MaterialSwitch = binding.switchPushNotifications
+        // Example: loadSavedPushEnabled()
+        pushSwitch.isChecked = true
+        pushSwitch.setOnCheckedChangeListener { _, enabled ->
+            // save to prefs / enable-disable notifications
+            Snackbar.make(binding.settingsRoot, if (enabled) R.string.enabled else R.string.disabled, Snackbar.LENGTH_SHORT).show()
         }
 
-        // Set up clear cache button
-        view.findViewById<View>(R.id.layoutClearCache)?.setOnClickListener {
-            showClearCacheConfirmation()
-        }
-
-        //set up privacy policy button
-        view.findViewById<View>(R.id.layoutPrivacySettings)?.setOnClickListener {
+        // --- Row clicks ---
+        binding.layoutPrivacySettings.setOnClickListener {
             findNavController().navigate(R.id.privacyPolicyFragment)
         }
+
+        binding.layoutClearCache.setOnClickListener { confirmClearCache() }
+
+        binding.layoutDeleteAccount.setOnClickListener { confirmDeleteAccount() }
+
+        binding.layoutLogout.setOnClickListener { confirmLogout() }
     }
 
-    private fun showLogoutConfirmation() {
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Logout")
-            .setMessage("Are you sure you want to logout?")
-            .setPositiveButton("Logout") { _, _ ->
-                performLogout()
-            }
-            .setNegativeButton("Cancel", null)
+    // region Confirmations
+
+    private fun confirmLogout() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.logout)
+            .setMessage(R.string.logout_confirm_message)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.logout) { _, _ -> performLogout() }
             .show()
     }
+
+    private fun confirmDeleteAccount() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delete_account)
+            .setMessage(R.string.delete_account_confirm_message)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.delete) { _, _ -> deleteAccount() }
+            .show()
+    }
+
+    private fun confirmClearCache() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.clear_cache)
+            .setMessage(R.string.clear_cache_confirm_message)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.clear_cache) { _, _ -> clearCache() }
+            .show()
+    }
+
+    // endregion
+
+    // region Actions
 
     private fun performLogout() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        uiScope.launch {
             try {
-                val result = authManager.logout()
-                if (result is com.synaptix.capetowncoffees.domain.usecase.auth.LogoutResult.Success) {
-                    // Navigate back to sign in screen and clear the back stack
-                    val navOptions = NavOptions.Builder()
-                        .setPopUpTo(R.id.nav_graph, true)
-                        .build()
-                    findNavController().navigate(R.id.signInFragment, null, navOptions)
-                } else {
-                    showError("Failed to logout. Please try again.")
+                when (authManager.logout()) {
+                    is com.synaptix.capetowncoffees.domain.usecase.auth.LogoutResult.Success -> {
+                        val navOptions = NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_graph, true)
+                            .build()
+                        findNavController().navigate(R.id.signInFragment, null, navOptions)
+                    }
+                    else -> snackError(getString(R.string.logout_failed))
                 }
             } catch (e: Exception) {
-                showError("An error occurred: ${e.message}")
+                snackError(getString(R.string.generic_error))
             }
         }
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun showClearCacheConfirmation() {
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Clear Cache")
-            .setMessage("Are you sure you want to clear all cached data? This will not delete your account or personal data.")
-            .setPositiveButton("Clear Cache") { _, _ ->
-                clearCache()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun clearCache() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                // Clear app cache
-                val cacheDir = requireContext().cacheDir
-                deleteRecursive(cacheDir)
-                
-                // Clear external cache if available
-                val externalCacheDir = requireContext().externalCacheDir
-                if (externalCacheDir != null) {
-                    deleteRecursive(externalCacheDir)
-                }
-                
-                Toast.makeText(requireContext(), "Cache cleared successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                showError("Failed to clear cache: ${e.message}")
-            }
-        }
-    }
-    
-    private fun deleteRecursive(fileOrDirectory: java.io.File) {
-        if (fileOrDirectory.isDirectory) {
-            fileOrDirectory.listFiles()?.forEach { child ->
-                deleteRecursive(child)
-            }
-        }
-        // Don't delete the directory itself, just its contents
-        if (fileOrDirectory != requireContext().cacheDir && fileOrDirectory != requireContext().externalCacheDir) {
-            fileOrDirectory.delete()
-        }
-    }
-
-    private fun showDeleteAccountConfirmation() {
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Delete Account")
-            .setMessage("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.")
-            .setPositiveButton("Delete") { _, _ ->
-                deleteAccount()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 
     private fun deleteAccount() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        uiScope.launch {
             try {
                 val result = authManager.deleteAccount()
                 if (result.isSuccess) {
-                    // Navigate to sign in screen after successful deletion
                     val navOptions = NavOptions.Builder()
                         .setPopUpTo(R.id.nav_graph, true)
                         .build()
                     findNavController().navigate(R.id.signInFragment, null, navOptions)
-                    Toast.makeText(requireContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.settingsRoot, R.string.account_deleted, Snackbar.LENGTH_LONG).show()
                 } else {
-                    showError("Failed to delete account. Please try again.")
+                    snackError(getString(R.string.delete_failed))
                 }
             } catch (e: Exception) {
-                showError("An error occurred: ${e.message}")
+                snackError(getString(R.string.generic_error))
             }
         }
+    }
+
+    private fun clearCache() {
+        uiScope.launch(Dispatchers.IO) {
+            try {
+                // Clear internal cache
+                requireContext().cacheDir?.let { clearDirChildren(it) }
+                // Clear external cache
+                requireContext().externalCacheDir?.let { clearDirChildren(it) }
+
+                launch(Dispatchers.Main) {
+                    Snackbar.make(binding.settingsRoot, R.string.cache_cleared, Snackbar.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    snackError(getString(R.string.generic_error))
+                }
+            }
+        }
+    }
+
+    private fun clearDirChildren(dir: File) {
+        dir.listFiles()?.forEach { child ->
+            if (child.isDirectory) {
+                clearDirChildren(child)
+            }
+            // Delete children; keep the root directory
+            runCatching { child.delete() }
+        }
+    }
+
+    // endregion
+
+    private fun snackError(message: String) {
+        Snackbar.make(binding.settingsRoot, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

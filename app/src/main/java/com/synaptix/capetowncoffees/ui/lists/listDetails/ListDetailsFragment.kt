@@ -1,11 +1,30 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT assisted in designing and structuring this Fragment, including lifecycle
+//handling, navigation setup, and interaction with the ViewModel.
+//* It also provided guidance on ConstraintLayout usage and UI event handling.
+//* It also helped generate useful comments
+//======================================================================================
 
+package com.synaptix.capetowncoffees.ui.lists.listDetails
+
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -13,10 +32,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.google.android.material.appbar.MaterialToolbar
 import com.synaptix.capetowncoffees.R
+import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import timber.log.Timber
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ListDetailsFragment : Fragment() {
@@ -29,6 +51,7 @@ class ListDetailsFragment : Fragment() {
 
     // Inject the Assisted factory for the adapter
     @Inject lateinit var listDetailsAdapterFactory: ListDetailsPlacesAdapter.Factory
+    @Inject lateinit var locationUtil: LocationUtil
     private lateinit var placesAdapter: ListDetailsPlacesAdapter
 
     override fun onCreateView(
@@ -37,12 +60,18 @@ class ListDetailsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View = inflater.inflate(R.layout.fragment_list_details, container, false)
 
+    @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         tvTitle   = view.findViewById(R.id.tvTitle)
         ivPrivacy = view.findViewById(R.id.ivPrivacy)
         recycler  = view.findViewById(R.id.recyclerPlaces)
+
+        // Hook up toolbar back navigation (layout uses MaterialToolbar with navigationIcon)
+        view.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
 
         // Create adapter with lifecycle-aware scope + click navigation
         placesAdapter = listDetailsAdapterFactory.create(
@@ -60,9 +89,15 @@ class ListDetailsFragment : Fragment() {
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         }
 
-        // Back button in header
-        view.findViewById<View>(R.id.btnBack).setOnClickListener {
-            findNavController().navigateUp()
+        // Fetch user location (optional) and provide to adapter for distance display
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = locationUtil.getCurrentLatLng()
+            result.onSuccess { latLng ->
+                Timber.d("Got user location: $latLng")
+                placesAdapter.setUserLocation(latLng)
+            }.onFailure { e ->
+                Timber.i(e, "Could not obtain user location (permissions?); distances hidden")
+            }
         }
 
         val listId = arguments?.getString("listId")
@@ -99,7 +134,7 @@ class ListDetailsFragment : Fragment() {
 
         // Delete list
         view.findViewById<View>(R.id.btnDeleteList).setOnClickListener {
-            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            AlertDialog.Builder(requireContext())
                 .setTitle("Delete List")
                 .setMessage("Are you sure you want to delete this list? This action cannot be undone.")
                 .setPositiveButton("Delete") { _, _ ->
@@ -108,10 +143,10 @@ class ListDetailsFragment : Fragment() {
                         onDone = { findNavController().navigateUp() },
                         onError = { e ->
                             Timber.e(e, "Failed to delete list")
-                            android.widget.Toast.makeText(
+                            Toast.makeText(
                                 requireContext(),
                                 "Failed to delete list: ${e.message}",
-                                android.widget.Toast.LENGTH_SHORT
+                                Toast.LENGTH_SHORT
                             ).show()
                         }
                     )

@@ -1,4 +1,20 @@
-package com.synaptix.capetowncoffees.ui.savedLists
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT provided assistance in designing ViewModel logic, LiveData handling, and
+//implementing clean MVVM architecture principles.
+//* It also helped refine data flow between repositories and UI layers.
+//* It also helped generate useful comments
+//======================================================================================
+
+package com.synaptix.capetowncoffees.ui.lists.listDetails
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -7,7 +23,6 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
-import com.synaptix.capetowncoffees.domain.model.CoffeeUser
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
@@ -52,8 +67,8 @@ class ListDetailsViewModel @Inject constructor(
         }
     }
 
-    private val _places = MutableLiveData<kotlin.collections.List<CoffeePlaceFull>>()
-    val places: LiveData<kotlin.collections.List<CoffeePlaceFull>> get() = _places
+    private val _places = MutableLiveData<List<CoffeePlaceFull>>()
+    val places: LiveData<List<CoffeePlaceFull>> get() = _places
 
     fun loadPlacesForIds(ids: List<String>) {
         if (ids.isEmpty()) {

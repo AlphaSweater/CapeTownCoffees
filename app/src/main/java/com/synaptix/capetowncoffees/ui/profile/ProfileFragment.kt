@@ -1,124 +1,133 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT assisted in designing and structuring this Fragment, including lifecycle
+//handling, navigation setup, and interaction with the ViewModel.
+//* It also provided guidance on ConstraintLayout usage and UI event handling.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.profile
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
+import android.util.Base64
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.MaterialToolbar
 import com.synaptix.capetowncoffees.R
+import com.synaptix.capetowncoffees.databinding.FragmentProfileNewBinding
 import com.synaptix.capetowncoffees.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import android.graphics.BitmapFactory
-import android.util.Base64
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-
 @AndroidEntryPoint
+class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
 
-class ProfileFragment : Fragment() {
-
-    private var _binding: com.synaptix.capetowncoffees.databinding.FragmentProfileBinding? = null
+    // ─────────── View & VM ───────────
+    private var _binding: FragmentProfileNewBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ProfileViewModel by viewModels()
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        _binding = com.synaptix.capetowncoffees.databinding.FragmentProfileBinding.inflate(inflater, container, false)
-        return binding.root
-    }
 
+    // ─────────── Lifecycle ───────────
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+        _binding = FragmentProfileNewBinding.bind(view)
 
-        // Observe user data
+        setupToolbar()
+        observeUser()
+        viewModel.loadUserProfile()
+
+        binding.btnEditProfile.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_editProfileFragment)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    // ─────────── UI Wiring ───────────
+    // Sets up toolbar menu and handles navigation to settings.
+    private fun setupToolbar() {
+        val toolbar: MaterialToolbar = binding.toolbar
+        if (toolbar.menu.size() == 0) toolbar.inflateMenu(R.menu.menu_profile)
+
+        toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_settings -> {
+                    runCatching { findNavController().navigate(R.id.settingsFragment) }
+                        .onFailure { Timber.e(it, "Failed to navigate to settings") }
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    // ─────────── Collectors ───────────
+    // Observes user state and renders name/photo; decodes images off main thread.
+    private fun observeUser() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.userState.collect { resource ->
-                    when (resource) {
+                viewModel.userState.collect { res ->
+                    when (res) {
                         is Resource.Success -> {
-                            resource.data.let { user ->
-                                binding.tvUserName.text = user.fullName.trim()
-                                // Load Base64 image if available
-                                // check if photoBase64 is not null or empty
-                                if (user.photoBase64.isNullOrEmpty()) {
-                                    Timber.d("PhotoBase64 is null or empty")
-                                }
-                                user.photoBase64?.let { base64 ->
-                                    try {
-                                        Timber.d("Loading profile image from Base64")
-                                        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
-                                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                                        binding.ivProfilePicture.setImageBitmap(bitmap)
-                                    } catch (e: Exception) {
-                                        Timber.e(e, "Error loading profile image")
+                            val user = res.data
+                            binding.tvUserName.text = user.fullName?.trim().orEmpty()
+
+                            val b64 = user.photoBase64
+                            if (b64.isNullOrBlank()) {
+                                binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
+                            } else {
+                                lifecycleScope.launch {
+                                    val bmp = decodeBase64Bitmap(b64)
+                                    if (bmp != null) {
+                                        binding.ivProfilePicture.setImageBitmap(bmp)
+                                    } else {
                                         binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                                     }
-                                } ?: run {
-                                    binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                                 }
                             }
                         }
                         is Resource.Error -> {
-                            Timber.e("Error loading user: ${resource.message}")
+                            Timber.e("Error loading user: ${res.message}")
+                            binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
+                            binding.tvUserName.text = getString(R.string.app_name)
                         }
-                        else -> { /* Loading state can be handled here if needed */ }
-                    }
-                }
-            }
-        }
-
-        // Load user data
-        viewModel.loadUserProfile()
-
-        // Settings button navigation - simplified and fixed
-        binding.btnSettings.apply {
-            // Make sure the button is clickable
-            isClickable = true
-            isFocusable = true
-            
-            // Handle click
-            setOnClickListener {
-                try {
-                    // Try direct navigation first (simpler approach)
-                    findNavController().navigate(R.id.settingsFragment)
-                    Timber.d("Navigating to settings fragment")
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to navigate to settings")
-                }
-            }
-            
-            // Add touch feedback
-            setOnTouchListener { v, event ->
-                when (event.action) {
-                    android.view.MotionEvent.ACTION_DOWN -> {
-                        v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(100).start()
-                    }
-                    android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
-                        v.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
-                        if (event.action == android.view.MotionEvent.ACTION_UP) {
-                            v.performClick()
+                        is Resource.Loading -> {
+                            // no-op; add shimmer here if needed
                         }
                     }
                 }
-                true
             }
         }
+    }
 
-        // Edit profile button navigation
-        binding.btnEditProfile.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_editProfileFragment)
-        }
+    // ─────────── Helpers ───────────
+    // Safe Base64 decode; returns null on failures to keep UI resilient.
+    private suspend fun decodeBase64Bitmap(base64: String): Bitmap? = withContext(Dispatchers.Default) {
+        runCatching {
+            val bytes = Base64.decode(base64, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }.onFailure { Timber.e(it, "Failed to decode Base64 image") }
+            .getOrNull()
     }
 }

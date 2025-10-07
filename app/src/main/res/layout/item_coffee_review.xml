@@ -24,41 +24,64 @@
             android:id="@+id/ivAvatar"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:scaleType="centerCrop"
+            android:layout_marginTop="7dp"
             android:contentDescription="@string/profile_photo"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.Circle"
+            android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.Circle"
             tools:src="@drawable/bg_skeleton_circle" />
 
         <!-- Header (name + rating + chip) -->
-        <LinearLayout
-            android:id="@+id/headerTextContainer"
-            android:layout_width="0dp"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="12dp"
-            app:layout_constraintStart_toEndOf="@id/ivAvatar"
-            app:layout_constraintTop_toTopOf="@id/ivAvatar"
-            app:layout_constraintEnd_toStartOf="@id/tvDate">
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/ivAvatar"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="MissingConstraints">
 
+            <!-- Name -->
             <TextView
                 android:id="@+id/tvAuthor"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="40dp"
+                android:layout_marginTop="-6dp"
+                android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:text="Alex Johnson" />
 
-            <LinearLayout
+            <!-- Date -->
+            <TextView
+                android:id="@+id/tvDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="2dp">
+                android:layout_marginTop="-4dp"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:textColor="@color/text_tip"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="2d ago" />
 
-                <!-- Rating bar -->
+            <!-- Rating container -->
+            <LinearLayout
+                android:id="@+id/ratingContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                app:layout_constraintStart_toStartOf="@id/tvAuthor"
+                app:layout_constraintTop_toBottomOf="@id/tvAuthor">
+
+                <!-- Stars -->
                 <androidx.appcompat.widget.AppCompatRatingBar
                     android:id="@+id/ratingBar"
                     style="@style/Widget.Ctc.RatingBar.Small"
@@ -66,9 +89,10 @@
                     android:layout_height="wrap_content"
                     android:isIndicator="true"
                     android:numStars="5"
-                    android:stepSize="0.5"
-                    android:rating="4.5" />
+                    android:rating="4.5"
+                    android:stepSize="0.5" />
 
+                <!-- Numeric Rating -->
                 <TextView
                     android:id="@+id/tvRating"
                     android:layout_width="wrap_content"
@@ -78,41 +102,35 @@
                     android:textColor="@color/text_secondary"
                     tools:text="4.6" />
 
+                <!-- Source Chip -->
                 <TextView
                     android:id="@+id/tvSourceChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_chip_soft"
+                    android:maxLines="1"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="2dp"
-                    android:background="@drawable/bg_chip_soft"
                     android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                     android:textColor="@color/text_secondary"
                     tools:text="Google" />
             </LinearLayout>
-        </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-            android:textColor="@color/text_tip"
-            app:layout_constraintTop_toTopOf="@id/ivAvatar"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="2d ago" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <!-- Review text -->
         <TextView
             android:id="@+id/tvBody"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
             android:textColor="@color/text_secondary"
-            app:layout_constraintStart_toStartOf="@id/ivAvatar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ivAvatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout"
             tools:text="Smooth flat white, cozy vibes, friendly staff — solid Wi-Fi too." />
 
         <!-- ───────────────────── MOSAIC (adaptive) ───────────────────── -->
