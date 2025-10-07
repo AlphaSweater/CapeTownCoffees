@@ -13,8 +13,7 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/profileRoot"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
         <!-- Collapsing App Bar with TRUE top-aligned toolbar and parallax gradient -->
         <com.google.android.material.appbar.AppBarLayout
@@ -29,7 +28,6 @@
                 android:id="@+id/collapsing"
                 android:layout_width="match_parent"
                 android:layout_height="360dp"
-                android:fitsSystemWindows="true"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:contentScrim="@color/surface"
                 app:titleEnabled="false">
