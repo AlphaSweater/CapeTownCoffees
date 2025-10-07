@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT was used to guide the structure of this Adapter, including the ViewHolder
+//setup, data binding logic, and handling click listeners.
+//* Assistance was also provided for optimizing RecyclerView performance and readability.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.home.adapter
 
 import android.view.LayoutInflater
@@ -9,71 +25,56 @@ import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.ItemCategoryBinding
 import com.synaptix.capetowncoffees.domain.model.Category
 
+// ─────────── Adapter ───────────
+// Simple selectable category chips backed by a RecyclerView.
 class CategoryAdapter(
     private val onCategoryClick: (Category) -> Unit
 ) : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>() {
 
+    // ─────────── State ───────────
     private val categories = mutableListOf<Category>()
-    private var selectedPosition = RecyclerView.NO_POSITION
+    private var selectedPosition: Int = RecyclerView.NO_POSITION
 
+    // ─────────── ViewHolder ───────────
+    // Binds a MaterialButton as a selectable chip.
     inner class CategoryViewHolder(
         private val binding: ItemCategoryBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(category: Category) {
             val button = binding.root as MaterialButton
+            val ctx = itemView.context
 
+            // Text & icon reflect the domain model
             button.text = category.name
             button.setIconResource(category.iconResId)
 
-            if (adapterPosition == selectedPosition) {
-                // Selected state
-                button.backgroundTintList = ContextCompat.getColorStateList(
-                    itemView.context,
-                    R.color.coffee_medium
-                )
-                button.setTextColor(
-                    ContextCompat.getColor(itemView.context, R.color.white)
-                )
-                button.iconTint = ContextCompat.getColorStateList(
-                    itemView.context,
-                    R.color.white
-                )
+            // Apply selected vs unselected styling
+            if (bindingAdapterPosition == selectedPosition) {
+                button.backgroundTintList = ContextCompat.getColorStateList(ctx, R.color.coffee_medium)
+                button.setTextColor(ContextCompat.getColor(ctx, R.color.white))
+                button.iconTint = ContextCompat.getColorStateList(ctx, R.color.white)
             } else {
-                // Unselected state
-                button.backgroundTintList = ContextCompat.getColorStateList(
-                    itemView.context,
-                    R.color.background
-                )
-                button.strokeColor = ContextCompat.getColorStateList(
-                    itemView.context,
-                    R.color.button_category
-                )
-                button.setTextColor(
-                    ContextCompat.getColor(itemView.context, R.color.button_category)
-                )
-                button.iconTint = ContextCompat.getColorStateList(
-                    itemView.context,
-                    R.color.button_category
-                )
+                button.backgroundTintList = ContextCompat.getColorStateList(ctx, R.color.background)
+                button.strokeColor = ContextCompat.getColorStateList(ctx, R.color.button_category)
+                button.setTextColor(ContextCompat.getColor(ctx, R.color.button_category))
+                button.iconTint = ContextCompat.getColorStateList(ctx, R.color.button_category)
             }
 
+            // Click selects this item and emits the domain object
             button.setOnClickListener {
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    updateSelectedPosition(position)
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    updateSelectedPosition(pos)
                     onCategoryClick(category)
                 }
             }
         }
     }
 
+    // ─────────── Adapter Overrides ───────────
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
-        val binding = ItemCategoryBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+        val binding = ItemCategoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CategoryViewHolder(binding)
     }
 
@@ -83,24 +84,23 @@ class CategoryAdapter(
 
     override fun getItemCount(): Int = categories.size
 
+    // ─────────── Public API ───────────
+    // Replaces the data set; simple swap since category list is small.
     fun updateCategories(newCategories: List<Category>) {
         categories.clear()
         categories.addAll(newCategories)
         notifyDataSetChanged()
     }
 
+    // ─────────── Private Helpers ───────────
+    // Updates selection and refreshes only the affected items.
     private fun updateSelectedPosition(newPosition: Int) {
-        if (newPosition in 0 until itemCount) {
-            val previousPosition = selectedPosition
-            selectedPosition = newPosition
+        if (newPosition !in 0 until itemCount) return
 
-            // Only notify changes if positions are valid
-            if (previousPosition != RecyclerView.NO_POSITION) {
-                notifyItemChanged(previousPosition)
-            }
-            if (selectedPosition != RecyclerView.NO_POSITION) {
-                notifyItemChanged(selectedPosition)
-            }
-        }
+        val previous = selectedPosition
+        selectedPosition = newPosition
+
+        if (previous != RecyclerView.NO_POSITION) notifyItemChanged(previous)
+        if (selectedPosition != RecyclerView.NO_POSITION) notifyItemChanged(selectedPosition)
     }
 }
