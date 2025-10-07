@@ -7,22 +7,18 @@ import com.synaptix.capetowncoffees.domain.model.GooglePlaceReview
 import com.synaptix.capetowncoffees.domain.model.InAppReview
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 
-/**
- * Mapper for the CoffeeReview sealed hierarchy.
- * - Preserves *per-source* default order (in-app and Google independently).
- * - Provides list mapping for Google to capture Google’s incoming order (1..n).
- */
-object ReviewMapper {
+// ─────────── Mapper — Reviews (DTO/SDK ⇄ Domain) ───────────
+// We normalize review sources (in-app vs Google) into consistent domain models.
+// Ordering notes: we keep the default order per source so lists can be merged predictably.
+public object ReviewMapper {
 
-    // -----------------------------
-    // IN-APP (DTO <-> Domain)
-    // -----------------------------
-
-    fun fromAppReviewDto(
+    // ─────────── In-app reviews (DTO → Domain) ───────────
+    // Single DTO + user profile into an InAppReview. We allow placeId override for subcollection writes.
+    public fun fromAppReviewDto(
         dto: AppReviewDTO,
         userDto: CoffeeUserDTO,
         placeIdOverride: String? = null,
-        defaultOrder: Int = 1,
+        defaultOrder: Int = 1
     ): InAppReview {
         return InAppReview(
             id = dto.id,
@@ -32,31 +28,32 @@ object ReviewMapper {
             profilePhotoBase64 = userDto.photoBase64,
             rating = dto.rating,
             text = dto.text,
-            publishTime = dto.createdAt,   // epoch seconds expected
+            publishTime = dto.createdAt,
             textLanguageCode = dto.textLanguageCode,
             defaultOrder = defaultOrder,
             order = defaultOrder,
             isEdited = false,
-            helpfulCount = 0,
+            helpfulCount = 0
         )
     }
 
-    fun fromAppReviewList(
+    // Map a list for a single known user; we assign 1-based increasing order.
+    public fun fromAppReviewList(
         dtoList: List<AppReviewDTO>,
         userDto: CoffeeUserDTO,
         placeIdOverride: String? = null,
-        startIndex: Int = 1,
-    ): List<InAppReview> =
-        dtoList.mapIndexed { index, dto ->
-            fromAppReviewDto(
-                dto = dto,
-                userDto = userDto,
-                placeIdOverride = placeIdOverride,
-                defaultOrder = startIndex + index
-            )
-        }
+        startIndex: Int = 1
+    ): List<InAppReview> = dtoList.mapIndexed { index, dto ->
+        fromAppReviewDto(
+            dto = dto,
+            userDto = userDto,
+            placeIdOverride = placeIdOverride,
+            defaultOrder = startIndex + index
+        )
+    }
 
-    fun fromAppReviewList(
+    // Map a list for many users; strict=true enforces that every userId has a profile.
+    public fun fromAppReviewList(
         dtoList: List<AppReviewDTO>,
         userDtosMap: Map<String, CoffeeUserDTO>,
         placeIdOverride: String? = null,
@@ -68,9 +65,7 @@ object ReviewMapper {
         if (strict) {
             val required = dtoList.asSequence().map { it.userId }.toSet()
             val missing = required - userDtosMap.keys
-            require(missing.isEmpty()) {
-                "User map is missing profiles for userIds=$missing"
-            }
+            require(missing.isEmpty()) { "User map is missing profiles for userIds=$missing" }
         }
 
         return dtoList.mapIndexed { index, dto ->
@@ -84,7 +79,8 @@ object ReviewMapper {
         }
     }
 
-    fun toAppReviewDTO(review: InAppReview): AppReviewDTO {
+    // Domain → DTO for persistence.
+    public fun toAppReviewDTO(review: InAppReview): AppReviewDTO {
         return AppReviewDTO(
             id = review.id,
             userId = review.reviewerId,
@@ -96,8 +92,8 @@ object ReviewMapper {
         )
     }
 
-    /** For quick in-app submission creation via the model’s companion. */
-    fun newInAppSubmission(
+    // Helper to create a new in-app submission with current time and initial order.
+    public fun newInAppSubmission(
         reviewerId: String,
         placeId: String,
         rating: Double,
@@ -115,18 +111,15 @@ object ReviewMapper {
         order = defaultOrderStart
     )
 
-    // -----------------------------
-    // GOOGLE (SDK -> Domain)
-    // -----------------------------
-
-    /** Map a single Google review. Prefer fromGoogleList(...) for preserved ordering. */
-    fun fromGoogleReview(
+    // ─────────── Google reviews (SDK → Domain) ───────────
+    // Map a single Google review. Parsing publish time is best-effort.
+    public fun fromGoogleReview(
         googleReview: GoogleReview,
         placeId: String,
         defaultOrder: Int = 1
     ): GooglePlaceReview {
         val attr = googleReview.authorAttribution
-        val iso = googleReview.publishTime // ISO-8601 string or null
+        val iso = googleReview.publishTime
 
         val epochSeconds = try {
             iso?.let { CoffeeTimeUtils.parseIsoToSeconds(it) }
@@ -135,7 +128,7 @@ object ReviewMapper {
         }
 
         return GooglePlaceReview(
-            id = null, // capture an id if the SDK exposes one in your version
+            id = null,
             reviewerId = null,
             placeId = placeId,
             authorName = attr.name,
@@ -149,28 +142,22 @@ object ReviewMapper {
         )
     }
 
-    /**
-     * Preserve Google’s incoming order: index + 1 (1-based) becomes both defaultOrder and order.
-     * This lets you “reset to default” later and get back Google’s original ranking.
-     */
-    fun fromGoogleList(
+    // Preserve incoming Google order (1-based). Useful for resetting to source ranking.
+    public fun fromGoogleList(
         googleReviews: List<GoogleReview>,
         placeId: String
-    ): List<GooglePlaceReview> =
-        googleReviews.mapIndexed { index, gr ->
-            fromGoogleReview(gr, placeId, defaultOrder = index + 1)
-        }
+    ): List<GooglePlaceReview> = googleReviews.mapIndexed { index, gr ->
+        fromGoogleReview(gr, placeId, defaultOrder = index + 1)
+    }
 }
 
-// ==============================================================================
-// Extension Mappers
-// ==============================================================================
+// ─────────── Extensions — Convenience mappers ───────────
+// These keep call sites clean while delegating to ReviewMapper.
 
-fun AppReviewDTO.toDomain(userDto: CoffeeUserDTO, defaultOrder: Int = 1): InAppReview =
+public fun AppReviewDTO.toDomain(userDto: CoffeeUserDTO, defaultOrder: Int = 1): InAppReview =
     ReviewMapper.fromAppReviewDto(this, userDto, defaultOrder = defaultOrder)
 
-/** All belong to one user. */
-fun List<AppReviewDTO>.toDomainListForSingleUser(
+public fun List<AppReviewDTO>.toDomainListForSingleUser(
     user: CoffeeUserDTO,
     placeIdOverride: String? = null,
     startIndex: Int = 1
@@ -182,8 +169,7 @@ fun List<AppReviewDTO>.toDomainListForSingleUser(
         startIndex = startIndex
     )
 
-/** Many users: pass a non-empty user map. */
-fun List<AppReviewDTO>.toDomainListWithUsers(
+public fun List<AppReviewDTO>.toDomainListWithUsers(
     users: Map<String, CoffeeUserDTO>,
     placeIdOverride: String? = null,
     startIndex: Int = 1,
@@ -197,11 +183,11 @@ fun List<AppReviewDTO>.toDomainListWithUsers(
         strict = strict
     )
 
-fun InAppReview.toDto(): AppReviewDTO =
+public fun InAppReview.toDto(): AppReviewDTO =
     ReviewMapper.toAppReviewDTO(this)
 
-fun GoogleReview.toDomain(placeId: String, defaultOrder: Int = 1): GooglePlaceReview =
+public fun GoogleReview.toDomain(placeId: String, defaultOrder: Int = 1): GooglePlaceReview =
     ReviewMapper.fromGoogleReview(this, placeId, defaultOrder)
 
-fun List<GoogleReview>.toDomainList(placeId: String): List<GooglePlaceReview> =
+public fun List<GoogleReview>.toDomainList(placeId: String): List<GooglePlaceReview> =
     ReviewMapper.fromGoogleList(this, placeId)
