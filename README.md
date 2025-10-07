@@ -47,7 +47,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 - Firebase Authentication for secure login and identity management.
 - Input validation and protection against improper input.
 
-  ## 🔧 Tech Stack
+## 🔧 Tech Stack
 ### Core
 
 - 100% [Kotlin](https://kotlinlang.org/)
