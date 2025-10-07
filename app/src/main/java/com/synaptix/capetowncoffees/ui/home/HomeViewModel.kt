@@ -12,6 +12,7 @@ import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
 import com.synaptix.capetowncoffees.ui.common.viewmodel.loadableState
 import com.synaptix.capetowncoffees.ui.common.viewmodel.state
 import com.synaptix.capetowncoffees.ui.common.viewmodel.toUiError
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,8 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val searchNearby: SearchNearbyCoffeePlacesUseCase,
-    private val locationUtil: LocationUtil
+    private val searchNearby: SearchNearbyCoffeePlacesUseCase
 ) : SimpleViewModel() {
 
     /* ╭──────────────────────────── Config ──────────────────────────────╮ */
@@ -220,7 +220,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun distance(a: LatLng, b: LatLng): Double =
-        locationUtil.distanceMeters(a, b).toDouble()
+        LocationFormattingUtil.distanceMeters(a, b).toDouble()
 
     // local sorting/filtering for the NEAR list only (Featured is server-driven)
     private fun filterByCategory(
@@ -231,7 +231,7 @@ class HomeViewModel @Inject constructor(
         "popular" -> source.sortedByDescending { it.ratingCount ?: 0 }
         "rated"   -> source.sortedByDescending { it.rating ?: 0.0 }
         "nearby"  -> if (user == null) source else source.sortedBy {
-            it.location?.let { ll -> locationUtil.distanceMeters(user, ll).toFloat() } ?: Float.MAX_VALUE
+            it.location?.let { ll -> LocationFormattingUtil.distanceMeters(user, ll) } ?: Float.MAX_VALUE
         }
         "dates"   -> source.sortedByDescending {
             (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f)
