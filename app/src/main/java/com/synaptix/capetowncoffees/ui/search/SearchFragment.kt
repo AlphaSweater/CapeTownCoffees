@@ -1,28 +1,26 @@
-// ui/search/SearchFragment.kt
 package com.synaptix.capetowncoffees.ui.search
 
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.getSystemService
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DiffUtil
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
-import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.materialswitch.MaterialSwitch
@@ -31,7 +29,11 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.transition.platform.MaterialSharedAxis
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
-import com.synaptix.capetowncoffees.ui.common.viewmodel.*
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
+import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
+import com.synaptix.capetowncoffees.ui.common.viewmodel.start
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -90,21 +92,19 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
 
         // ── Collect VM state ────────────────────────────────────────────────
-        // Collect suggestions (Loadable)
         collect(vm.suggestions.flow) { loadable ->
             when (loadable) {
                 Loadable.Uninitialized, Loadable.Loading -> {
-                    // show skeleton if you have one, else clear
-                    suggestionsAdapter.submitList(emptyList())
+                    suggestionsAdapter.submitListDistinct(emptyList())
                     showBottomSuggestions(true)
                 }
                 is Loadable.Data -> {
-                    val items = loadable.value.map { it.toAdapterItem() }
-                    suggestionsAdapter.submitList(items)
+                    val items: List<CoffeePlaceSuggestion> = loadable.value
+                    suggestionsAdapter.submitListDistinct(items)
                     showBottomSuggestions(items.isNotEmpty())
                 }
                 is Loadable.Error -> {
-                    // optional: show error/snack
+                    Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                     showBottomSuggestions(false)
                 }
             }
@@ -115,14 +115,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             when (eff) {
                 is Effect.Navigate -> if (eff.route == "search.submit") {
                     hideKeyboard(etSearch)
-                    // findNavController().navigate(R.id.action_search_to_results, eff.args)
+                    findNavController().navigate(R.id.action_searchFragment_to_cafeDetailFragment, eff.args)
                 }
                 is Effect.Message -> { /* snackbar(eff.text) */ }
             }
         }
 
         // ── Hooks ───────────────────────────────────────────────────────────
-        // Text changes go to VM
         etSearch.addTextChangedListener { s -> vm.onQueryTyping(s?.toString().orEmpty()) }
 
         etSearch.setOnEditorActionListener { _, actionId, event ->
@@ -173,7 +172,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         filtersHeader.setOnClickListener { toggleFilters(container) }
 
         // Radius label
-        fun updateRadiusLabel(v: Float) { tvRadiusValue.text = locationUtils.formatDistance(v) }
+        fun updateRadiusLabel(meters: Float) { tvRadiusValue.text = LocationFormattingUtil.formatDistance(meters) }
         updateRadiusLabel(sliderRadius.value * 1000)
 
         sliderRadius.addOnChangeListener { _, value, fromUser ->
@@ -206,9 +205,10 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         rvSuggestions.isVisible = show
     }
 
-    private fun onSuggestionClicked(item: SuggestionItem) {
-        etSearch.setText(item.title)
-        etSearch.setSelection(item.title.length)
+    private fun onSuggestionClicked(item: CoffeePlaceSuggestion) {
+        val text = item.name.orEmpty()
+        etSearch.setText(text)
+        etSearch.setSelection(text.length)
         vm.submitSearch()
     }
 
@@ -224,51 +224,4 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         val imm = requireContext().getSystemService<InputMethodManager>()
         imm?.hideSoftInputFromWindow(v.windowToken, 0)
     }
-}
-
-/* ---------------- Adapter + Model (UI-only) ---------------- */
-
-private data class SuggestionItem(
-    val title: String,
-    val address: String? = null
-)
-
-private fun CoffeePlaceSuggestion.toAdapterItem() =
-    SuggestionItem(
-        title = name.orEmpty(),
-        address = address
-    )
-
-private class SuggestionsAdapter(
-    private val onClick: (SuggestionItem) -> Unit
-) : androidx.recyclerview.widget.ListAdapter<SuggestionItem, SuggestionsAdapter.VH>(Diff) {
-
-    object Diff : DiffUtil.ItemCallback<SuggestionItem>() {
-        override fun areItemsTheSame(oldItem: SuggestionItem, newItem: SuggestionItem) =
-            oldItem.title == newItem.title && oldItem.address == newItem.address
-        override fun areContentsTheSame(oldItem: SuggestionItem, newItem: SuggestionItem) =
-            oldItem == newItem
-    }
-
-    inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val title: TextView = itemView.findViewById(R.id.tvTitle)
-        private val subtitle: TextView? = itemView.findViewById(R.id.tvSubtitle)
-
-        fun bind(item: SuggestionItem) {
-            title.text = item.title
-            subtitle?.apply {
-                isVisible = !item.address.isNullOrBlank()
-                text = item.address.orEmpty()
-            }
-            itemView.setOnClickListener { onClick(item) }
-        }
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_search_suggestion, parent, false)
-        return VH(v)
-    }
-
-    override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(getItem(position))
 }

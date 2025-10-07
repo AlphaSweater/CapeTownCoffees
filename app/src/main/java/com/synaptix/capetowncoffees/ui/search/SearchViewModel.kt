@@ -78,7 +78,7 @@ class SearchViewModel @Inject constructor(
                 .build()
             ParamsAndLoc(params, loc)
         }
-            .debounce(220)                   // debounce typing
+            .debounce(220)      // debounce typing
             .distinctUntilChanged()          // uses data-class equality
 
     // ── UI events ──────────────────────────────────────────────────────────────
