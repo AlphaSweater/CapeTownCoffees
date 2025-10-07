@@ -1,6 +1,8 @@
 package com.synaptix.capetowncoffees.ui.search
 
 import android.os.Bundle
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
@@ -11,30 +13,50 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val getSuggestions: GetCoffeePlaceSuggestionsUseCase
+    private val getSuggestions: GetCoffeePlaceSuggestionsUseCase,
+    private val savedState: SavedStateHandle
 ) : SimpleViewModel() {
 
-    // ── Inputs/State ───────────────────────────────────────────────────────────
-    val query   = state("")
-    val radiusM = state(30_000)
-    val strict  = state(true)
+    /* ─────────────────── Persisted Keys ─────────────────── */
+    private companion object {
+        const val K_QUERY   = "search.query"
+        const val K_RADIUS  = "search.radiusM"
+        const val K_STRICT  = "search.strict"
+    }
+
+    /* ─────────────────── Inputs / State (cached) ─────────────────── */
+    val query   = state(savedState.get<String>(K_QUERY) ?: "")
+    val radiusM = state(savedState.get<Int>(K_RADIUS) ?: 30_000)
+    val strict  = state(savedState.get<Boolean>(K_STRICT) ?: true)
     val userLoc = state<LatLng?>(null)
 
-    // Outputs
+    /* ─────────────────── Outputs ─────────────────── */
     val suggestions = loadableState<List<CoffeePlaceSuggestion>>()
 
     private var streamJob: Job? = null
 
+    init {
+        // Mirror state → SavedStateHandle so it restores automatically
+        viewModelScope.launch {
+            query.flow.collect { savedState[K_QUERY] = it }
+        }
+        viewModelScope.launch {
+            radiusM.flow.collect { savedState[K_RADIUS] = it }
+        }
+        viewModelScope.launch {
+            strict.flow.collect { savedState[K_STRICT] = it }
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun start(args: Bundle?) {
         super.start(args)
-
-        // Stream: query + filters + location → suggestions
         streamJob?.cancel()
         streamJob = observeInto(
             target = suggestions,
@@ -55,7 +77,7 @@ class SearchViewModel @Inject constructor(
         )
     }
 
-    // Build CoffeeSearchParameters from UI state and emit when any input changes
+    /* Build CoffeeSearchParameters from UI state and emit when any input changes */
     @OptIn(FlowPreview::class)
     private fun combinedInput(): Flow<ParamsAndLoc> =
         combine(query.flow, radiusM.flow, strict.flow, userLoc.flow) { q, rM, isStrict, loc ->
@@ -63,22 +85,21 @@ class SearchViewModel @Inject constructor(
             val params = CoffeeSearchParameters.builder()
                 .query(q.trim())
                 .radiusMeters(meters)
-                .maxResults(5)       // ≤5 suggestions
+                .maxResults(5)
                 .sortByDistance(true)
                 .strictCoffeeOnly(isStrict)
                 .build()
             ParamsAndLoc(params, loc)
         }
-            .debounce(220)    // debounce typing/slider/toggle noise
-            .distinctUntilChanged()        // avoid duplicate fetches when inputs unchanged
+            .debounce(220)
+            .distinctUntilChanged()
 
-    // ── UI events ──────────────────────────────────────────────────────────────
+    /* ─────────────── UI events ─────────────── */
     fun onQueryTyping(text: String) = query.set(text)
-    fun onRadiusChanged(m: Int)     = radiusM.set(m)
+    fun onRadiusChanged(m: Int) = radiusM.set(m)
     fun onStrictChanged(only: Boolean) = strict.set(only)
     fun setUserLocation(latLng: LatLng?) = userLoc.set(latLng)
 
-    // Suggestion selected → navigate to detail with ONLY the placeId
     fun onSuggestionClicked(item: CoffeePlaceSuggestion) {
         val id = item.id
         main {
@@ -86,28 +107,6 @@ class SearchViewModel @Inject constructor(
                 Effect.Navigate(
                     route = "search.openPlace",
                     args = Bundle().apply { putString("placeId", id) }
-                )
-            )
-        }
-    }
-
-    // Optional: keep IME Search behavior (if you still want to deep-link to detail using a query result)
-    fun submitSearch() {
-        val q   = query.value.trim()
-        val loc = userLoc.value
-        if (q.isEmpty() || loc == null) return
-
-        main {
-            send(
-                Effect.Navigate(
-                    route = "search.submit",
-                    args = Bundle().apply {
-                        putString("q", q)
-                        putInt("radiusM", radiusM.value)
-                        putBoolean("strictOnly", strict.value)
-                        putDouble("lat", loc.latitude)
-                        putDouble("lng", loc.longitude)
-                    }
                 )
             )
         }

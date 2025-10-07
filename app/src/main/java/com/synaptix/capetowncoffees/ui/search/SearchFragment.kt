@@ -88,18 +88,20 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         bindViews(view)
         setupToolbar()
-        setupFilters()
+        setupFiltersRestoreThenWire()
         getCurrentLocation()
         setupSuggestionsList()
 
         start(vm, arguments)
 
-        showBottomSuggestions(false)
+        showBottomSuggestions(vm.suggestions.value is Loadable.Data)
 
-        // Autofocus search
+        // Autofocus only if there's no cached text
         view.post {
-            etSearch.requestFocus()
-            showKeyboard(etSearch)
+            if (vm.query.value.isBlank()) {
+                etSearch.requestFocus()
+                showKeyboard(etSearch)
+            }
         }
 
         // ── Collect VM state ────────────────────────────────────────────────
@@ -133,11 +135,11 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                         )
                     }
                 }
-                is Effect.Message -> { /* optional snackbar */ }
+                is Effect.Message -> Unit
             }
         }
 
-        // ── IME “Search” → close filters after IME settles ─────────────────
+        // ── IME “Search” → close keyboard ─────────────────
         etSearch.addTextChangedListener { s -> vm.onQueryTyping(s?.toString().orEmpty()) }
         etSearch.setOnEditorActionListener { _, actionId, event ->
             val imeGo = actionId == EditorInfo.IME_ACTION_SEARCH ||
@@ -184,20 +186,31 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-    private fun setupFilters() {
-        // Header click toggles
+    /** Restore UI controls from VM first, then attach listeners */
+    private fun setupFiltersRestoreThenWire() {
+        // 1) Restore values FROM ViewModel (cached via SavedStateHandle)
+        etSearch.setText(vm.query.value)
+        etSearch.setSelection(etSearch.text?.length ?: 0)
+
+        // Slider shows KM in UI (value), VM stores meters
+        val km = (vm.radiusM.value / 1000f).coerceIn(sliderRadius.valueFrom, sliderRadius.valueTo)
+        if (sliderRadius.value != km) sliderRadius.value = km
+
+        switchStrictCoffee.isChecked = vm.strict.value
+
+        // Keep radius label accurate on first render
+        tvRadiusValue.text = com.synaptix.capetowncoffees.util.LocationFormattingUtil
+            .formatDistance(vm.radiusM.value.toFloat())
+
+        // 2) Wire listeners AFTER restoring values
         filtersHeader.setOnClickListener { setFilters(FILTERS_TOGGLE) }
 
-        fun updateRadiusLabel(meters: Float) {
-            tvRadiusValue.text = LocationFormattingUtil.formatDistance(meters)
-        }
-        updateRadiusLabel(sliderRadius.value * 1000)
-
         sliderRadius.addOnChangeListener { _, value, fromUser ->
-            if (fromUser) updateRadiusLabel(value * 1000)
-            vm.onRadiusChanged(value.toInt() * 1000)
+            if (fromUser) {
+                tvRadiusValue.text = LocationFormattingUtil.formatDistance(value * 1000f)
+                vm.onRadiusChanged(value.toInt() * 1000)
+            }
         }
-
         switchStrictCoffee.setOnCheckedChangeListener { _, checked ->
             vm.onStrictChanged(checked)
         }
