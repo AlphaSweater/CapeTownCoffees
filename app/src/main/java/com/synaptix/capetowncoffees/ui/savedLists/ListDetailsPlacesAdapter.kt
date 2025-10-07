@@ -43,7 +43,7 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_near_me, parent, false)
+            .inflate(R.layout.item_coffee_near_me, parent, false)
         return VH(view, coroutineScope, photoResolver, onItemClicked)
     }
 
