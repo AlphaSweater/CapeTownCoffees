@@ -317,6 +317,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun startNetworkRefresh() {
+        scrollHomeToTop()
+
         binding.rvFeatured.batchLayout {
             popularSkeleton.show(POPULAR_SKELETON_COUNT)
             popularAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
@@ -462,6 +464,21 @@ class HomeFragment : Fragment() {
     }
 
     /* ───────────────────────────── UI Helpers ────────────────────────── */
+
+    private fun scrollHomeToTop() {
+        // Expand app bar if collapsed
+        binding.appBar.setExpanded(true, true)
+
+        // Scroll the outer container to top
+        binding.rootScroll.post { binding.rootScroll.smoothScrollTo(0, 0) }
+
+        // Also reset inner RV positions (defensive)
+        binding.rvNearMe.stopScroll()
+        binding.rvNearMe.scrollToPosition(0)
+
+        binding.rvFeatured.stopScroll()
+        binding.rvFeatured.scrollToPosition(0)
+    }
 
     private fun navigateToSearch(
         openFilters: Boolean = false,
