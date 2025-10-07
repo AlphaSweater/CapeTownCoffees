@@ -128,7 +128,8 @@ class PlacesApiRepository @Inject constructor(
                     CoffeePlaceSuggestion(
                         id = prediction.placeId,
                         name = prediction.getPrimaryText(null).toString(),
-                        address = prediction.getSecondaryText(null).toString()
+                        address = prediction.getSecondaryText(null).toString(),
+                        distance = prediction.distanceMeters
                     )
                 }
                 .toList()

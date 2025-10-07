@@ -9,6 +9,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.ui.common.BaseAdapter
 import com.synaptix.capetowncoffees.ui.common.BaseViewHolder
 import com.synaptix.capetowncoffees.ui.common.simpleDiff
+import com.synaptix.capetowncoffees.util.LocationFormattingUtil
 
 /**
  * SuggestionsAdapter — binds CoffeePlaceSuggestion directly:
@@ -21,20 +22,12 @@ class SuggestionsAdapter(
 ) : BaseAdapter<CoffeePlaceSuggestion, ItemSearchSuggestionBinding>(
     diff = simpleDiff(
         sameItem = { o, n ->
-            // Prefer stable ID when present; else fall back to name+address
             val ok = o.id
             val nk = n.id
-            when {
-                ok != null && nk != null -> ok == nk
-                else -> o.name.orEmpty() == n.name.orEmpty() &&
-                        o.address.orEmpty() == n.address.orEmpty()
-            }
+            ok == nk
         },
         sameContent = { o, n ->
-            // Compare exactly what we render
-            o.name == n.name &&
-                    o.address == n.address &&
-                    o.distanceDisplay() == n.distanceDisplay()
+            o == n
         }
     ),
     idProvider = { s -> (s.id ?: "${s.name}|${s.address}").hashCode().toLong() }
@@ -65,40 +58,11 @@ class SuggestionsAdapter(
             tvSubtitle.text = addr
 
             // Distance pill (already formatted in the model)
-            val dist = item.distanceDisplay().orEmpty()
-            tvDistance.text = dist
-            tvDistance.visibility = if (dist.isBlank()) View.GONE else View.VISIBLE
-
-            // A11y: readable row description
-            root.contentDescription = buildString {
-                append(item.name ?: "")
-                if (addr.isNotBlank()) append(", ").append(addr)
-                if (dist.isNotBlank()) append(", ").append(dist)
-            }
+            val dist = item.distance?.toFloat() ?: 0f
+            tvDistance.text = LocationFormattingUtil.formatDistance(dist)
+            tvDistance.visibility = if (dist == 0f) View.GONE else View.VISIBLE
 
             root.setOnClickListener { onClick(item) }
         }
-    }
-}
-
-/* ───────────────────────── helpers ─────────────────────────
-   Read the distance text from the model. We try common field names
-   so you don't have to rename your domain model today.
-*/
-private fun CoffeePlaceSuggestion.distanceDisplay(): String? {
-    return when {
-        // If your model has 'distanceLabel'
-        runCatching { this.javaClass.getDeclaredField("distanceLabel") }.isSuccess ->
-            (this.javaClass.getDeclaredField("distanceLabel").apply { isAccessible = true }.get(this) as? String)
-
-        // Or 'distanceText'
-        runCatching { this.javaClass.getDeclaredField("distanceText") }.isSuccess ->
-            (this.javaClass.getDeclaredField("distanceText").apply { isAccessible = true }.get(this) as? String)
-
-        // Or a plain 'distance' already formatted as string
-        runCatching { this.javaClass.getDeclaredField("distance") }.isSuccess ->
-            (this.javaClass.getDeclaredField("distance").apply { isAccessible = true }.get(this) as? String)
-
-        else -> null
     }
 }
