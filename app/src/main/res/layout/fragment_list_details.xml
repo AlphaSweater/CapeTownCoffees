@@ -14,8 +14,7 @@
         android:layout_height="wrap_content"
         android:background="@color/background"
         android:elevation="0dp"
-        app:liftOnScroll="false"
-        android:fitsSystemWindows="true">
+        app:liftOnScroll="false">
 
         <!-- Top toolbar (back + optional actions) -->
         <com.google.android.material.appbar.MaterialToolbar

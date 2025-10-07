@@ -219,7 +219,7 @@
 
     <fragment
         android:id="@+id/privacyPolicyFragment"
-        android:name="com.synaptix.capetowncoffees.ui.privacy.PrivacyPolicyFragment"
+        android:name="com.synaptix.capetowncoffees.ui.settings.privacy.PrivacyPolicyFragment"
         android:label="Privacy Policy"
         tools:layout="@layout/fragment_settings_privacy_policy"/>
 
