@@ -16,12 +16,12 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 ## 📚 Table of Contents
 - [Features](#-features)
-- [Own Features](#own-features)
+- [Security Features](#security-features)
+- [Tech Stack](#-tech-stack)
 - [Security Features](#-security-features)
 - [Prerequisites](#️-prerequisites)
 - [How to Compile and Run](#-how-to-compile-and-run-the-application)
 - [Video Demonstration](#-video-demo)
-- [Tech Stack](#-tech-stack)
 - [Screenshots](#-screenshots)
 - [Contributors](#-contributors)
 - [Learning Outcomes](#-learning-outcomes)
@@ -29,7 +29,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 ## 🌟 Features
 
-- SignUp and Login: Users can securely create an account and log in to access their personal budget data from anywhere. This ensures that all personal information is protected and personalized for each user.
+- SignUp and Login: Users can securely create an account and log in. This ensures that all personal information is protected and personalized for each user.
 
 - Google SignUp: Users can choose to sign up through Google's secure authentication.
 
@@ -39,11 +39,32 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 - Favourites List: For ease of access users can save their favourite cafés for quick access later on.
 
+- Downloads List: Allows users to download cafes to be accessed when the app is offline.
+
 - Detailed View: Users can see a detailed overview of different coffee shops, showing information such as the shop's rating, description, distance away, etc.
 
 ## 🔐 Security Features
 - Firebase Authentication for secure login and identity management.
 - Input validation and protection against improper input.
+
+  ## 🔧 Tech Stack
+### Core
+
+- 100% [Kotlin](https://kotlinlang.org/)
+- 100% [Jetpack Compose](https://developer.android.com/jetpack/compose)
+- [Material3 design](https://m3.material.io/) (UI components)
+- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) (structured concurrency)
+- [Kotlin Flow](https://kotlinlang.org/docs/flow.html)
+- [Hilt](https://dagger.dev/hilt/) (DI)
+
+### Database
+- [Firestore](https://console.firebase.google.com) (firebase no-sql database)
+- [FireBase Authentication](https://console.firebase.google.com) (Google SSO sign in)
+
+### Build & CI
+- [Gradle KTS](https://docs.gradle.org/current/userguide/kotlin_dsl.html)
+- [Gradle version catalogs](https://developer.android.com/build/migrate-to-catalogs) (dependencies versions)
+- [GitHub Actions](https://github.com/AlphaSweater/BudgetBuddy-Project/actions)
 
 ## 🛠️ Prerequisites 
 
@@ -95,26 +116,6 @@ https://developer.android.com/studio
 📺 **Watch the full walkthrough of BudgetBuddy on YouTube:**
 👉 [Click here to view]()
 - 
-
-
-## 🔧 Tech Stack
-### Core
-
-- 100% [Kotlin](https://kotlinlang.org/)
-- 100% [Jetpack Compose](https://developer.android.com/jetpack/compose)
-- [Material3 design](https://m3.material.io/) (UI components)
-- [Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html) (structured concurrency)
-- [Kotlin Flow](https://kotlinlang.org/docs/flow.html)
-- [Hilt](https://dagger.dev/hilt/) (DI)
-
-### Database
-- [Firestore](https://console.firebase.google.com) (firebase no-sql database)
-- [Imgur API](https://console.firebase.google.com) (Image uploading and storage)
-
-### Build & CI
-- [Gradle KTS](https://docs.gradle.org/current/userguide/kotlin_dsl.html)
-- [Gradle version catalogs](https://developer.android.com/build/migrate-to-catalogs) (dependencies versions)
-- [GitHub Actions](https://github.com/AlphaSweater/BudgetBuddy-Project/actions)
 
 
 ## 📸 Screenshots
