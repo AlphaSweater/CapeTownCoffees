@@ -33,18 +33,19 @@ import com.synaptix.capetowncoffees.databinding.FragmentProfileNewBinding
 import com.synaptix.capetowncoffees.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
 
+    // ─────────── View & VM ───────────
     private var _binding: FragmentProfileNewBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: ProfileViewModel by viewModels()
 
+    // ─────────── Lifecycle ───────────
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentProfileNewBinding.bind(view)
@@ -58,24 +59,22 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    // ─────────── UI Wiring ───────────
+    // Sets up toolbar menu and handles navigation to settings.
     private fun setupToolbar() {
         val toolbar: MaterialToolbar = binding.toolbar
+        if (toolbar.menu.size() == 0) toolbar.inflateMenu(R.menu.menu_profile)
 
-        // Inflate menu if you didn’t set app:menu in XML
-        if (toolbar.menu.size() == 0) {
-            toolbar.inflateMenu(R.menu.menu_profile) // contains action_settings
-        }
-
-        // Handle right-side settings icon click
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_settings -> {
-                    try {
-                        findNavController().navigate(R.id.settingsFragment)
-                        Timber.d("Navigating to settings fragment")
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to navigate to settings")
-                    }
+                    runCatching { findNavController().navigate(R.id.settingsFragment) }
+                        .onFailure { Timber.e(it, "Failed to navigate to settings") }
                     true
                 }
                 else -> false
@@ -83,6 +82,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
         }
     }
 
+    // ─────────── Collectors ───────────
+    // Observes user state and renders name/photo; decodes images off main thread.
     private fun observeUser() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -94,10 +95,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
 
                             val b64 = user.photoBase64
                             if (b64.isNullOrBlank()) {
-                                Timber.d("No Base64 profile photo; using placeholder.")
                                 binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                             } else {
-                                // Decode off the main thread
                                 lifecycleScope.launch {
                                     val bmp = decodeBase64Bitmap(b64)
                                     if (bmp != null) {
@@ -111,10 +110,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
                         is Resource.Error -> {
                             Timber.e("Error loading user: ${res.message}")
                             binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
-                            binding.tvUserName.text = getString(R.string.app_name) // or keep last value
+                            binding.tvUserName.text = getString(R.string.app_name)
                         }
                         is Resource.Loading -> {
-                            // Optional: show a shimmer/skeleton here
+                            // no-op; add shimmer here if needed
                         }
                     }
                 }
@@ -122,18 +121,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
         }
     }
 
+    // ─────────── Helpers ───────────
+    // Safe Base64 decode; returns null on failures to keep UI resilient.
     private suspend fun decodeBase64Bitmap(base64: String): Bitmap? = withContext(Dispatchers.Default) {
-        return@withContext try {
+        runCatching {
             val bytes = Base64.decode(base64, Base64.DEFAULT)
             BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to decode Base64 image")
-            null
-        }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+        }.onFailure { Timber.e(it, "Failed to decode Base64 image") }
+            .getOrNull()
     }
 }

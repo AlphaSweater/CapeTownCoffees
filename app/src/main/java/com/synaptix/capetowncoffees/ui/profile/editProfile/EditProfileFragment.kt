@@ -16,10 +16,10 @@
 
 package com.synaptix.capetowncoffees.ui.profile.editProfile
 
-// Remove this import as it's not needed
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,35 +41,37 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class EditProfileFragment : Fragment() {
+public class EditProfileFragment : Fragment() {
 
+    // ─────────── Constants ───────────
+    private companion object {
+        private const val IMAGE_MIME_SELECTOR = "image/*"
+        private const val CURSOR_NOT_SET = -1
+    }
+
+    // ─────────── View / VM ───────────
     private var _binding: FragmentProfileEditBinding? = null
-
-    // This property is only valid between onCreateView and onDestroyView
     private val binding get() = _binding!!
-
     private val viewModel: EditProfileViewModel by viewModels()
 
-    private val pickImageLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            if (uri != null) {
-                try {
-                    // First set the image in the UI
-                    val inputStream = requireContext().contentResolver.openInputStream(uri)
-                    val bitmap = BitmapFactory.decodeStream(inputStream)
-                    binding.ivProfilePicture.setImageBitmap(bitmap)
-                    inputStream?.close()
-
-                    // Then update the ViewModel with the URI
-                    viewModel.setProfilePictureUri(uri)
-
-                    // Note: We'll let the user save the changes explicitly with the save button
-                } catch (e: Exception) {
-                    showError("Failed to load image")
-                }
+    // ─────────── Activity Result Launchers ───────────
+    // Lets user pick an image; we optimistically paint it, then store the Uri in VM.
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        try {
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                val bitmap = BitmapFactory.decodeStream(input)
+                binding.ivProfilePicture.setImageBitmap(bitmap)
             }
+            viewModel.setProfilePictureUri(uri)
+        } catch (_: Exception) {
+            showError(getString(R.string.profile_edit_image_load_failed))
         }
+    }
 
+    // ─────────── Lifecycle ───────────
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -79,10 +81,10 @@ class EditProfileFragment : Fragment() {
         return binding.root
     }
 
+    // Wires toolbar, click handlers, text listeners, and collects state.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Hook up toolbar back navigation (layout uses MaterialToolbar with navigationIcon)
         view.findViewById<MaterialToolbar>(R.id.toolbar)?.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
@@ -92,139 +94,122 @@ class EditProfileFragment : Fragment() {
         observeViewModel()
     }
 
-    private fun setupClickListeners() {
-        binding.apply {
-            btnEditPhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
-            btnSaveChanges.setOnClickListener {
-                // Pass the context to the ViewModel
-                viewModel.updateProfile(requireContext())
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
-                findNavController().navigateUp()
-            }
+    // ─────────── UI Wiring ───────────
+    // Primary click actions: pick photo, save profile, toggle password section.
+    private fun setupClickListeners() = with(binding) {
+        btnEditPhoto.setOnClickListener { pickImageLauncher.launch(IMAGE_MIME_SELECTOR) }
 
-            // Add click listener for the change password button
-            btnChangePassword.setOnClickListener {
-                val isVisible = layoutPasswordFields.isVisible
-                layoutPasswordFields.visibility = if (isVisible) View.GONE else View.VISIBLE
-                btnChangePassword.text = if (isVisible) {
-                    getString(R.string.change)
-                } else {
-                    getString(android.R.string.cancel)
-                }
-                // Clear password fields when hiding
-                if (isVisible) {
-                    etCurrentPassword.text?.clear()
-                    etNewPassword.text?.clear()
-                    etConfirmNewPassword.text?.clear()
-                }
+        btnSaveChanges.setOnClickListener {
+            viewModel.updateProfile(requireContext())
+            findNavController().navigateUp()
+        }
+
+        btnChangePassword.setOnClickListener {
+            val nowVisible = !layoutPasswordFields.isVisible
+            layoutPasswordFields.visibility = if (nowVisible) View.VISIBLE else View.GONE
+            btnChangePassword.text = if (nowVisible) getString(android.R.string.cancel) else getString(R.string.change)
+            if (!nowVisible) {
+                etCurrentPassword.text?.clear()
+                etNewPassword.text?.clear()
+                etConfirmNewPassword.text?.clear()
             }
         }
     }
 
-    private fun setupTextChangeListeners() {
-        binding.apply {
-            // Update the ID to match the one in the layout (tvFullName)
-            tvFullName.doAfterTextChanged { editable ->
-                viewModel.setFullName(editable?.toString() ?: "")
-            }
-            etCurrentPassword.doAfterTextChanged { editable ->
-                viewModel.setCurrentPassword(editable?.toString() ?: "")
-            }
-            etNewPassword.doAfterTextChanged { editable ->
-                viewModel.setNewPassword(editable?.toString() ?: "")
-            }
-            etConfirmNewPassword.doAfterTextChanged { editable ->
-                viewModel.setConfirmPassword(editable?.toString() ?: "")
-            }
-        }
+    // Simple two-way text sync; VM holds the authoritative state.
+    private fun setupTextChangeListeners() = with(binding) {
+        tvFullName.doAfterTextChanged { viewModel.setFullName(it?.toString().orEmpty()) }
+        etCurrentPassword.doAfterTextChanged { viewModel.setCurrentPassword(it?.toString().orEmpty()) }
+        etNewPassword.doAfterTextChanged { viewModel.setNewPassword(it?.toString().orEmpty()) }
+        etConfirmNewPassword.doAfterTextChanged { viewModel.setConfirmPassword(it?.toString().orEmpty()) }
     }
 
+    // ─────────── Collectors ───────────
+    // Collects VM state for rendering; keeps UI reactive and simple.
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
                     when (state) {
                         is EditProfileUiState.Loading -> showLoading(true)
+
                         is EditProfileUiState.Success -> {
                             showLoading(false)
-                            
-                            // Update email if needed
+
                             val currentEmail = binding.tvEmail.text?.toString()
                             if (currentEmail != state.user.email) {
-                                binding.tvEmail.setText(state.user.email ?: "")
+                                binding.tvEmail.setText(state.user.email.orEmpty())
                             }
-                            
-                            // Update full name if needed
+
                             updateFullName(state.user.fullName)
-                            
-                            // Update profile picture
                             updateProfilePicture(state.profilePictureUri, state.user.photoBase64)
-                            
-                            // Show success message if available
-                            state.successMessage?.let { showSuccess(it) }
-                            
-                            // Update save button state
+
+                            state.successMessage?.let(::showSuccess)
                             binding.btnSaveChanges.isEnabled = state.isFormValid
                         }
+
                         is EditProfileUiState.Error -> {
                             showLoading(false)
-                            if (state.message.isNotBlank()) {
-                                showError(state.message)
-                            }
+                            if (state.message.isNotBlank()) showError(state.message)
                         }
                     }
                 }
             }
         }
     }
-    
+
+    // ─────────── Render Helpers ───────────
+    // Preserves cursor when possible to avoid jarring jumps while typing.
     private fun updateFullName(fullName: String?) {
-        if (fullName != null && binding.tvFullName.text?.toString() != fullName) {
-            val selection = binding.tvFullName.selectionEnd
-            binding.tvFullName.setText(fullName)
-            
-            // Restore cursor position if possible
-            if (selection in 0..(fullName.length)) {
-                binding.tvFullName.setSelection(selection)
-            } else {
-                binding.tvFullName.setSelection(fullName.length)
-            }
-        }
+        if (fullName == null) return
+        val current = binding.tvFullName.text?.toString()
+        if (current == fullName) return
+
+        val selection = binding.tvFullName.selectionEnd
+        binding.tvFullName.setText(fullName)
+
+        val safeEnd = if (selection == CURSOR_NOT_SET) fullName.length else selection
+        val clamped = safeEnd.coerceIn(0, fullName.length)
+        binding.tvFullName.setSelection(clamped)
     }
-    
+
+    // Prefers the freshly chosen Uri; falls back to base64 from server.
     private fun updateProfilePicture(uri: Uri?, photoBase64: String?) {
-        // Try to load from URI first (newly selected image)
-        uri?.let { 
+        if (uri != null) {
             try {
-                val inputStream = requireContext().contentResolver.openInputStream(it)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                binding.ivProfilePicture.setImageBitmap(bitmap)
-                inputStream?.close()
+                requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                    val bitmap = BitmapFactory.decodeStream(input)
+                    binding.ivProfilePicture.setImageBitmap(bitmap)
+                }
                 return
-            } catch (e: Exception) {
-                // Fall through to base64 if URI loading fails
+            } catch (_: Exception) {
+                // fall through to base64
             }
         }
-        
-        // Fall back to base64 from server
         loadServerProfileImage(photoBase64)
     }
-    
+
+    // Decodes base64 safely; shows a default avatar on failure or missing data.
     private fun loadServerProfileImage(photoBase64: String?) {
-        photoBase64?.let { base64 ->
-            try {
-                val imageBytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
-                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                binding.ivProfilePicture.setImageBitmap(bitmap)
-            } catch (e: Exception) {
-                binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
-            }
-        } ?: run {
+        if (photoBase64.isNullOrBlank()) {
+            binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
+            return
+        }
+        try {
+            val imageBytes = Base64.decode(photoBase64, Base64.DEFAULT)
+            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            binding.ivProfilePicture.setImageBitmap(bitmap)
+        } catch (_: Exception) {
             binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
         }
     }
 
-
+    // ─────────── UI State Toggles ───────────
     private fun showLoading(show: Boolean) {
         binding.progressBar.isVisible = show
         binding.editProfileContent.isVisible = !show
@@ -232,21 +217,14 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun showError(message: String) {
-        view?.let { view ->
-            Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
-        }
+        view?.let { Snackbar.make(it, message, Snackbar.LENGTH_LONG).show() }
     }
 
     private fun showSuccess(message: String) {
-        view?.let { view ->
-            Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+        view?.let {
+            Snackbar.make(it, message, Snackbar.LENGTH_LONG)
                 .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.success_green))
                 .show()
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
