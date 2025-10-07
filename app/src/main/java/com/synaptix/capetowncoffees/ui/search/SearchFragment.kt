@@ -112,8 +112,17 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     showBottomSuggestions(true)
                 }
                 is Loadable.Data -> {
-                    val items: List<CoffeePlaceSuggestion> = loadable.value
+                    val items = loadable.value
+                    val newSig = listSignature(items)
+                    val shouldScroll = newSig != lastSuggestionsSignature && items.isNotEmpty()
+
                     suggestionsAdapter.submitListDistinct(items)
+
+                    if (shouldScroll) {
+                        rvSuggestions.post { scrollSuggestionsToTop() }
+                        lastSuggestionsSignature = newSig
+                    }
+
                     showBottomSuggestions(items.isNotEmpty())
                 }
                 is Loadable.Error -> {
@@ -249,6 +258,20 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         rvSuggestions.adapter = suggestionsAdapter
         (rvSuggestions.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         rvSuggestions.setHasFixedSize(true)
+    }
+
+    private var lastSuggestionsSignature: String? = null
+
+    private fun listSignature(items: List<CoffeePlaceSuggestion>): String {
+        // size + first few ids gives a cheap, stable signature for meaningful changes
+        val head = items.take(3).joinToString("|") { it.id }
+        return "${items.size}#$head"
+    }
+
+    private fun scrollSuggestionsToTop() {
+        rvSuggestions.stopScroll()
+        (rvSuggestions.layoutManager as? LinearLayoutManager)
+            ?.scrollToPositionWithOffset(0, 0)
     }
 
     private fun showBottomSuggestions(show: Boolean) {
