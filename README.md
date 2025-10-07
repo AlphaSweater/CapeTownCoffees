@@ -1,5 +1,5 @@
 
-![Logo](.png)
+![Logo](https://i.postimg.cc/L6MYhpN8/Logo-With-Title.png)
 
 
 <h1 align="center">📊 Cape Town Coffees</h1>
