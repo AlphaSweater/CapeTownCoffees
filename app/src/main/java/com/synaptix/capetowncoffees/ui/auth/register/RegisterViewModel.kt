@@ -1,15 +1,35 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT provided assistance in designing ViewModel logic, LiveData handling, and
+//implementing clean MVVM architecture principles.
+//* It also helped refine data flow between repositories and UI layers.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.auth.register
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginWithGoogleUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegisterUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.RegistrationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+// ─────────── UI State ───────────
+// Small state machine for the register screen; keeps rendering logic simple.
 sealed class RegisterUiState {
     object Idle : RegisterUiState()
     object Loading : RegisterUiState()
@@ -25,50 +45,74 @@ sealed class RegisterUiState {
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
+    // Use cases hold the domain logic; VM coordinates inputs/outputs
     private val registerUserUseCase: RegisterUserUseCase,
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase
 ) : ViewModel() {
-    // Internal MutableLiveData for register state
+
+    // ─────────── Constants ───────────
+    // Centralize messages to avoid typos and make reuse easier.
+    private companion object {
+        private const val MSG_EMAIL_REQUIRED = "Email is required"
+        private const val MSG_EMAIL_INVALID = "Invalid email format"
+        private const val MSG_PASSWORD_REQUIRED = "Password is required"
+        private const val MSG_PASSWORD_LENGTH = "Password must be at least 8 characters"
+        private const val MSG_PASSWORD_UPPER = "Password must contain at least one uppercase letter"
+        private const val MSG_PASSWORD_NUMBER = "Password must contain at least one number"
+        private const val MSG_PASSWORD_SPECIAL = "Password must contain at least one special character"
+        private const val MSG_CONFIRM_REQUIRED = "Please confirm your password"
+        private const val MSG_CONFIRM_MISMATCH = "Passwords do not match"
+        private const val MSG_NAME_REQUIRED = "Name is required"
+        private const val MSG_NAME_LENGTH = "Name must be at least 2 characters"
+        private const val MSG_EMAIL_EXISTS = "Email already in use"
+        private const val MSG_UNKNOWN = "Unknown error"
+        private const val MSG_GOOGLE_GENERIC = "Could not sign in with Google"
+    }
+
+    // ─────────── State ───────────
+    // Backing state is mutable; expose immutable view to UI.
     private val _registerState = MutableLiveData<RegisterUiState>(RegisterUiState.Idle)
-    val registerState: LiveData<RegisterUiState> get() = _registerState
+    public val registerState: LiveData<RegisterUiState> get() = _registerState
 
-    fun validateEmail(email: String): String? {
+    // ─────────── Validation ───────────
+    // Straightforward field validation; we keep it readable and specific per field.
+    public fun validateEmail(email: String): String? {
         return when {
-            email.isBlank() -> "Email is required"
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Invalid email format"
+            email.isBlank() -> MSG_EMAIL_REQUIRED
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> MSG_EMAIL_INVALID
             else -> null
         }
     }
 
-    fun validatePassword(password: String): String? {
+    public fun validatePassword(password: String): String? {
         return when {
-            password.isBlank() -> "Password is required"
-            password.length < 8 -> "Password must be at least 8 characters"
-            !password.matches(Regex(".*[A-Z].*")) -> "Password must contain at least one uppercase letter"
-            !password.matches(Regex(".*[0-9].*")) -> "Password must contain at least one number"
-            !password.matches(Regex(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) ->
-                "Password must contain at least one special character"
+            password.isBlank() -> MSG_PASSWORD_REQUIRED
+            password.length < 8 -> MSG_PASSWORD_LENGTH
+            !password.matches(Regex(".*[A-Z].*")) -> MSG_PASSWORD_UPPER
+            !password.matches(Regex(".*[0-9].*")) -> MSG_PASSWORD_NUMBER
+            !password.matches(Regex(".*[!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*")) -> MSG_PASSWORD_SPECIAL
             else -> null
         }
     }
 
-    fun validatePasswordConfirmation(password: String, confirmPassword: String): String? {
+    public fun validatePasswordConfirmation(password: String, confirmPassword: String): String? {
         return when {
-            confirmPassword.isBlank() -> "Please confirm your password"
-            confirmPassword != password -> "Passwords do not match"
+            confirmPassword.isBlank() -> MSG_CONFIRM_REQUIRED
+            confirmPassword != password -> MSG_CONFIRM_MISMATCH
             else -> null
         }
     }
 
-    fun validateName(name: String): String? {
+    public fun validateName(name: String): String? {
         return when {
-            name.isBlank() -> "Name is required"
-            name.length < 2 -> "Name must be at least 2 characters"
+            name.isBlank() -> MSG_NAME_REQUIRED
+            name.length < 2 -> MSG_NAME_LENGTH
             else -> null
         }
     }
 
-    fun validateInputs(name: String, email: String, password: String, confirmPassword: String): Boolean {
+    // Returns true when all fields pass validation; also emits field-level errors for the UI.
+    public fun validateInputs(name: String, email: String, password: String, confirmPassword: String): Boolean {
         val nameError = validateName(name)
         val emailError = validateEmail(email)
         val passwordError = validatePassword(password)
@@ -76,64 +120,56 @@ class RegisterViewModel @Inject constructor(
 
         if (nameError != null || emailError != null || passwordError != null || confirmPasswordError != null) {
             _registerState.value = RegisterUiState.ValidationError(
-                nameError,
-                emailError,
-                passwordError,
-                confirmPasswordError
+                nameError = nameError,
+                emailError = emailError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmPasswordError
             )
             return false
         }
         return true
     }
 
-    // Function that handles user sign-up
-    // Takes name, email and password, hashes the password securely
-    // and creates a new UserEntity object to register the user
-    fun registerUser(name: String, email: String, password: String, confirmPassword: String) {
-        if (!validateInputs(name, email, password, confirmPassword)) {
-            return
-        }
+    // ─────────── Actions: Email/Password Register ───────────
+    // Triggers registration and posts UI states along the way.
+    public fun registerUser(name: String, email: String, password: String, confirmPassword: String) {
+        if (!validateInputs(name, email, password, confirmPassword)) return
 
         viewModelScope.launch {
             try {
                 _registerState.value = RegisterUiState.Loading
                 val fullName = name.trim()
-                
-                val result = registerUserUseCase.invoke(email, password, fullName)
-                _registerState.value = when (result) {
-                    is RegistrationResult.Success -> RegisterUiState.Success
-                    is RegistrationResult.EmailExists -> RegisterUiState.Error("Email already in use")
-                    is RegistrationResult.Error -> RegisterUiState.Error(result.message)
+                when (val result = registerUserUseCase(email, password, fullName)) {
+                    is RegistrationResult.Success -> _registerState.value = RegisterUiState.Success
+                    is RegistrationResult.EmailExists -> _registerState.value = RegisterUiState.Error(MSG_EMAIL_EXISTS)
+                    is RegistrationResult.Error -> _registerState.value = RegisterUiState.Error(result.message)
                 }
             } catch (e: Exception) {
-                _registerState.value = RegisterUiState.Error(e.localizedMessage ?: "Unknown error")
+                _registerState.value = RegisterUiState.Error(e.localizedMessage ?: MSG_UNKNOWN)
             }
         }
     }
 
-    fun registerWithGoogleToken(idToken: String) {
+    // ─────────── Actions: Google Register/Login ───────────
+    // Exchanges Google ID token for app credentials; mirrors the same state machine.
+    public fun registerWithGoogleToken(idToken: String) {
         _registerState.value = RegisterUiState.Loading
         viewModelScope.launch {
             try {
-                when (val r = loginWithGoogleUseCase(idToken)) {
-                    is RegistrationResult -> {}
-                    else -> {}
+                when (val result: LoginResult = loginWithGoogleUseCase(idToken)) {
+                    is LoginResult.Success -> _registerState.value = RegisterUiState.Success
+                    is LoginResult.Error -> _registerState.value = RegisterUiState.Error(result.message)
+                    is LoginResult.InvalidCredentials -> _registerState.value = RegisterUiState.Error(MSG_GOOGLE_GENERIC)
                 }
-            } catch (_: Throwable) {}
-
-            when (val result = loginWithGoogleUseCase(idToken)) {
-                is com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult.Success ->
-                    _registerState.value = RegisterUiState.Success
-                is com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult.Error ->
-                    _registerState.value = RegisterUiState.Error(result.message)
-                is com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult.InvalidCredentials ->
-                    _registerState.value = RegisterUiState.Error("Could not sign in with Google")
+            } catch (e: Throwable) {
+                _registerState.value = RegisterUiState.Error(e.localizedMessage ?: MSG_UNKNOWN)
             }
         }
     }
 
-    // Function to reset the state back to idle
-    fun resetState() {
+    // ─────────── Utilities ───────────
+    // Helpful after a one-off success/error to avoid repeat handling on re-subscribe.
+    public fun resetState() {
         _registerState.value = RegisterUiState.Idle
     }
 }

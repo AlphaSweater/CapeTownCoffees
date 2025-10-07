@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT was used to guide the structure of this Adapter, including the ViewHolder
+//setup, data binding logic, and handling click listeners.
+//* Assistance was also provided for optimizing RecyclerView performance and readability.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.home.adapter
 
 import android.graphics.drawable.Drawable
@@ -27,14 +43,17 @@ import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.text.DecimalFormat
 
-/**
- * CoffeePlaceItemAdapter — powers both Near Me and Popular lists.
- * Works with a suspend photo resolver and keeps binds lightweight.
- */
+// ─────────── Adapter ───────────
+// Renders compact coffee place cards; supports distance updates and image preloading.
 class CoffeePlaceItemAdapter @AssistedInject constructor(
     @Assisted private var currentLocation: LatLng? = null,
     @Assisted private val onClick: (Click) -> Unit,
@@ -47,19 +66,16 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         sameContent = { o, n -> o == n },
         payload = { o, n ->
             when {
-                // o.isFavorite != n.isFavorite -> Payload.Fav
                 o.rating != n.rating || o.ratingCount != n.ratingCount -> Payload.Rating
                 else -> null
             }
         }
     ),
-    // 🔒 Namespace stable IDs so Concat adapters never collide
     idProvider = { ID_NAMESPACE xor it.id.hashCode().toLong() }
 ) {
 
-    /* ╭────────────────────────── Public API ────────────────────────────╮ */
-
-    /** Provided by Fragment so Glide preloader knows the real size. */
+    // ─────────── Public API ───────────
+    // Set by the Fragment once per holder so Glide can compute correct preload sizes.
     var preloadSizeProvider: ViewPreloadSizeProvider<String>? = null
 
     sealed interface Click {
@@ -77,7 +93,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         ): CoffeePlaceItemAdapter
     }
 
-    /** Efficient updates; distance-only invalidation when location changes. */
+    // Efficient updates; when only location changes we invalidate distance labels via payload.
     fun updateItems(items: List<CoffeePlaceLite>, userLocation: LatLng? = null) {
         val locationChanged = userLocation != null && userLocation != currentLocation
         if (userLocation != null) currentLocation = userLocation
@@ -89,15 +105,11 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         }
     }
 
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
-    /* ╭───────────────────────── Adapter Wiring ─────────────────────────╮ */
-
+    // ─────────── Adapter Wiring ───────────
     override fun itemViewTypeFor(position: Int): Int = R.layout.item_coffee_near_me
 
-    override fun onCreateBinding(
-        inflater: LayoutInflater,
-        parent: ViewGroup
-    ): ItemCoffeeNearMeBinding = ItemCoffeeNearMeBinding.inflate(inflater, parent, false)
+    override fun onCreateBinding(inflater: LayoutInflater, parent: ViewGroup): ItemCoffeeNearMeBinding =
+        ItemCoffeeNearMeBinding.inflate(inflater, parent, false)
 
     override fun onCreateVH(binding: ItemCoffeeNearMeBinding) =
         RowVH(
@@ -108,15 +120,13 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
             onClick = ::emitClick,
             getCurrentLocation = { currentLocation }
         ).also { vh ->
-            // Preloader gets the measured size ONCE per holder
             preloadSizeProvider?.setView(vh.vb.ivImage)
         }
 
     private fun emitClick(click: Click) = onClick(click)
 
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
-    /* ╭──────────────────────────── ViewHolder ───────────────────────────╮ */
-
+    // ─────────── ViewHolder ───────────
+    // Keeps a per-holder scope for image/url work; cancels on recycle to prevent leaks.
     class RowVH(
         binding: ItemCoffeeNearMeBinding,
         private val locationUtil: LocationUtil,
@@ -126,68 +136,50 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         private val getCurrentLocation: () -> LatLng?,
     ) : BaseViewHolder<CoffeePlaceLite, ItemCoffeeNearMeBinding>(binding) {
 
-        // One scope per holder (cheap). Cancel on recycle/detach.
         private val job = SupervisorJob()
         private val scope = CoroutineScope(Dispatchers.Main.immediate + job)
 
-        private var bindToken: Int = 0 // prevents late image writes after rebinding
+        private var bindToken: Int = 0           // generation counter to ignore stale async writes
         private var boundItem: CoffeePlaceLite? = null
 
         init {
-            // Static click hookups (no per-bind allocations)
             vb.root.setOnClickListener { boundItem?.let { onClick(Click.Open(it.id)) } }
             vb.ivImage.setOnClickListener { boundItem?.let { onClick(Click.Open(it.id)) } }
             vb.btnAddToList.setOnClickListener { boundItem?.let { onClick(Click.AddToList(it.id)) } }
-            // vb.btnFavorite.setOnClickListener { boundItem?.let { onClick(Click.ToggleFavorite(it.id, !vb.btnFavorite.isChecked)) } }
         }
 
-        override fun onAttached() {
-            // If you ever pause/resume animations or preloading, hook here.
-        }
-
-        override fun onDetached() {
-            // Keep scope alive; Glide cancels via clear() in onRecycled().
-        }
+        override fun onAttached() = Unit
+        override fun onDetached() = Unit
 
         override fun onRecycled() {
-            // Cancel any in-flight work for this holder
             job.cancelChildren()
             Glide.with(vb.ivImage).clear(vb.ivImage)
             boundItem = null
         }
 
+        // Full bind: fill static text, compute distance, resolve image url.
         override fun bind(item: CoffeePlaceLite) {
             boundItem = item
-            bindToken++ // new generation for this holder
+            bindToken++
             val tokenAtBind = bindToken
 
             with(vb) {
-                // Popular/Featured chip
                 pillPopular.isVisible = showPopularChip
 
-                // Name
                 tvCafeName.text = item.name.orEmpty()
                 tvCafeName.contentDescription = item.name.orEmpty()
 
-                // Address
                 renderAddress(item.address)
-
-                // Distance
                 renderDistance(item)
-
-                // Rating
                 renderRating(item.rating, item.ratingCount)
 
-                // Price (not in use yet)
                 tvCafePrice.visibility = View.GONE
 
-                // Reset image to placeholder while resolving URL
                 ivImage.setImageResource(R.drawable.featured_placeholder)
                 ivImage.contentDescription = item.name?.let { "$it photo" }
                     ?: root.context.getString(R.string.coffee_image)
             }
 
-            // Resolve photo URL asynchronously (suspend util)
             scope.launch {
                 val url = try {
                     item.images?.firstOrNull()
@@ -200,27 +192,24 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     null
                 }
 
-                // If holder has been rebound since we launched, abort
                 if (tokenAtBind != bindToken) return@launch
-
-                with(vb) { bindImage(url, item.id) }
+                vb.bindImage(url, item.id)
             }
         }
 
+        // Partial bind: respond to targeted payloads only.
         override fun bind(item: CoffeePlaceLite, payloads: List<Any>) {
             if (payloads.isEmpty()) { bind(item); return }
-            with(vb) {
-                payloads.forEach { p ->
-                    when (p) {
-                        Payload.Rating   -> renderRating(item.rating, item.ratingCount)
-                        Payload.Distance -> renderDistance(item)
-                    }
+            payloads.forEach { p ->
+                when (p) {
+                    Payload.Rating   -> vb.renderRating(item.rating, item.ratingCount)
+                    Payload.Distance -> vb.renderDistance(item)
                 }
             }
         }
 
-        /* ────────────────────── Render helpers (fast) ─────────────────── */
-
+        // ─────────── Render Helpers ───────────
+        // Keep these cheap; they run often during scroll.
         private fun ItemCoffeeNearMeBinding.renderAddress(address: String?) {
             tvCafeAddress.isGone = address.isNullOrBlank()
             if (!address.isNullOrBlank()) tvCafeAddress.text = address
@@ -240,13 +229,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         }
 
         private fun ItemCoffeeNearMeBinding.bindImage(url: String?, id: String) {
-            if (url == null) {
-                // Timber.tag(TAG).d("no-url id=%s", id)
-                return
-            }
-
-            // Timber.tag(TAG).d("load-start id=%s url=%s", id, url)
-
+            if (url == null) return
             Glide.with(ivImage)
                 .load(url)
                 .thumbnail(0.25f)
@@ -259,9 +242,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         }
     }
 
-    /* ╰──────────────────────────────────────────────────────────────────╯ */
-    /* ╭──────────────────────────── Internals ────────────────────────────╮ */
-
+    // ─────────── Internals ───────────
     private sealed interface Payload {
         data object Fav : Payload
         data object Rating : Payload
@@ -269,26 +250,19 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
     }
 
     private companion object {
-        const val TAG = "CTC-IMG"
+        private const val TAG = "CTC-IMG"
         private const val ID_NAMESPACE: Long = 0x10_0000_0000L
         private val RATING_FMT = DecimalFormat("0.0")
 
-        // Reusable lightweight Glide listener (no big allocations per bind)
         private fun GLIDE_LOGGER(id: String) = object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean
-            ): Boolean {
-                // Timber.tag(TAG).d("load-fail id=%s url=%s err=%s", id, model, e?.localizedMessage)
-                return false
-            }
+            ): Boolean = false
 
             override fun onResourceReady(
                 resource: Drawable?, model: Any?, target: Target<Drawable>?,
                 dataSource: DataSource, isFirstResource: Boolean
-            ): Boolean {
-                // Timber.tag(TAG).d("load-ok   id=%s src=%s first=%s", id, dataSource, isFirstResource)
-                return false
-            }
+            ): Boolean = false
         }
     }
 }

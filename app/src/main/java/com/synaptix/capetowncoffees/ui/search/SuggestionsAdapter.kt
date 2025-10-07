@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT was used to guide the structure of this Adapter, including the ViewHolder
+//setup, data binding logic, and handling click listeners.
+//* Assistance was also provided for optimizing RecyclerView performance and readability.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.search
 
 import android.view.LayoutInflater

@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT provided assistance in designing ViewModel logic, LiveData handling, and
+//implementing clean MVVM architecture principles.
+//* It also helped refine data flow between repositories and UI layers.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.ui.coffeeDetail
 
 import android.content.Context
@@ -16,14 +32,13 @@ import com.synaptix.capetowncoffees.ui.common.viewmodel.loadableState
 import com.synaptix.capetowncoffees.ui.common.viewmodel.state
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import com.synaptix.capetowncoffees.util.LocationFormattingUtil
-import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import javax.inject.Inject
-import timber.log.Timber
 
 @HiltViewModel
 class CafeDetailViewModel @Inject constructor(
@@ -31,10 +46,18 @@ class CafeDetailViewModel @Inject constructor(
     private val getCoffeeReviewsForPlaceUseCase: GetCoffeeReviewsForPlaceUseCase
 ) : SimpleViewModel() {
 
-    object ScreenArgs { const val PLACE_ID = "placeId" }
+    // ─────────── Screen Args & Route Keys ───────────
+    // Centralized keys to avoid typos across Fragment/VM.
+    public object ScreenArgs { public const val PLACE_ID: String = "placeId" }
+    private companion object {
+        private const val ROUTE_OPEN_MAP = "action_open_external_map"
+        private const val ROUTE_DIAL_PHONE = "action_dial_phone"
+        private const val ROUTE_OPEN_REVIEW_GALLERY = "action_open_review_gallery"
+    }
 
-    /** UI-ready state the Fragment binds to. */
-    data class Ui(
+    // ─────────── UI Model ───────────
+    // Flattened, render-ready fields; compute-heavy work stays out of the Fragment.
+    public data class Ui(
         val name: String = "",
         val address: String = "",
         val addressClickable: Boolean = false,
@@ -49,38 +72,33 @@ class CafeDetailViewModel @Inject constructor(
         val imageAvailable: Boolean = false
     )
 
-    // Primary entity for the screen
-    val place = loadableState<CoffeePlaceFull>()
-    // Sectional data (shows its own skeleton / error)
-    val reviews = loadableState<List<CoffeeReview>>()
+    // ─────────── State ───────────
+    // Primary entity and reviews use Loadable for skeleton/error handling.
+    public val place = loadableState<CoffeePlaceFull>()
+    public val reviews = loadableState<List<CoffeeReview>>()
+    public val ui = state(Ui())
 
-    // UI model
-    val ui = state(Ui())
-
-    // Internals
+    // ─────────── Internals ───────────
+    // Keep inputs needed for derived data (e.g., distance).
     private var placeId: String? = null
     private var userLocation: LatLng? = null
     private var placeLocation: LatLng? = null
 
-
-    override fun start(args: Bundle?) {
+    // ─────────── Lifecycle ───────────
+    // Called once the Fragment hands us arguments; kick off initial loads.
+    public override fun start(args: Bundle?) {
         super.start(args)
 
         val id = args?.getString(ScreenArgs.PLACE_ID)
-
         if (id.isNullOrBlank()) {
             main { send(Effect.Message("Missing placeId for Café Detail")) }
             return
         }
         placeId = id
 
-        // One-shot fetch of full details (Result-aware)
         fetchResultInto(place, { getCoffeePlaceDetailsUseCase(placeId!!) }, label = "place")
-
-        // One-shot fetch of reviews (Result-aware)
         fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(placeId!!) }, label = "reviews")
 
-        // Whenever 'place' changes to Data, (re)compute Ui
         viewModelScope.launch {
             place.flow.collect { loadable ->
                 if (loadable is Loadable.Data) updateUiFrom(loadable.value)
@@ -88,73 +106,70 @@ class CafeDetailViewModel @Inject constructor(
         }
     }
 
-    fun refresh() {
+    // ─────────── Actions (Pull-to-refresh / Retry) ───────────
+    public fun refresh() {
         val id = placeId ?: return
         fetchResultInto(place, { getCoffeePlaceDetailsUseCase(id) }, label = "place-refresh")
         fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(id) }, label = "reviews-refresh")
     }
 
-    fun retryReviews() {
+    public fun retryReviews() {
         val id = placeId ?: return
         fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(id) }, label = "reviews-retry")
     }
 
-    /** Fragment tells us when it has a device location. */
-    fun onUserLocation(loc: LatLng) {
+    // ─────────── Inputs from Fragment ───────────
+    // Location arrival toggles distance rendering once both points exist.
+    public fun onUserLocation(loc: LatLng) {
         userLocation = loc
         maybeUpdateDistance()
     }
 
-    /** User taps address in the UI. Fragment will perform the Intent using these args. */
-    fun onAddressClicked() {
+    // Address/phone taps emit effects; Fragment handles the Android intents.
+    public fun onAddressClicked() {
         val placeData = place.value
         if (placeData is Loadable.Data) {
             val mapUrl = placeData.value.googleMapsUrl ?: return
             val b = Bundle().apply { putString("map_url", mapUrl) }
-            main { send(Effect.Navigate("action_open_external_map", b)) }
+            main { send(Effect.Navigate(ROUTE_OPEN_MAP, b)) }
         }
     }
 
-
-    /** User taps phone. Fragment will perform the dial Intent using this arg. */
-    fun onPhoneClicked() {
+    public fun onPhoneClicked() {
         val phone = ui.value.phoneNumber ?: return
         val b = Bundle().apply { putString("phone", phone) }
-        main { send(Effect.Navigate("action_dial_phone", b)) }
+        main { send(Effect.Navigate(ROUTE_DIAL_PHONE, b)) }
     }
 
-    // ───────────────────── Reviews interactions (adapter → VM) ─────────────────────
-
-    fun onReviewLike(reviewId: String) {
-        // TODO: integrate with your use case to post a "helpful/upvote" for in-app review
+    // ─────────── Review Interactions (Adapter → VM) ───────────
+    // For now we show feedback only; wire to domain when ready.
+    public fun onReviewLike(reviewId: String) {
         Timber.i("Like review: $reviewId")
         main { send(Effect.Message("Thanks for the feedback!")) }
-        // Later: update local state via payloads or refresh the section
     }
 
-    fun onReviewDislike(reviewId: String) {
-        // TODO: integrate with your use case to post a "not helpful/downvote" for in-app review
+    public fun onReviewDislike(reviewId: String) {
         Timber.i("Dislike review: $reviewId")
         main { send(Effect.Message("We'll keep improving!")) }
     }
 
-    fun onOpenPhoto(reviewId: String, startIndex: Int, urls: List<String>) {
+    public fun onOpenPhoto(reviewId: String, startIndex: Int, urls: List<String>) {
         if (urls.isEmpty()) return
         val b = Bundle().apply {
             putString("review_id", reviewId)
             putInt("start", startIndex)
             putStringArrayList("urls", ArrayList(urls))
         }
-        main { send(Effect.Navigate("action_open_review_gallery", b)) }
+        main { send(Effect.Navigate(ROUTE_OPEN_REVIEW_GALLERY, b)) }
     }
 
-    // ───────────────────────────────── helpers ─────────────────��───────────────
-
+    // ─────────── Private Helpers ───────────
+    // Translate domain model → UI model; compute derived fields here.
     private fun updateUiFrom(place: CoffeePlaceFull) {
         placeLocation = place.location
 
         val rating = place.rating
-        val ratingCountText = place.ratingCount?.let { "(${it})" }
+        val ratingCountText = place.ratingCount?.let { "($it)" }
         val phone = place.nationalPhoneNumber ?: place.internationalPhoneNumber
         val hours = formatOpeningHours(place.currentOpeningHours)
         val imageAvailable = !place.images.isNullOrEmpty()
@@ -178,6 +193,7 @@ class CafeDetailViewModel @Inject constructor(
         maybeUpdateDistance()
     }
 
+    // Update distance/ETA label only when both ends are known; otherwise hide.
     private fun maybeUpdateDistance() {
         val user = userLocation
         val cafe = placeLocation
@@ -190,12 +206,9 @@ class CafeDetailViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Formats weekly opening hours (Mon..Sun). Input examples per line:
-     *  - "Mon: 07:00-17:00", "Monday: 7:00 am – 5:00 pm", "Tue: Closed"
-     * Supports multiple intervals: "08:00–12:00, 13:00–17:00".
-     */
-    fun formatOpeningHours(
+    // ─────────── Opening Hours Formatting ───────────
+    // Normalizes provider-specific strings into a concise weekly schedule.
+    public fun formatOpeningHours(
         hours: List<String>?,
         prefs: CoffeeTimeUtils.DisplayPrefs = CoffeeTimeUtils.defaultPrefsProvider(),
         context: Context? = null
@@ -204,34 +217,39 @@ class CafeDetailViewModel @Inject constructor(
 
         val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
         val zone: ZoneId = prefs.zone
-        val anchor: (LocalTime) -> Long = { LocalDate.now(zone).atTime(it).atZone(zone).toEpochSecond() }
-        val fmt: (LocalTime) -> String = { CoffeeTimeUtils.formatShortTime(anchor(it), prefs, context) }
+        val anchor: (LocalTime) -> Long = { lt -> LocalDate.now(zone).atTime(lt).atZone(zone).toEpochSecond() }
+        val fmt: (LocalTime) -> String = { lt -> CoffeeTimeUtils.formatShortTime(anchor(lt), prefs, context) }
 
-        // Parse & normalize each day's line → "Closed" or "hh:mm–hh:mm[, hh:mm–hh:mm]"
-        val normalized = days.zip(hours.map { raw ->
-            val cleaned = raw
-                .replace('\u202F', ' ') // narrow no-break space
-                .replace('\u00A0', ' ') // no-break space
-                .replace('—', '-')      // em dash
-                .replace('–', '-')      // en dash
-                .replace('.', ':')      // "7.00 am" → "7:00 am"
-                .replace("\\s+".toRegex(), " ")
-                .trim()
+        // Normalize each day's text to either "Closed" or "hh:mm – hh:mm[, hh:mm – hh:mm]"
+        val normalized: List<Pair<String, String>> = days.zip(
+            hours.map { raw ->
+                val cleaned = raw
+                    .replace('\u202F', ' ')
+                    .replace('\u00A0', ' ')
+                    .replace('—', '-')
+                    .replace('–', '-')
+                    .replace('.', ':')
+                    .replace("\\s+".toRegex(), " ")
+                    .trim()
 
-            val content = cleaned.substringAfter(':', missingDelimiterValue = "").trim()
-            if (content.equals("closed", true) || content.isEmpty()) "Closed" else {
-                val ranges = content.split(Regex("\\s*,\\s*|\\s*;\\s*|\\s*[、，]\\s*")) // commas, semicolons, CJK commas
-                val formatted = ranges.mapNotNull { r ->
-                    val (a, b) = r.split('-', limit = 2).map { it.trim() }.let { if (it.size == 2) it[0] to it[1] else null } ?: return@mapNotNull null
-                    val t1 = CoffeeTimeUtils.parseTimeToLocalTime(a)
-                    val t2 = CoffeeTimeUtils.parseTimeToLocalTime(b)
-                    if (t1 != null && t2 != null) "${fmt(t1)} – ${fmt(t2)}" else null
+                val content = cleaned.substringAfter(':', missingDelimiterValue = "").trim()
+                if (content.equals("closed", true) || content.isEmpty()) {
+                    "Closed"
+                } else {
+                    val ranges = content.split(Regex("\\s*,\\s*|\\s*;\\s*|\\s*[、，]\\s*"))
+                    val formatted = ranges.mapNotNull { r ->
+                        val parts = r.split('-', limit = 2).map { it.trim() }
+                        val pair = if (parts.size == 2) parts[0] to parts[1] else null
+                        val t1 = CoffeeTimeUtils.parseTimeToLocalTime(pair?.first ?: return@mapNotNull null)
+                        val t2 = CoffeeTimeUtils.parseTimeToLocalTime(pair.second)
+                        if (t1 != null && t2 != null) "${fmt(t1)} – ${fmt(t2)}" else null
+                    }
+                    if (formatted.isEmpty()) "Closed" else formatted.joinToString(", ")
                 }
-                if (formatted.isEmpty()) "Closed" else formatted.joinToString(", ")
             }
-        })
+        )
 
-        // Group consecutive days with identical hours
+        // Collapse consecutive days sharing the same hours into ranges.
         val out = mutableListOf<String>()
         var start = 0
         var cur = normalized[0].second
@@ -241,7 +259,10 @@ class CafeDetailViewModel @Inject constructor(
             if (!sameNext) {
                 val label = if (start == i) days[i] else "${days[start]} – ${days[i]}"
                 out += "$label: $cur"
-                if (!last) { start = i + 1; cur = normalized[i + 1].second }
+                if (!last) {
+                    start = i + 1
+                    cur = normalized[i + 1].second
+                }
             }
         }
         return out.joinToString("\n")

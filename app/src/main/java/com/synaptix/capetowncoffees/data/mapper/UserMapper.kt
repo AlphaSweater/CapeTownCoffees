@@ -1,3 +1,19 @@
+//======================================================================================
+//Group 2 - Group Members:
+//======================================================================================
+//* Chad Fairlie ST10269509
+//* Dhiren Ruthenavelu ST10256859
+//* Kayla Ferreira ST10259527
+//* Nathan Teixeira ST10249266
+//======================================================================================
+//References:
+//======================================================================================
+//* ChatGPT was used to guide the creation of mapper classes responsible for converting
+//between entities, DTOs, and domain models.
+//* It also helped ensure consistent naming and mapping logic throughout the project.
+//* It also helped generate useful comments
+//======================================================================================
+
 package com.synaptix.capetowncoffees.data.mapper
 
 import com.synaptix.capetowncoffees.data.model.CoffeeUserDTO
