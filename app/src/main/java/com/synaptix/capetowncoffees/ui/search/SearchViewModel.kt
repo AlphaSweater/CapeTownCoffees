@@ -63,12 +63,13 @@ class SearchViewModel @Inject constructor(
             flow = combinedInput()
                 .flatMapLatest { input ->
                     val (params, loc) = input
-                    Timber.d("Fetching suggestions for: %s", params)
+                    Timber.tag("CTC-Flow").d("Fetching suggestions for: %s", params)
                     if (params.query.isNullOrBlank() || loc == null) {
                         flowOf(emptyList())
                     } else {
                         flow {
                             val result = getSuggestions(params, loc)
+                            Timber.tag("CTC-Flow").d("Got %s suggestions", result.getOrNull()?.size ?: "no")
                             emit(result.getOrElse { throw it })
                         }
                     }
@@ -85,7 +86,7 @@ class SearchViewModel @Inject constructor(
             val params = CoffeeSearchParameters.builder()
                 .query(q.trim())
                 .radiusMeters(meters)
-                .maxResults(5)
+                .maxResults(10)
                 .sortByDistance(true)
                 .strictCoffeeOnly(isStrict)
                 .build()

@@ -2,11 +2,9 @@ package com.synaptix.capetowncoffees.ui.search
 
 import android.os.Bundle
 import android.transition.AutoTransition
-import android.transition.Transition
 import android.transition.TransitionManager
 import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
@@ -20,7 +18,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.whenStarted
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -208,7 +205,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         switchStrictCoffee.isChecked = vm.strict.value
 
         // Keep radius label accurate on first render
-        tvRadiusValue.text = com.synaptix.capetowncoffees.util.LocationFormattingUtil
+        tvRadiusValue.text = LocationFormattingUtil
             .formatDistance(vm.radiusM.value.toFloat())
 
         // 2) Wire listeners AFTER restoring values
