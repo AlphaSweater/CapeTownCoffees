@@ -82,6 +82,8 @@ class EditProfileFragment : Fragment() {
             btnSaveChanges.setOnClickListener {
                 // Pass the context to the ViewModel
                 viewModel.updateProfile(requireContext())
+
+                findNavController().navigateUp()
             }
 
             // Add click listener for the change password button
