@@ -97,7 +97,7 @@ https://developer.android.com/studio
 
 - Ensure you have the correct SDK versions installed:
 
-- Minimum SDK version needed is 25 (35+ recommended)
+- Minimum SDK version needed is 26 (36+ recommended)
 (You can check or install SDKs via SDK Manager in Android Studio.)
 
 4. Connect a device to run the app:
