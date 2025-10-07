@@ -152,4 +152,5 @@
     <string name="privacy_public_dropdown">Private</string>
     <string name="save">Save</string>
     <string name="create_list">Create List</string>
+    <string name="settings">Settings</string>
 </resources>
