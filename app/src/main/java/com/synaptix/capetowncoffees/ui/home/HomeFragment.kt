@@ -111,7 +111,6 @@ class HomeFragment : Fragment() {
     /* ╰──────────────────────────────────────────────────────────────────╯ */
 
     /* ╭──────────────────────── Shared RV resources ─────────────────────╮ */
-    private val sharedPool by lazy { RecyclerView.RecycledViewPool() }
     private val concatConfig: ConcatAdapter.Config by lazy {
         ConcatAdapter.Config.Builder()
             .setIsolateViewTypes(true)
@@ -165,6 +164,14 @@ class HomeFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val hasLocation = vm.ui.value.currentLocation != null
+        if (hasLocation && vm.shouldRefreshForSearchParamsChange()) {
+            startNetworkRefresh()      // show skeletons
+            vm.refresh(force = true)   // refetch Nearby + Featured
+        }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -468,8 +475,6 @@ class HomeFragment : Fragment() {
             radiusKm?.let { putInt(ARG_RADIUS_KM, it) }
             strictOnly?.let { putBoolean(ARG_STRICT_ONLY, it) }
         }
-        // If you use Safe Args, call the generated Direction instead:
-        // findNavController().navigate(HomeFragmentDirections.toSearch(openFilters, prefill, radiusKm ?: -1, strictOnly ?: false))
         findNavController().navigate(R.id.searchFragment, args)
     }
 
