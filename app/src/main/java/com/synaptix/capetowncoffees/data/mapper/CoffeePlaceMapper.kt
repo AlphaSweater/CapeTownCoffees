@@ -22,28 +22,40 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.TagExtractor
 
-object CoffeePlaceMapper {
-    fun toFull(place: Place): CoffeePlaceFull = CoffeePlaceFull(
-        id = place.id ?: "",
-        name = place.displayName,
-        address = place.formattedAddress,
-        location = place.location,
-        googleMapsUrl = place.googleMapsUri?.toString(),
-        rating = place.rating,
-        ratingCount = place.userRatingCount,
-        images = place.photoMetadatas,
-        primaryType = place.primaryType,
-        types = place.placeTypes?.map { it.toString() },
-        businessStatus = place.businessStatus?.name,
-        currentOpeningHours = place.currentOpeningHours?.weekdayText,
+// ─────────── Mapper — CoffeePlace ⇄ Domain ───────────
+// We map raw Google Places objects into our domain models.
+// Keep this layer dumb: only field selection/formatting, no I/O or lookups.
+public object CoffeePlaceMapper {
+
+    // ─────────── Constants ───────────
+    // We prefer a named empty id so the fallback is visible and consistent.
+    private const val EMPTY_ID: String = ""
+
+    // ─────────── Public API ───────────
+
+    // Full model for detail screens; we carry richer fields like phones, site, hours.
+    public fun toFull(place: Place): CoffeePlaceFull = CoffeePlaceFull(
+        id = place.id ?: EMPTY_ID,                        // ensure non-null id string
+        name = place.displayName,                         // human name shown by Google
+        address = place.formattedAddress,                 // postal-like formatted address
+        location = place.location,                        // lat/lng; null-safe upstream
+        googleMapsUrl = place.googleMapsUri?.toString(),  // deep-link to Maps when available
+        rating = place.rating,                            // average rating 0..5
+        ratingCount = place.userRatingCount,              // number of user ratings
+        images = place.photoMetadatas,                    // metadata list for lazy photo fetch
+        primaryType = place.primaryType,                  // main category (e.g., CAFE)
+        types = place.placeTypes?.map { it.toString() },  // keep raw strings for filtering
+        businessStatus = place.businessStatus?.name,      // e.g., OPERATIONAL
+        currentOpeningHours = place.currentOpeningHours?.weekdayText, // readable hours
         nationalPhoneNumber = place.nationalPhoneNumber,
         internationalPhoneNumber = place.internationalPhoneNumber,
         websiteUrl = place.websiteUri?.toString(),
-        tags = TagExtractor.extract(place)
+        tags = TagExtractor.extract(place)                // lightweight tag hints from fields
     )
 
-    fun toLite(place: Place): CoffeePlaceLite = CoffeePlaceLite(
-        id = place.id ?: "",
+    // Lite model for lists and suggestions; only essentials for quick rendering.
+    public fun toLite(place: Place): CoffeePlaceLite = CoffeePlaceLite(
+        id = place.id ?: EMPTY_ID,
         name = place.displayName,
         address = place.formattedAddress,
         location = place.location,
@@ -57,8 +69,9 @@ object CoffeePlaceMapper {
         tags = TagExtractor.extract(place)
     )
 
-    fun toSuggestion(place: Place): CoffeePlaceSuggestion = CoffeePlaceSuggestion(
-        id = place.id ?: "",
+    // Minimal model for typeahead UX; we keep only id + display name.
+    public fun toSuggestion(place: Place): CoffeePlaceSuggestion = CoffeePlaceSuggestion(
+        id = place.id ?: EMPTY_ID,
         name = place.displayName
     )
 }
