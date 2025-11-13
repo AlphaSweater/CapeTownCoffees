@@ -33,6 +33,7 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import androidx.core.net.toUri
 
 class CoffeePlaceUtilsUseCase @Inject constructor(
     private val context: Context,
@@ -121,18 +122,26 @@ class CoffeePlaceUtilsUseCase @Inject constructor(
         photoMetadata: PhotoMetadata,
         maxWidthDp: Int? = null,
         maxHeightDp: Int? = null
-    ): Uri? = suspendCancellableCoroutine { cont ->
-        val density = context.resources.displayMetrics.density
-        val builder = FetchResolvedPhotoUriRequest.builder(photoMetadata)
-        maxWidthDp?.let { builder.setMaxWidth((it * density).toInt()) }
-        maxHeightDp?.let { builder.setMaxHeight((it * density).toInt()) }
-        val request = builder.build()
-        placesClient.fetchResolvedPhotoUri(request)
-            .addOnSuccessListener { response ->
-                cont.resume(response.uri)
-            }
-            .addOnFailureListener { exception ->
-                cont.resume(null)
-            }
+    ): Uri? {
+        // Original code commented out for cost.
+        /*
+        return suspendCancellableCoroutine { cont ->
+            val density = context.resources.displayMetrics.density
+            val builder = FetchResolvedPhotoUriRequest.builder(photoMetadata)
+            maxWidthDp?.let { builder.setMaxWidth((it * density).toInt()) }
+            maxHeightDp?.let { builder.setMaxHeight((it * density).toInt()) }
+            val request = builder.build()
+            placesClient.fetchResolvedPhotoUri(request)
+                .addOnSuccessListener { response ->
+                    cont.resume(response.uri)
+                }
+                .addOnFailureListener { exception ->
+                    cont.resume(null)
+                }
+        }
+        */
+
+        // Return a hardcoded URL instead.
+        return "https://media.discordapp.net/attachments/1277334380012109875/1416054067368562798/caleb1.JPG?ex=691686de&is=6915355e&hm=02ac126ed346a0849700813f7edc7558fb1311dddbf3c5abdc30815826548281&=&format=webp&width=1280&height=960".toUri()
     }
 }
