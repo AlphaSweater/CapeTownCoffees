@@ -120,6 +120,9 @@ dependencies {
     // Storage for profile photo uploads
     implementation("com.google.firebase:firebase-storage")
 
+    // Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging")
+
     implementation(libs.androidx.ui.graphics.android)
     implementation(libs.androidx.foundation.android)
 
@@ -140,4 +143,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // --- Biometrics & Encrypted storage ---
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

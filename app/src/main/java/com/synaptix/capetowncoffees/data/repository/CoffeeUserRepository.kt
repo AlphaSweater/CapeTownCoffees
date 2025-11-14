@@ -157,4 +157,14 @@ class CoffeeUserRepository @Inject constructor(
             true
         }.getOrThrow()
     }
+
+    override suspend fun updateFcmToken(token: String): Result<Unit> =
+        runCatching {
+            val uid = getCurrentUserId() ?: error("No user logged in")
+            val data = mapOf(
+                "fcmToken" to token,
+                "updatedAt" to CoffeeTimeUtils.nowSeconds()
+            )
+            getCollection().document(uid).set(data, SetOptions.merge()).await()
+        }
 }
