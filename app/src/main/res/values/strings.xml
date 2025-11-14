@@ -24,14 +24,18 @@
     <!-- Existing resources below -->
     <string name="app_name">Cape Town Coffees</string>
 
-    <!-- Sign In Screen -->
+    <!-- Login + Register Screen -->
     <string name="app_logo">Cape Town Coffees Logo</string>
+    <string name="cape_towns">Cape Towns</string>
+    <string name="coffees">COFFEES</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
     <string name="forgot_password">Forgot Password?</string>
     <string name="sign_in">Sign In</string>
     <string name="or_continue_with">or continue with</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="continue_with_google">Continue with Google</string>
     <string name="dont_have_an_account">Don\'t have an account?</string>
     <string name="sign_up">Sign Up</string>
 
@@ -188,4 +192,5 @@
     <string name="private_label">Private</string>
     <string name="public_label">Public</string>
     <string name="profile_edit_image_load_failed">Failed to load profile image</string>
+
 </resources>
