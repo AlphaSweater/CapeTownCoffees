@@ -21,6 +21,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -50,6 +55,9 @@ class LoginFragment : Fragment() {
 
     // Single active toast so messages don't stack
     private var activeToast: Toast? = null
+
+    private lateinit var biometricPrompt: BiometricPrompt
+    private lateinit var biometricInfo: BiometricPrompt.PromptInfo
 
     // ─────────── Activity Result Launchers ───────────
     // Handles the result from Google's sign-in intent and forwards the ID token to the VM
@@ -114,6 +122,9 @@ class LoginFragment : Fragment() {
             }
         }
 
+        setupBiometricPrompt()
+        autoPromptBiometricIfAvailable()
+
         // ─────────── Observers ───────────
         // React to auth state changes and keep UI enabled/disabled appropriately
         viewModel.loginState.observe(viewLifecycleOwner) { state ->
@@ -126,6 +137,12 @@ class LoginFragment : Fragment() {
                 is LoginUiState.Success -> {
                     binding.buttonlogin.isEnabled = true
                     toast(getString(R.string.ctc_login_success))
+                    // After a successful password login, if biometrics are available, persist creds for next time.
+                    val email = binding.emailEditText.text?.toString().orEmpty()
+                    val password = binding.passwordEditText.text?.toString().orEmpty()
+                    if (isBiometricAvailable() && email.isNotBlank() && password.isNotBlank()) {
+                        saveCredentialsSecure(email, password)
+                    }
                     try {
                         findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
                     } catch (e: Exception) {
@@ -167,5 +184,67 @@ class LoginFragment : Fragment() {
     private fun toast(message: CharSequence) {
         activeToast?.cancel()
         activeToast = Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).also { it.show() }
+    }
+
+    private fun autoPromptBiometricIfAvailable() {
+        if (!isBiometricAvailable()) return
+        val creds = getCredentialsSecure() ?: return
+        // Prompt the user to authenticate using their enrolled biometrics
+        biometricPrompt.authenticate(biometricInfo)
+    }
+
+    private fun setupBiometricPrompt() {
+        val executor = ContextCompat.getMainExecutor(requireContext())
+        biometricPrompt = BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                val creds = getCredentialsSecure()
+                if (creds != null) {
+                    viewModel.loginUser(creds.first, creds.second)
+                } else {
+                    toast("No saved credentials")
+                }
+            }
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                toast(errString)
+            }
+            override fun onAuthenticationFailed() {
+                toast("Fingerprint not recognized")
+            }
+        })
+
+        biometricInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Login with fingerprint")
+            .setSubtitle("Use your fingerprint to sign in")
+            .setNegativeButtonText("Use password")
+            .build()
+    }
+
+    private fun isBiometricAvailable(): Boolean {
+        val manager = BiometricManager.from(requireContext())
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        val res = manager.canAuthenticate(authenticators)
+        return res == BiometricManager.BIOMETRIC_SUCCESS
+    }
+
+    private fun prefs() = EncryptedSharedPreferences.create(
+        requireContext(),
+        "ctc_secure_prefs",
+        MasterKey.Builder(requireContext()).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+    )
+
+    private fun saveCredentialsSecure(email: String, password: String) {
+        prefs().edit()
+            .putString("bio_email", email)
+            .putString("bio_password", password)
+            .apply()
+    }
+
+    private fun getCredentialsSecure(): Pair<String, String>? {
+        val p = prefs()
+        val email = p.getString("bio_email", null)
+        val password = p.getString("bio_password", null)
+        return if (!email.isNullOrBlank() && !password.isNullOrBlank()) email to password else null
     }
 }

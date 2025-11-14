@@ -18,6 +18,7 @@ package com.synaptix.capetowncoffees.di
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.synaptix.capetowncoffees.BuildConfig
 import dagger.Module
 import dagger.Provides
@@ -46,6 +47,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseMessaging(): FirebaseMessaging = FirebaseMessaging.getInstance()
 
     // =================== END FIREBASE SERVICES ===================
 

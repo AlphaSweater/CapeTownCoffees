@@ -128,4 +128,9 @@ interface ICoffeeUserRepository {
      * Returns the authenticated FirebaseUser.
      */
     suspend fun signInWithGoogle(idToken: String): Result<FirebaseUser>
+
+    /**
+     * Updates the FCM token for the currently authenticated user.
+     */
+    suspend fun updateFcmToken(token: String): Result<Unit>
 }

@@ -20,6 +20,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
@@ -40,6 +41,7 @@ import timber.log.Timber
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    private val NOTIFICATION_PERMISSION_REQUEST_CODE = 2002
 
     private var permissionDialogShown = false
     private var permissionRequestInProgress = false
@@ -56,6 +58,9 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, true)
 
         setContentView(R.layout.activity_main)
+
+        // Request Android 13+ notification permission so FCM notifications can show
+        requestNotificationPermissionIfNeeded()
 
         // ---- Set the spacer height exactly once (no stacking on resumes) ----
         setStatusSpacerOnce(rootId = R.id.root_container, spacerId = R.id.status_spacer)
@@ -184,6 +189,12 @@ class MainActivity : AppCompatActivity() {
                 permissionDialogShown = true
                 showPermissionSettingsDialog()
             }
+        } else if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
+                Timber.i("User granted POST_NOTIFICATIONS permission.")
+            } else {
+                Timber.i("User denied POST_NOTIFICATIONS permission.")
+            }
         }
     }
 
@@ -205,6 +216,14 @@ class MainActivity : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION_REQUEST_CODE)
+            }
+        }
     }
 
     /**
