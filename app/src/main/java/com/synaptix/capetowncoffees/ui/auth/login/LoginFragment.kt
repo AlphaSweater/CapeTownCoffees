@@ -92,6 +92,17 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         Timber.d("LoginFragment onViewCreated called")
 
+        // checks to see if user is already logged in and skips login screen
+        if (viewModel.hasExistingSession()) {
+            Timber.d("Existing user session detected. Skipping login screen.")
+            try {
+                findNavController().navigate(R.id.action_authLoginFragment_to_homeFragment)
+            } catch (e: Exception) {
+                Timber.e(e, "Navigation failed while skipping login")
+            }
+            return
+        }
+
         // ─────────── UI Wiring ───────────
         // Swap to register screen
         binding.textRegisterSwap.setOnClickListener {
@@ -188,6 +199,7 @@ class LoginFragment : Fragment() {
 
     private fun autoPromptBiometricIfAvailable() {
         if (!isBiometricAvailable()) return
+        if (viewModel.hasExistingSession()) return
         val creds = getCredentialsSecure() ?: return
         // Prompt the user to authenticate using their enrolled biometrics
         biometricPrompt.authenticate(biometricInfo)
