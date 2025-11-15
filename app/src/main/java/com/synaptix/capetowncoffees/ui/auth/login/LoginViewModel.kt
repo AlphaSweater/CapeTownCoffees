@@ -20,6 +20,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.synaptix.capetowncoffees.domain.repository.ICoffeeUserRepository
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginResult
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginUserUseCase
 import com.synaptix.capetowncoffees.domain.usecase.auth.LoginWithGoogleUseCase
@@ -45,7 +46,8 @@ sealed class LoginUiState {
 class LoginViewModel @Inject constructor(
     // Use cases encapsulate domain logic for credentials and Google auth
     private val loginUserUseCase: LoginUserUseCase,
-    private val loginWithGoogleUseCase: LoginWithGoogleUseCase
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
+    private val coffeeUserRepository: ICoffeeUserRepository
 ) : ViewModel() {
 
     // ─────────── Constants ───────────
@@ -98,6 +100,10 @@ class LoginViewModel @Inject constructor(
         }
         Timber.d("Validation passed")
         return true
+    }
+
+    fun hasExistingSession(): Boolean {
+        return coffeeUserRepository.getCurrentUser() != null
     }
 
     // ─────────── Actions: Credentials Login ───────────
