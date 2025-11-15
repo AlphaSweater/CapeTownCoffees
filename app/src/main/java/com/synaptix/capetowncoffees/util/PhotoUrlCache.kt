@@ -20,17 +20,29 @@ class PhotoUrlCache(
 ) {
     private val cache = mutableMapOf<String, String?>()
 
-    /** Returns cached if known; otherwise triggers async compute and returns null now. */
+    /** Returns cached if known; otherwise triggers async compute (if allowed) and returns null now. */
     fun peekOrCompute(place: CoffeePlaceLite): String? {
-        val cached = cache[place.id]
-        if (cached != null || cache.containsKey(place.id)) return cached
-
-        owner.lifecycleScope.launch {
-            val url = place.images?.firstOrNull()?.let { meta ->
-                utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString()
-            }
-            cache[place.id] = url
+        // 1) If we've already cached something for this id (including null), just return it.
+        if (cache.containsKey(place.id)) {
+            return cache[place.id]
         }
+
+        // 2) Place is cached: NEVER hit Places; rely only on cachedImageUrl.
+        if (place.isCached) {
+            val cachedUrl = place.cachedImageUrl
+            cache[place.id] = cachedUrl   // may be null; that's intentional
+            return cachedUrl
+        }
+
+        // 3) Not cached yet: allowed to call Places.
+        owner.lifecycleScope.launch {
+            val url = place.images
+                ?.firstOrNull()
+                ?.let { meta -> utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString() }
+
+            cache[place.id] = url // may be null if resolution failed or no images.
+        }
+
         return null
     }
 
@@ -38,15 +50,26 @@ class PhotoUrlCache(
     fun warm(items: List<CoffeePlaceLite>, take: Int) {
         if (items.isEmpty()) return
         val n = min(items.size, take)
+
         owner.lifecycleScope.launch {
             for (i in 0 until n) {
                 val p = items[i]
-                if (!cache.containsKey(p.id)) {
-                    val url = p.images?.firstOrNull()?.let { meta ->
-                        utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString()
-                    }
-                    cache[p.id] = url
+
+                // Skip if we already have an entry (even if it's null).
+                if (cache.containsKey(p.id)) continue
+
+                if (p.isCached) {
+                    // Cached: never hit Places, just store cachedImageUrl (can be null).
+                    cache[p.id] = p.cachedImageUrl
+                    continue
                 }
+
+                // Not cached: allowed to call Places via images metadata.
+                val url = p.images
+                    ?.firstOrNull()
+                    ?.let { meta -> utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString() }
+
+                cache[p.id] = url
             }
         }
     }

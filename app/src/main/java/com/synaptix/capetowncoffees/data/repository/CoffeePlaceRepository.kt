@@ -11,9 +11,11 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
-import kotlinx.coroutines.CoroutineScope           // <-- added
-import kotlinx.coroutines.Dispatchers            // <-- added
-import kotlinx.coroutines.launch                 // <-- added
+import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import dagger.Lazy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,7 +27,8 @@ var offlineModeEnabled: Boolean = false
 @Singleton
 class CoffeePlaceRepository @Inject constructor(
     firestore: FirebaseFirestore,
-    private val placesApiRepository: IPlacesApiRepository
+    private val placesApiRepository: IPlacesApiRepository,
+    private val coffeePlaceUtilsUseCase: Lazy<CoffeePlaceUtilsUseCase>
 ) : BaseRepository<CoffeePlaceDTO>(
     firestore = firestore,
     childCollection = "coffee_places"
@@ -105,7 +108,8 @@ class CoffeePlaceRepository @Inject constructor(
             Result.success(merged)
         } else {
             // Not in DB yet → start async caching, but don't wait for it.
-            Timber.d("Coffee place not cached yet. Caching API result (id=$placeId)")
+            Timber.d("Coffee place not cached yet. Start Caching of API result (id=$placeId)")
+
             ensureCoffeePlaceCachedAsync(placeId, sourceFull = apiPlace)
 
             // return the API result as-is (API is source of truth here)
@@ -191,7 +195,16 @@ class CoffeePlaceRepository @Inject constructor(
                     apiResult.getOrThrow()
                 }
 
-                // 3) Convert and write to Firestore
+                // 3) Fetch image URL
+                if (!fullPlace.images.isNullOrEmpty()) {
+                    Timber.d("ensureCoffeePlaceCachedAsync: fetching image URL for caching (id=$placeId)")
+                    val uri = coffeePlaceUtilsUseCase.get().getPhotoUriFromMetadata(fullPlace.images.first())
+
+                    fullPlace.cachedImageUrl = uri.toString()
+                }
+
+
+                // 4) Convert and write to Firestore
                 val dtoToCache = CoffeePlaceDTO.fromFull(fullPlace)
 
                 addCoffeePlace(dtoToCache, placeId = fullPlace.id)

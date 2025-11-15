@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -57,7 +58,7 @@ class CoffeeDetailFragment : Fragment() {
     // ─────────── Constants ───────────
     // Keep magic numbers/ids here for clarity and reuse.
     private companion object {
-        private const val PHOTO_MAX_WIDTH_DP = 1000
+        private const val PHOTO_MAX_HEIGHT_DP = 300
         private const val EFFECT_OPEN_MAP = "action_open_external_map"
         private const val EFFECT_DIAL = "action_dial_phone"
         private const val EFFECT_OPEN_REVIEW_GALLERY = "action_open_review_gallery"
@@ -240,19 +241,42 @@ class CoffeeDetailFragment : Fragment() {
     private fun updateImage(cafe: CoffeePlaceFull) {
         val imageView = binding.ivImage
         val placeholderRes = R.drawable.featured_placeholder
-        cafe.images?.firstOrNull()?.let { meta ->
-            viewLifecycleOwner.lifecycleScope.launch {
-                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(meta, maxWidthDp = PHOTO_MAX_WIDTH_DP)
-                if (uri != null) {
-                    Glide.with(imageView.context)
-                        .load(uri)
-                        .placeholder(placeholderRes)
-                        .into(imageView)
-                } else {
-                    imageView.setImageResource(placeholderRes)
-                }
+
+        // Show placeholder immediately to avoid flicker / blank state
+        imageView.setImageResource(placeholderRes)
+
+        // 1) Prefer cached image when marked as cached
+        val cachedUri = if (cafe.isCached) cafe.cachedImageUrl?.toUri() else null
+        if (cachedUri != null) {
+            imageView.loadWithGlide(cachedUri, placeholderRes)
+            return
+        }
+
+        // 2) If not cached (or no cached URL), try Google Places photo
+        val firstMeta = cafe.images?.firstOrNull() ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val uri = runCatching {
+                coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(
+                    firstMeta,
+                    maxHeightDp = PHOTO_MAX_HEIGHT_DP
+                )
+            }.getOrNull()
+
+            if (!isAdded) return@launch
+
+            if (uri != null) {
+                imageView.loadWithGlide(uri, placeholderRes)
             }
-        } ?: imageView.setImageResource(placeholderRes)
+        }
+    }
+
+    private fun ImageView.loadWithGlide(source: Any, placeholderRes: Int) {
+        Glide.with(this)
+            .load(source)
+            .placeholder(placeholderRes)
+            .error(placeholderRes)
+            .into(this)
     }
 
     private fun showLoading(isLoading: Boolean) {

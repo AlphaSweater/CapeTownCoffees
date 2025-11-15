@@ -121,7 +121,7 @@ class CoffeePlaceUtilsUseCase @Inject constructor(
     suspend fun getPhotoUriFromMetadata(
         photoMetadata: PhotoMetadata,
         maxWidthDp: Int? = null,
-        maxHeightDp: Int? = null
+        maxHeightDp: Int? = 300
     ): Uri? {
         return suspendCancellableCoroutine { cont ->
             val density = context.resources.displayMetrics.density
@@ -137,8 +137,5 @@ class CoffeePlaceUtilsUseCase @Inject constructor(
                     cont.resume(null)
                 }
         }
-
-        // Return a hardcoded URL instead.
-        return "https://media.discordapp.net/attachments/1277334380012109875/1416054067368562798/caleb1.JPG?ex=691686de&is=6915355e&hm=02ac126ed346a0849700813f7edc7558fb1311dddbf3c5abdc30815826548281&=&format=webp&width=1280&height=960".toUri()
     }
 }

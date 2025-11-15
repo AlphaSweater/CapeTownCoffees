@@ -65,7 +65,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         sameContent = { o, n -> o == n },
         payload = { o, n ->
             when {
-                o.googleRating != n.googleRating || o.googleRatingCount != n.googleRatingCount -> Payload.Rating
+                o.combinedRating != n.combinedRating || o.combinedRatingCount != n.combinedRatingCount -> Payload.Rating
                 else -> null
             }
         }
@@ -170,7 +170,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
 
                 renderAddress(item.address)
                 renderDistance(item)
-                renderRating(item.googleRating, item.googleRatingCount)
+                renderRating(item.combinedRating, item.combinedRatingCount)
 
                 tvCafePrice.visibility = View.GONE
 
@@ -179,10 +179,31 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     ?: root.context.getString(R.string.coffee_image)
             }
 
+            // 1) Cached: NEVER hit Places
+            if (item.isCached) {
+                val cachedUrl = item.cachedImageUrl
+
+                if (!cachedUrl.isNullOrBlank()) {
+                    // Use cached image only
+                    vb.bindImage(cachedUrl, item.id)
+                } else {
+                    // No cached url -> keep placeholder; optionally let bindImage handle null
+                    vb.bindImage(null, item.id)
+                }
+                return
+            }
+
+            // 2) Not cached yet: allowed to hit Places
+            val firstMeta = item.images?.firstOrNull() ?: run {
+                // No images -> keep placeholder
+                vb.bindImage(null, item.id) // optional
+                return
+            }
+
             scope.launch {
                 val url = try {
-                    item.images?.firstOrNull()
-                        ?.let { meta -> coffeePlaceUtils.getPhotoUriFromMetadata(meta, maxWidthDp = 500) }
+                    coffeePlaceUtils
+                        .getPhotoUriFromMetadata(firstMeta, maxWidthDp = 500)
                         ?.toString()
                 } catch (e: CancellationException) {
                     throw e
@@ -191,7 +212,9 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     null
                 }
 
+                // ViewHolder was rebound to another item meanwhile – bail out
                 if (tokenAtBind != bindToken) return@launch
+
                 vb.bindImage(url, item.id)
             }
         }
@@ -201,7 +224,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
             if (payloads.isEmpty()) { bind(item); return }
             payloads.forEach { p ->
                 when (p) {
-                    Payload.Rating   -> vb.renderRating(item.googleRating, item.googleRatingCount)
+                    Payload.Rating   -> vb.renderRating(item.combinedRating, item.combinedRatingCount)
                     Payload.Distance -> vb.renderDistance(item)
                 }
             }
@@ -236,7 +259,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                 .error(R.drawable.featured_placeholder)
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .centerCrop()
-                .listener(GLIDE_LOGGER(id))
+                .listener(glideLogger(id))
                 .into(ivImage)
         }
     }
@@ -253,7 +276,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         private const val ID_NAMESPACE: Long = 0x10_0000_0000L
         private val RATING_FMT = DecimalFormat("0.0")
 
-        private fun GLIDE_LOGGER(id: String) = object : RequestListener<Drawable> {
+        private fun glideLogger(id: String) = object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean
             ): Boolean = false

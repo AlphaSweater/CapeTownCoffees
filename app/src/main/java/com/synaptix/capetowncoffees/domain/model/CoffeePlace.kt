@@ -46,15 +46,34 @@ interface CoffeePlaceBase {
         appRating: Double?,
         appRatingCount: Int?
     ): Pair<Double, Int> {
-        val gRating = googleRating ?: 0.0
-        val gCount = googleRatingCount ?: 0
-        val aRating = appRating ?: 0.0
-        val aCount = appRatingCount ?: 0
+        // Are these sources actually usable?
+        val hasGoogle = googleRating != null && (googleRatingCount ?: 0) > 0
+        val hasApp = appRating != null && (appRatingCount ?: 0) > 0
 
-        val totalRatings = gCount + aCount
-        if (totalRatings == 0) {
+        // ✅ Only Google ratings available → just return Google values
+        if (hasGoogle && !hasApp) {
+            val rounded = round(googleRating * 100) / 100.0
+            return Pair(rounded, googleRatingCount!!)
+        }
+
+        // ✅ Only app ratings available → just return app values
+        if (hasApp && !hasGoogle) {
+            val rounded = round(appRating * 100) / 100.0
+            return Pair(rounded, appRatingCount!!)
+        }
+
+        // ❌ No ratings at all
+        if (!hasGoogle) {
             return Pair(0.0, 0)
         }
+
+        // 🤝 Both Google and app ratings available → combine them
+        val gRating = googleRating
+        val gCount = googleRatingCount!!
+        val aRating = appRating!!
+        val aCount = appRatingCount!!
+
+        val totalRatings = gCount + aCount
 
         val weightedGoogle = gRating * gCount
         val weightedApp = aRating * aCount
@@ -62,6 +81,7 @@ interface CoffeePlaceBase {
 
         return Pair(round(combinedRating * 100) / 100.0, totalRatings)
     }
+
 }
 
 
@@ -83,7 +103,7 @@ data class CoffeePlaceFull(
     val location: LatLng?,
     val googleMapsUrl: String?,
     val images: List<PhotoMetadata>?, // Handles Google images
-    val cachedImageUrl: String? = null,
+    var cachedImageUrl: String? = null,
 
     // ⭐ Ratings & Reviews
     val googleRating: Double?,

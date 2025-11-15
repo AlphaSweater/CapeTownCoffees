@@ -102,8 +102,8 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
             tvName.text = item.name ?: itemView.context.getString(R.string.unknown)
             tvAddress.text = item.address.orEmpty()
 
-            val rating = item.googleRating ?: 0.0
-            val count = item.googleRatingCount ?: 0
+            val rating = item.combinedRating
+            val count = item.combinedRatingCount
             tvRating.text = String.format(Locale.getDefault(), "%.1f (%d)", rating, count)
 
             // Distance label

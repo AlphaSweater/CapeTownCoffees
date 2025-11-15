@@ -80,6 +80,7 @@ object CoffeePlaceMapper {
         locationLng = coffeePlaceFull.location?.longitude,
         googleMapsUrl = coffeePlaceFull.googleMapsUrl,
         websiteUrl = coffeePlaceFull.websiteUrl,
+        imageUrl = coffeePlaceFull.cachedImageUrl,
         googleRating = coffeePlaceFull.googleRating,
         googleRatingCount = coffeePlaceFull.googleRatingCount,
         primaryType = coffeePlaceFull.primaryType,
