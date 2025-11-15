@@ -168,8 +168,8 @@ class CafeDetailViewModel @Inject constructor(
     private fun updateUiFrom(place: CoffeePlaceFull) {
         placeLocation = place.location
 
-        val rating = place.rating
-        val ratingCountText = place.ratingCount?.let { "($it)" }
+        val rating = place.googleRating
+        val ratingCountText = place.googleRatingCount?.let { "($it)" }
         val phone = place.nationalPhoneNumber ?: place.internationalPhoneNumber
         val hours = formatOpeningHours(place.currentOpeningHours)
         val imageAvailable = !place.images.isNullOrEmpty()

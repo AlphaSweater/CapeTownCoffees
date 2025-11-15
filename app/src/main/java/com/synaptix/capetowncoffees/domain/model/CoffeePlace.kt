@@ -18,18 +18,52 @@
 // =============================
 package com.synaptix.capetowncoffees.domain.model
 
-import androidx.compose.ui.graphics.vector.Path
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
 import com.synaptix.capetowncoffees.data.mapper.CoffeePlaceMapper
+import kotlin.math.round
 
 // =============================
 // Interfaces
 // =============================
 
 // Base interface for all coffee place models.
-interface CoffeePlaceBase
+interface CoffeePlaceBase {
+    /**
+     * Calculates the combined rating and count from Google and app reviews.
+     *
+     * @param googleRating The rating from Google (e.g., 4.5).
+     * @param googleRatingCount The number of Google ratings.
+     * @param appRating The rating from the app (e.g., 4.2).
+     * @param appRatingCount The number of app ratings.
+     * @return A Pair where the first element is the combined average rating (Double)
+     *         and the second is the total rating count (Int).
+     */
+    fun calculateCombinedRating(
+        googleRating: Double?,
+        googleRatingCount: Int?,
+        appRating: Double?,
+        appRatingCount: Int?
+    ): Pair<Double, Int> {
+        val gRating = googleRating ?: 0.0
+        val gCount = googleRatingCount ?: 0
+        val aRating = appRating ?: 0.0
+        val aCount = appRatingCount ?: 0
+
+        val totalRatings = gCount + aCount
+        if (totalRatings == 0) {
+            return Pair(0.0, 0)
+        }
+
+        val weightedGoogle = gRating * gCount
+        val weightedApp = aRating * aCount
+        val combinedRating = (weightedGoogle + weightedApp) / totalRatings
+
+        return Pair(round(combinedRating * 100) / 100.0, totalRatings)
+    }
+}
+
 
 // Interface for dynamic field mapping from Google Place API.
 interface CoffeePlaceCompanion<T : CoffeePlaceBase> {
@@ -48,13 +82,19 @@ data class CoffeePlaceFull(
     val address: String?,
     val location: LatLng?,
     val googleMapsUrl: String?,
-    val rating: Double?,
-    val ratingCount: Int?,
     val images: List<PhotoMetadata>?, // Handles Google images
+    val cachedImageUrl: String? = null,
+
+    // ⭐ Ratings & Reviews
+    val googleRating: Double?,
+    val googleRatingCount: Int?,
+    val appRating: Double? = null,
+    val appRatingCount: Int? = null,
+    val coffeeReviews: List<CoffeeReview> = emptyList(), // In-app and Google reviews combined
 
     // 🏪 Types
-    val primaryType: String?,          // new SDK: exactly one primary type
-    val types: List<String>?,          // extra types list
+    val primaryType: String?,
+    val types: List<String>?,
 
     // ⏰ Hours
     val businessStatus: String?,
@@ -66,15 +106,20 @@ data class CoffeePlaceFull(
     val websiteUrl: String?,
 
     // 🍽️ Grouped Attributes
-    val tags: List<Tag>, // Unified tags for UI
+    val tags: List<Tag>,
 
-    // ⭐ Reviews
-    val coffeeReviews: List<CoffeeReview> = emptyList(), // In-app and Google reviews combined
-
-    // 💰 Other attributes
-    val priceLevel: Int? = null // Google price level (0-4)
-
+    val isFavorite: Boolean = false,
+    val isCached: Boolean = false,
 ) : CoffeePlaceBase {
+
+    // Computed property for combined rating
+    val combinedRating: Double
+        get() = calculateCombinedRating(googleRating, googleRatingCount, appRating, appRatingCount).first
+
+    // Computed property for combined rating count
+    val combinedRatingCount: Int
+        get() = calculateCombinedRating(googleRating, googleRatingCount, appRating, appRatingCount).second
+
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceFull> {
         override val fields = listOf(
@@ -92,7 +137,6 @@ data class CoffeePlaceFull(
             Place.Field.NATIONAL_PHONE_NUMBER,
             Place.Field.INTERNATIONAL_PHONE_NUMBER,
             Place.Field.WEBSITE_URI,
-            Place.Field.PRICE_LEVEL,
             Place.Field.GOOGLE_MAPS_URI
         )
         override fun fromPlace(place: Place) = CoffeePlaceMapper.toFull(place)
@@ -107,15 +151,28 @@ data class CoffeePlaceLite(
     val location: LatLng?,
     val primaryType: String?,
     val types: List<String>?,
-    val rating: Double?,
-    val ratingCount: Int?,
+    val googleRating: Double?,
+    val googleRatingCount: Int?,
+    val appRating: Double? = null,
+    val appRatingCount: Int? = null,
     val images: List<PhotoMetadata>?,
+    val cachedImageUrl: String? = null,
     val currentOpeningHours: List<String>?,
     val businessStatus: String?,
     val priceLevel: Int? = null,
-    val tags: List<Tag>, // Unified tags for UI
-    var isFavorite: Boolean = false
+    val tags: List<Tag>,
+    var isFavorite: Boolean = false,
+    val isCached: Boolean = false,
 ) : CoffeePlaceBase {
+
+    // Computed property for combined rating
+    val combinedRating: Double
+        get() = calculateCombinedRating(googleRating, googleRatingCount, appRating, appRatingCount).first
+
+    // Computed property for combined rating count
+    val combinedRatingCount: Int
+        get() = calculateCombinedRating(googleRating, googleRatingCount, appRating, appRatingCount).second
+
     // ----------- Companion for mapping from Place -----------
     companion object : CoffeePlaceCompanion<CoffeePlaceLite> {
         override val fields = listOf(

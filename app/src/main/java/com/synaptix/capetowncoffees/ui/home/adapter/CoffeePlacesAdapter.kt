@@ -22,7 +22,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -66,7 +65,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         sameContent = { o, n -> o == n },
         payload = { o, n ->
             when {
-                o.rating != n.rating || o.ratingCount != n.ratingCount -> Payload.Rating
+                o.googleRating != n.googleRating || o.googleRatingCount != n.googleRatingCount -> Payload.Rating
                 else -> null
             }
         }
@@ -171,7 +170,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
 
                 renderAddress(item.address)
                 renderDistance(item)
-                renderRating(item.rating, item.ratingCount)
+                renderRating(item.googleRating, item.googleRatingCount)
 
                 tvCafePrice.visibility = View.GONE
 
@@ -202,7 +201,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
             if (payloads.isEmpty()) { bind(item); return }
             payloads.forEach { p ->
                 when (p) {
-                    Payload.Rating   -> vb.renderRating(item.rating, item.ratingCount)
+                    Payload.Rating   -> vb.renderRating(item.googleRating, item.googleRatingCount)
                     Payload.Distance -> vb.renderDistance(item)
                 }
             }

@@ -9,7 +9,7 @@
 //References:
 //======================================================================================
 //* ChatGPT was used to clarify repository patterns, data source integration, and best
-//practices for separating data access logic from UI components.
+//* practices for separating data access logic from UI components.
 //* It also provided suggestions to improve maintainability and consistency.
 //* It also helped generate useful comments
 //======================================================================================
@@ -19,6 +19,8 @@ package com.synaptix.capetowncoffees.data.repository
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import com.synaptix.capetowncoffees.data.common.BaseRepository
+import com.synaptix.capetowncoffees.data.mapper.CoffeePlaceMapper
+import com.synaptix.capetowncoffees.data.mapper.toDto
 import com.synaptix.capetowncoffees.data.model.CoffeePlaceDTO
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
@@ -26,11 +28,13 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceSuggestion
 import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+
+// Temporary global flag used to simulate/drive offline mode behaviour.
+// In future this can be replaced by a proper network / settings service.
+var offlineModeEnabled: Boolean = false
 
 @Singleton
 class CoffeePlaceRepository @Inject constructor(
@@ -58,19 +62,71 @@ class CoffeePlaceRepository @Inject constructor(
     override suspend fun deleteCoffeePlace(id: String): Result<Unit> = delete(id)
 
     // -----------------------------
-    // Fetch details (Google + Firestore merge)
+    // Fetch details (offline-aware: DB or API + cache + merge)
     // -----------------------------
-    override suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull> = coroutineScope {
-        val apiDeferred = async { placesApiRepository.getCoffeePlaceDetails(placeId) }
-        val dbDeferred  = async { getById(placeId) }
+    override suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull> {
+        // ───── OFFLINE MODE: DB ONLY ─────
+        if (offlineModeEnabled) {
+            Timber.d("Offline mode enabled, loading coffee place from DB only (id=$placeId)")
 
-        val apiResult = apiDeferred.await()
-        val dbResult  = dbDeferred.await()
+            val dbResult = getById(placeId)
 
-        // If API failed, just return that failure as-is.
-        apiResult.mapCatching { googlePlace ->
-            val appPlaceDTO = dbResult.getOrNull()
-            if (appPlaceDTO != null) mergeFullPlace(googlePlace, appPlaceDTO) else googlePlace
+            dbResult.onFailure {
+                Timber.e(it, "Offline: failed to read coffee place from DB (id=$placeId)")
+            }
+
+            val dto = dbResult.getOrNull()
+            return if (dto != null) {
+                val fullFromCache = CoffeePlaceMapper.toFull(dto)
+                Result.success(fullFromCache)
+            } else {
+                Result.failure(
+                    NoSuchElementException("Coffee place not found in offline cache (id=$placeId)")
+                )
+            }
+        }
+
+        // ───── ONLINE MODE: API FIRST, THEN DB + CACHE + MERGE ─────
+        Timber.d("Online mode: fetching coffee place from API (id=$placeId)")
+
+        val apiResult = placesApiRepository.getCoffeePlaceDetails(placeId)
+
+        if (apiResult.isFailure) {
+            Timber.e(
+                apiResult.exceptionOrNull(),
+                "Failed to fetch coffee place from API (id=$placeId)"
+            )
+            return apiResult
+        }
+
+        val apiPlace = apiResult.getOrThrow()
+
+        // Check DB for stored app data (ratings, in-app reviews, etc.)
+        val dbResult = getById(placeId)
+
+        dbResult.onFailure {
+            Timber.w(it, "Failed to read coffee place from DB (id=$placeId)")
+        }
+
+        val appPlaceDTO = dbResult.getOrNull()
+
+        return if (appPlaceDTO != null) {
+            // Already have local data → merge API + app data
+            Timber.d("Merging API and DB data for coffee place (id=$placeId)")
+            val merged = mergeFullPlace(apiPlace, appPlaceDTO)
+            Result.success(merged)
+        } else {
+            // Not in DB yet → cache it, then return the API result
+            Timber.d("Coffee place not cached yet. Caching API result (id=$placeId)")
+            val dtoToCache = CoffeePlaceDTO.fromFull(apiPlace)
+
+            addCoffeePlace(dtoToCache, placeId = apiPlace.id)
+                .onFailure {
+                    Timber.w(it, "Failed to cache coffee place (id=$placeId)")
+                }
+
+            // return the API result as-is (API is source of truth here)
+            return apiResult
         }
     }
 

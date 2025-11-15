@@ -17,9 +17,8 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
-import com.synaptix.capetowncoffees.domain.model.Tag
-import com.synaptix.capetowncoffees.domain.model.TagCategory
-import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
+import com.synaptix.capetowncoffees.data.mapper.CoffeePlaceMapper
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 
 //======================================================================================
 // CoffeePlaceDTO
@@ -40,10 +39,13 @@ data class CoffeePlaceDTO(
     // URLs
     val googleMapsUrl: String? = null,
     val websiteUrl: String? = null,
+    val imageUrl: String? = null,
 
-    // Ratings
-    val rating: Double? = null,
-    val ratingCount: Int? = null,
+    // Ratings & counts
+    val googleRating: Double? = null,
+    val googleRatingCount: Int? = null,
+    val appRating: Double? = null,
+    val appRatingCount: Int? = null,
 
     // Place types
     val primaryType: String? = null,
@@ -65,28 +67,6 @@ data class CoffeePlaceDTO(
     val updatedAt: Long? = null
 ) {
     companion object {
-        fun createNew(id: String): CoffeePlaceDTO {
-            return CoffeePlaceDTO(
-                id = id,
-                addedAt = CoffeeTimeUtils.nowSeconds()
-            )
-        }
+        fun fromFull(place: CoffeePlaceFull) = CoffeePlaceMapper.toDto(place)
     }
 }
-
-//======================================================================================
-// TagDTO
-//--------------------------------------------------------------------------------------
-// Represents a tag stored in:
-//     /coffeePlaces/{placeId}/tags/{tagId}
-//======================================================================================
-data class TagDTO(
-
-    @DocumentId
-    val id: String = "",
-
-    val name: String = "",
-    val category: String = TagCategory.EXTRA.name,
-
-    val createdAt: Long = CoffeeTimeUtils.nowSeconds()
-)

@@ -34,7 +34,6 @@ import javax.inject.Inject
 class CreateCoffeeReviewUseCase @Inject constructor(
     private val coffeeReviewRepository: ICoffeeReviewRepository,
     private val coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase,
-    private val createCoffeePlaceUseCase: CreateCoffeePlaceUseCase
 ) {
     /**
      * Create a new review for a place.
@@ -50,11 +49,8 @@ class CreateCoffeeReviewUseCase @Inject constructor(
     suspend operator fun invoke(coffeeReview: InAppReview, placeId: String): Result<String> {
         val placeExists = coffeePlaceUtilsUseCase.checkIfPlaceExists(placeId)
         if (!placeExists) {
-            val newPlace = CoffeePlaceDTO.createNew(placeId)
-            val placeResult = createCoffeePlaceUseCase(newPlace, placeId)
-            if (placeResult.isFailure) {
-                return Result.failure(placeResult.exceptionOrNull() ?: Exception("Failed to create place"))
-            }
+            return Result.failure(Exception("Failed find place"))
+
         }
         return coffeeReviewRepository.addReview(coffeeReview, placeId)
     }

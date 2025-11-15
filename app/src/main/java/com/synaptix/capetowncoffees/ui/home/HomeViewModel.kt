@@ -244,13 +244,13 @@ class HomeViewModel @Inject constructor(
         source: List<CoffeePlaceLite>,
         user: LatLng?
     ): List<CoffeePlaceLite> = when (category.name.lowercase()) {
-        "popular" -> source.sortedByDescending { it.ratingCount ?: 0 }
-        "rated"   -> source.sortedByDescending { it.rating ?: 0.0 }
+        "popular" -> source.sortedByDescending { it.googleRatingCount ?: 0 }
+        "rated"   -> source.sortedByDescending { it.googleRating ?: 0.0 }
         "nearby"  -> if (user == null) source else source.sortedBy {
             it.location?.let { ll -> LocationFormattingUtil.distanceMeters(user, ll) } ?: Float.MAX_VALUE
         }
         "dates"   -> source.sortedByDescending {
-            (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f)
+            (it.googleRating ?: 0.0) + ((it.googleRatingCount ?: 0) / 100f)
         }
         else      -> source
     }
