@@ -30,6 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="260dp">
 
+            <!-- Subtle top scrim over image (helps icons pop) -->
             <ImageView
                 android:id="@+id/ivImage"
                 android:layout_width="match_parent"
@@ -37,7 +38,6 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/featured_placeholder" />
 
-            <!-- Subtle top scrim over image (helps icons pop) -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="72dp"

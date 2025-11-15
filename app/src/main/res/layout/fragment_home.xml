@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- App bar (keeps status bar spacing + anchors the search card) -->
+    <!-- App bar -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
@@ -17,7 +17,6 @@
         android:elevation="0dp"
         app:liftOnScroll="false">
 
-        <!-- Minimal toolbar (no title). Keeps inset spacing clean. -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -27,7 +26,6 @@
             app:navigationIconTint="@color/text_primary"
             app:title="Explore" />
 
-        <!-- Faux Search field (tappable to open SearchFragment) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/searchCard"
             android:layout_width="match_parent"
@@ -68,16 +66,15 @@
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <!-- Optional mini filter icon (can open quick radius/strict dialog) -->
                 <FrameLayout
-                android:id="@+id/btnQuickFilterHit"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginStart="8dp"
-                android:contentDescription="@string/filters">
+                    android:id="@+id/btnQuickFilterHit"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="@string/filters">
                     <ImageView
                         android:id="@+id/btnQuickFilter"
                         android:layout_width="20dp"
@@ -91,7 +88,7 @@
         </com.google.android.material.card.MaterialCardView>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Progress (overlay) -->
+    <!-- Progress overlay -->
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleLarge"
@@ -100,7 +97,7 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
-    <!-- Pull to refresh + content -->
+    <!-- Pull-to-refresh wrapper -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
@@ -120,7 +117,13 @@
                 android:orientation="vertical"
                 android:descendantFocusability="blocksDescendants">
 
-                <!-- Categories (hidden by default; show when ready) -->
+                <!-- ✅ OFFLINE BANNER INSERTED HERE -->
+                <include
+                    android:id="@+id/offlineBanner"
+                    layout="@layout/item_offline_banner"
+                    android:visibility="gone" />
+
+                <!-- CATEGORIES -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvCategories"
                     android:layout_width="match_parent"
@@ -134,7 +137,7 @@
                     tools:listitem="@layout/item_category"
                     tools:itemCount="6" />
 
-                <!-- Featured -->
+                <!-- FEATURED -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -176,7 +179,7 @@
                         tools:itemCount="1" />
                 </LinearLayout>
 
-                <!-- Near Me -->
+                <!-- NEAR ME -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -220,4 +223,5 @@
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
