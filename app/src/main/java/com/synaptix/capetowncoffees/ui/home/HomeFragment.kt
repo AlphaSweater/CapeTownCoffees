@@ -164,6 +164,12 @@ class HomeFragment : Fragment() {
             navigateToSearch(openFilters = true)
             true
         }
+
+        vm.checkNetworkForBanner()
+
+        binding.offlineBanner.btnRetry.setOnClickListener {
+            vm.onOfflineBannerRetry()
+        }
     }
 
     override fun onResume() {
@@ -371,6 +377,9 @@ class HomeFragment : Fragment() {
                 startNetworkRefresh()
             }
             lastIsRefreshing = combinedRefreshing
+
+            // Offline banner visibility driven by VM state
+            binding.offlineBanner.root.isVisible = ui.isOffline
         }
 
         collectLoadable(vm.featured) { loadable ->
