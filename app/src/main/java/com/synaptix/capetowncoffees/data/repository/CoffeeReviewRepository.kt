@@ -73,8 +73,8 @@ class CoffeeReviewRepository @Inject constructor(
         placeId: String,
         limit: Int?
     ): Result<List<CoffeeReview>> = coroutineScope {
-        val dbDeferred = async { getAll(limit = limit, parentDocId = placeId) }           // Result<List<Dto>>
-        val apiDeferred = async { placesApiRepository.getCoffeePlaceReviews(placeId) }    // Result<List<CoffeeReview>>
+        val dbDeferred = async { getAll(limit = limit, parentDocId = placeId) }
+        val apiDeferred = async { placesApiRepository.getCoffeePlaceReviews(placeId) }
 
         val dbResult = dbDeferred.await()
         val apiResult = apiDeferred.await()

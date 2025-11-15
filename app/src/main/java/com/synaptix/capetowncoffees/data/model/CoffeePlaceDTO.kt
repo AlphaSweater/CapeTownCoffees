@@ -17,12 +17,52 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
+import com.synaptix.capetowncoffees.domain.model.Tag
+import com.synaptix.capetowncoffees.domain.model.TagCategory
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 
+//======================================================================================
+// CoffeePlaceDTO
+//======================================================================================
 data class CoffeePlaceDTO(
+
     @DocumentId
-    val id: String = "",      // Firestore document ID and Places API Place ID
-    val addedAt: Long,
+    val id: String = "",    // Firestore document ID == Google Place ID
+
+    // Basic info
+    val name: String? = null,
+    val address: String? = null,
+
+    // Location
+    val locationLat: Double? = null,
+    val locationLng: Double? = null,
+
+    // URLs
+    val googleMapsUrl: String? = null,
+    val websiteUrl: String? = null,
+
+    // Ratings
+    val rating: Double? = null,
+    val ratingCount: Int? = null,
+
+    // Place types
+    val primaryType: String? = null,
+    val types: List<String> = emptyList(),
+
+    // Business hours & status
+    val businessStatus: String? = null,
+    val currentOpeningHours: List<String> = emptyList(),
+
+    // Contact info
+    val nationalPhoneNumber: String? = null,
+    val internationalPhoneNumber: String? = null,
+
+    // Pricing
+    val priceLevel: Int? = null,
+
+    // Metadata for caching
+    val addedAt: Long = 0L,
+    val updatedAt: Long? = null
 ) {
     companion object {
         fun createNew(id: String): CoffeePlaceDTO {
@@ -33,3 +73,20 @@ data class CoffeePlaceDTO(
         }
     }
 }
+
+//======================================================================================
+// TagDTO
+//--------------------------------------------------------------------------------------
+// Represents a tag stored in:
+//     /coffeePlaces/{placeId}/tags/{tagId}
+//======================================================================================
+data class TagDTO(
+
+    @DocumentId
+    val id: String = "",
+
+    val name: String = "",
+    val category: String = TagCategory.EXTRA.name,
+
+    val createdAt: Long = CoffeeTimeUtils.nowSeconds()
+)
