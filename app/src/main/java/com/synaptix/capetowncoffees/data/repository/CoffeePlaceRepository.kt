@@ -174,8 +174,7 @@ class CoffeePlaceRepository @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // 1) Check if we already have this place
-                val existingResult = getById(placeId)
-                val existing = existingResult.getOrNull()
+                val existing = getById(placeId).getOrNull()
                 if (existing != null) {
                     Timber.d("ensureCoffeePlaceCachedAsync: place already cached (id=$placeId)")
                     return@launch
@@ -183,7 +182,9 @@ class CoffeePlaceRepository @Inject constructor(
 
                 // 2) Determine which full model to use for caching
                 val fullPlace = sourceFull ?: run {
-                    Timber.d("ensureCoffeePlaceCachedAsync: fetching full details for caching (id=$placeId)")
+                    Timber.d(
+                        "ensureCoffeePlaceCachedAsync: fetching full details for caching (id=$placeId)"
+                    )
                     val apiResult = placesApiRepository.getCoffeePlaceDetails(placeId)
                     if (apiResult.isFailure) {
                         Timber.w(
@@ -195,14 +196,27 @@ class CoffeePlaceRepository @Inject constructor(
                     apiResult.getOrThrow()
                 }
 
-                // 3) Fetch image URL
-                if (!fullPlace.images.isNullOrEmpty()) {
-                    Timber.d("ensureCoffeePlaceCachedAsync: fetching image URL for caching (id=$placeId)")
-                    val uri = coffeePlaceUtilsUseCase.get().getPhotoUriFromMetadata(fullPlace.images.first())
+                // 3) Resolve image URL using caching-aware use case
+                val firstMeta = fullPlace.images?.firstOrNull()
+                if (firstMeta != null) {
+                    Timber.d(
+                        "ensureCoffeePlaceCachedAsync: resolving image URL for caching (id=$placeId)"
+                    )
 
-                    fullPlace.cachedImageUrl = uri.toString()
+                    val uri = coffeePlaceUtilsUseCase.get().getPhotoUriFromMetadata(
+                        photoMetadata = firstMeta,
+                        isCached = fullPlace.isCached,
+                        cachedImageUrl = fullPlace.cachedImageUrl,
+                        maxWidthDp = 500
+                    )
+
+                    // uri may be null; only assign when non-null
+                    fullPlace.cachedImageUrl = uri?.toString()
+                } else {
+                    Timber.d(
+                        "ensureCoffeePlaceCachedAsync: no images available for place (id=$placeId)"
+                    )
                 }
-
 
                 // 4) Convert and write to Firestore
                 val dtoToCache = CoffeePlaceDTO.fromFull(fullPlace)
@@ -212,7 +226,10 @@ class CoffeePlaceRepository @Inject constructor(
                         Timber.d("ensureCoffeePlaceCachedAsync: cached coffee place (id=$placeId)")
                     }
                     .onFailure {
-                        Timber.w(it, "ensureCoffeePlaceCachedAsync: failed to cache coffee place (id=$placeId)")
+                        Timber.w(
+                            it,
+                            "ensureCoffeePlaceCachedAsync: failed to cache coffee place (id=$placeId)"
+                        )
                     }
             } catch (t: Throwable) {
                 Timber.w(t, "ensureCoffeePlaceCachedAsync: unexpected error (id=$placeId)")

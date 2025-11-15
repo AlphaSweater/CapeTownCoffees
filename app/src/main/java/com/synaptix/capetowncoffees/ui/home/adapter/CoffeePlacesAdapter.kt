@@ -179,32 +179,21 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     ?: root.context.getString(R.string.coffee_image)
             }
 
-            // 1) Cached: NEVER hit Places
-            if (item.isCached) {
-                val cachedUrl = item.cachedImageUrl
-
-                if (!cachedUrl.isNullOrBlank()) {
-                    // Use cached image only
-                    vb.bindImage(cachedUrl, item.id)
-                } else {
-                    // No cached url -> keep placeholder; optionally let bindImage handle null
-                    vb.bindImage(null, item.id)
-                }
-                return
-            }
-
-            // 2) Not cached yet: allowed to hit Places
-            val firstMeta = item.images?.firstOrNull() ?: run {
-                // No images -> keep placeholder
-                vb.bindImage(null, item.id) // optional
+            // If it's not cached and we also have no images, bail early.
+            if (!item.isCached && item.images.isNullOrEmpty()) {
+                vb.bindImage(null, item.id) // optional; keeps placeholder
                 return
             }
 
             scope.launch {
                 val url = try {
-                    coffeePlaceUtils
-                        .getPhotoUriFromMetadata(firstMeta, maxWidthDp = 500)
-                        ?.toString()
+                    val uri = coffeePlaceUtils.getPhotoUriFromMetadata(
+                        photoMetadata   = item.images?.firstOrNull(),
+                        isCached        = item.isCached,
+                        cachedImageUrl  = item.cachedImageUrl,
+                        maxWidthDp      = 500
+                    )
+                    uri?.toString()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (t: Throwable) {
@@ -212,10 +201,10 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     null
                 }
 
-                // ViewHolder was rebound to another item meanwhile – bail out
+                // ViewHolder reused for another item? bail out
                 if (tokenAtBind != bindToken) return@launch
 
-                vb.bindImage(url, item.id)
+                vb.bindImage(url, item.id) // url may be null -> placeholder stays
             }
         }
 

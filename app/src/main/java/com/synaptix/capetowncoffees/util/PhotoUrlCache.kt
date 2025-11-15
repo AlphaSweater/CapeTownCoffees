@@ -20,56 +20,55 @@ class PhotoUrlCache(
 ) {
     private val cache = mutableMapOf<String, String?>()
 
-    /** Returns cached if known; otherwise triggers async compute (if allowed) and returns null now. */
+    /** Returns cached if known; otherwise triggers async compute (using caching rules) and returns null now. */
     fun peekOrCompute(place: CoffeePlaceLite): String? {
-        // 1) If we've already cached something for this id (including null), just return it.
-        if (cache.containsKey(place.id)) {
-            return cache[place.id]
-        }
+        // Already resolved (including null)?
+        cache[place.id]?.let { return it }
+        if (cache.containsKey(place.id)) return null
 
-        // 2) Place is cached: NEVER hit Places; rely only on cachedImageUrl.
-        if (place.isCached) {
-            val cachedUrl = place.cachedImageUrl
-            cache[place.id] = cachedUrl   // may be null; that's intentional
-            return cachedUrl
-        }
-
-        // 3) Not cached yet: allowed to call Places.
+        // Compute async using the new unified logic
         owner.lifecycleScope.launch {
-            val url = place.images
-                ?.firstOrNull()
-                ?.let { meta -> utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString() }
+            val uri = try {
+                utils.getPhotoUriFromMetadata(
+                    photoMetadata   = place.images?.firstOrNull(),
+                    isCached        = place.isCached,
+                    cachedImageUrl  = place.cachedImageUrl,
+                    maxWidthDp      = maxWidthDp
+                )
+            } catch (_: Throwable) {
+                null
+            }
 
-            cache[place.id] = url // may be null if resolution failed or no images.
+            cache[place.id] = uri?.toString()
         }
 
         return null
     }
 
-    /** Eagerly compute first [take] URLs to avoid cold misses on initial bind/scroll. */
+    /** Eagerly compute the first [take] URLs using caching rules. */
     fun warm(items: List<CoffeePlaceLite>, take: Int) {
         if (items.isEmpty()) return
         val n = min(items.size, take)
 
         owner.lifecycleScope.launch {
             for (i in 0 until n) {
-                val p = items[i]
+                val place = items[i]
 
-                // Skip if we already have an entry (even if it's null).
-                if (cache.containsKey(p.id)) continue
+                // Skip if already resolved
+                if (cache.containsKey(place.id)) continue
 
-                if (p.isCached) {
-                    // Cached: never hit Places, just store cachedImageUrl (can be null).
-                    cache[p.id] = p.cachedImageUrl
-                    continue
+                val uri = try {
+                    utils.getPhotoUriFromMetadata(
+                        photoMetadata   = place.images?.firstOrNull(),
+                        isCached        = place.isCached,
+                        cachedImageUrl  = place.cachedImageUrl,
+                        maxWidthDp      = maxWidthDp
+                    )
+                } catch (_: Throwable) {
+                    null
                 }
 
-                // Not cached: allowed to call Places via images metadata.
-                val url = p.images
-                    ?.firstOrNull()
-                    ?.let { meta -> utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString() }
-
-                cache[p.id] = url
+                cache[place.id] = uri?.toString()
             }
         }
     }

@@ -242,23 +242,17 @@ class CoffeeDetailFragment : Fragment() {
         val imageView = binding.ivImage
         val placeholderRes = R.drawable.featured_placeholder
 
-        // Show placeholder immediately to avoid flicker / blank state
+        // Start from a known state
         imageView.setImageResource(placeholderRes)
-
-        // 1) Prefer cached image when marked as cached
-        val cachedUri = if (cafe.isCached) cafe.cachedImageUrl?.toUri() else null
-        if (cachedUri != null) {
-            imageView.loadWithGlide(cachedUri, placeholderRes)
-            return
-        }
-
-        // 2) If not cached (or no cached URL), try Google Places photo
-        val firstMeta = cafe.images?.firstOrNull() ?: return
+        imageView.contentDescription = cafe.name?.let { "$it photo" }
+            ?: getString(R.string.coffee_image)
 
         viewLifecycleOwner.lifecycleScope.launch {
             val uri = runCatching {
                 coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(
-                    firstMeta,
+                    photoMetadata = cafe.images?.firstOrNull(),
+                    isCached = cafe.isCached,
+                    cachedImageUrl = cafe.cachedImageUrl,
                     maxHeightDp = PHOTO_MAX_HEIGHT_DP
                 )
             }.getOrNull()

@@ -152,7 +152,15 @@ class ListDetailsPhotoResolver @Inject constructor(
     private val coffeePlaceUtils: CoffeePlaceUtilsUseCase
 ) {
     suspend fun url(place: CoffeePlaceFull): String? {
-        val meta = place.images?.firstOrNull() ?: return null
-        return coffeePlaceUtils.getPhotoUriFromMetadata(meta, maxWidthDp = 500)?.toString()
+        return try {
+            coffeePlaceUtils.getPhotoUriFromMetadata(
+                photoMetadata   = place.images?.firstOrNull(),
+                isCached        = place.isCached,
+                cachedImageUrl  = place.cachedImageUrl,
+                maxWidthDp      = 500
+            )?.toString()
+        } catch (t: Throwable) {
+            null
+        }
     }
 }
