@@ -174,7 +174,7 @@
                             android:id="@+id/tvRadiusValue"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="30 km"
+                            android:text="@string/search_radius_number"
                             android:textColor="@color/text_secondary"
                             android:textSize="14sp"/>
                     </LinearLayout>

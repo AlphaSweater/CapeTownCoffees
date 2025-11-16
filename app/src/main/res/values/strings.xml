@@ -20,7 +20,8 @@
     <string name="password_change_failed">Failed to change password</string>
     <string name="password_mismatch">New passwords do not match</string>
     <string name="current_password_required">Please enter your current password to change it</string>
-    <string name="_dots">••••••••</string>
+    <string name="fullname_example">Jane Doe</string>
+    <string name="password_hash">••••••••</string>
 
     <!-- Existing resources below -->
     <string name="app_name">Cape Town Coffees</string>
@@ -66,35 +67,30 @@
 
     <!-- privacy policy -->
     <string name="privacy_policy_title">Privacy Policy</string>
-
     <string name="privacy_section_overview">Overview</string>
-    <string name="privacy_overview_body">
-    We respect your privacy. This policy explains what data Cape Town Coffees collects, how we use it, and the choices you have. By using the app, you agree to the practices described here.
-</string>
-
-    <string name="privacy_section_data_we_collect">Data We Use</string>
-    <string name="privacy_collect_intro">
-    We Use only the data we need to run and improve the app. This may include:
-</string>
-
-    <string name="privacy_section_how_we_use_data">How We Use Your Data</string>
-
-    <string name="privacy_section_sharing">Sharing</string>
-    <string name="privacy_sharing_body">
-    We do not sell your personal data. We may share limited information with service providers (e.g., analytics, crash reporting, maps/places) strictly to operate features on our behalf, under confidentiality obligations, or when required by law.
-</string>
-
-    <string name="privacy_section_permissions">Permissions</string>
-    <string name="privacy_permissions_body">
-    Certain features require permissions (e.g., Location to find nearby coffee shops). You can grant or revoke them at any time in Android Settings. If you revoke a permission, related features may not work.
-</string>
-
-    <string name="privacy_section_your_choices">Your Choices &amp; Controls</string>
-
-    <string name="privacy_section_contact">Contact Us</string>
-    <string name="privacy_contact_body">
-    Questions about this policy or your data? Email us at support@capetowncoffees.example.
-</string>
+    <string name="privacy_overview_body">We respect your privacy. This policy explains what data Cape Town Coffees collects, how we use it, and the choices you have. By using the app, you agree to the practices described here.</string>
+    <string name="privacy_data_collect_intro">We collect only what we need to run the app and improve your experience. This may include:</string>
+    <string name="privacy_data_collect_bullet1">•  Account info (name, email)</string>
+    <string name="privacy_data_collect_bullet2">•  Usage data (interactions, crash logs)</string>
+    <string name="privacy_data_collect_bullet3">•  Location (if granted, to find nearby coffee places)</string>
+    <string name="privacy_data_collect_bullet4">•  Device identifiers (analytics/fraud prevention)</string>
+    <string name="privacy_use_data_title">How We Use Your Data</string>
+    <string name="privacy_use_data_bullet1">•  Provide and improve features</string>
+    <string name="privacy_use_data_bullet2">•  Personalize content</string>
+    <string name="privacy_use_data_bullet3">•  Authenticate and secure the app</string>
+    <string name="privacy_use_data_bullet4">•  Debug, analytics, and performance monitoring</string>
+    <string name="privacy_use_data_bullet5">•  Send push notifications (you can toggle this in Settings)</string>
+    <string name="privacy_sharing_title">Sharing</string>
+    <string name="privacy_sharing_body">We do not sell your personal data. We may share limited information with service providers (e.g., analytics, crash reporting, maps/places) strictly to operate features on our behalf, under confidentiality obligations, or when required by law.</string>
+    <string name="privacy_permissions_title">Permissions</string>
+    <string name="privacy_permissions_body">Certain features require permissions (e.g., Location to find nearby coffee shops). You can grant or revoke them at any time in Android Settings. If you revoke a permission, related features may not work.</string>
+    <string name="privacy_your_choices_title">Your Choices</string>
+    <string name="privacy_your_choices_bullet1">•  Manage permissions in Android Settings</string>
+    <string name="privacy_your_choices_bullet2">•  Toggle push notifications in Settings</string>
+    <string name="privacy_your_choices_bullet3">•  Request account deletion in Settings</string>
+    <string name="privacy_your_choices_bullet4">•  Clear cached data in Settings → Data</string>
+    <string name="privacy_contact_title">Contact Us</string>
+    <string name="privacy_contact_body">Questions or concerns? Email us at support@capetowncoffees.app</string>
 
     <!-- Home Page -->
     <string name="cafe_featured">Featured</string>
@@ -197,6 +193,9 @@
     <!-- Search Page -->
     <string name="search_for_coffee_shops">Search for Coffee shops...</string>
     <string name="search_filters">Filters</string>
+    <string name="search_radius_number">30 km</string>
+    <string name="category">Category</string>
+    <string name="search_radius_km">Search Radius (km)</string>
 
     <!-- List Details Page -->
     <string name="saved_list">Saved List</string>
@@ -223,4 +222,28 @@
     <string name="you_reviewed_truth_coffee_roasting">You reviewed Truth Coffee Roasting</string>
     <string name="_1_day_ago">1 day ago</string>
     <string name="view_all_activity">View All Activity</string>
+
+    <!-- Review -->
+    <string name="close">Close</string>
+    <string name="completed_review">COMPLETED\nREVIEW</string>
+    <string name="done">Done</string>
+    <string name="how_was_your_experience">How was your\nexperience?</string>
+    <string name="share_your_experience_with_the_community">Share your experience with the community</string>
+    <string name="next">Next</string>
+    <string name="tell_others_about_your_experience">Tell others about your\nexperience</string>
+    <string name="consider_discussing_the_facilities_pricing_and_taste">Consider discussing the facilities, pricing and taste</string>
+    <string name="share_images">Share Images</string>
+    <string name="coffee_review">COFFEE\nREVIEW</string>
+
+    <!-- Add Places to List -->
+    <string name="add_to_lists">Add to Lists</string>
+    <string name="search_lists">Search lists</string>
+    <string name="add">Add</string>
+    <string name="data_we_collect_title">Data We Collect</string>
+    <string name="distance_in_km">1 km</string>
+
+
+    <!-- Search Page -->
+
+
 </resources>

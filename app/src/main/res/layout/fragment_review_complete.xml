@@ -20,7 +20,7 @@
             android:id="@+id/btnClose"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:contentDescription="Close"
+            android:contentDescription="@string/close"
             android:padding="8dp"
             android:src="@drawable/ic_ctc_cross" />
     </LinearLayout>
@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="COMPLETED\nREVIEW"
+            android:text="@string/completed_review"
             android:textAlignment="center"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
@@ -57,7 +57,7 @@
             android:layout_marginTop="24dp"
             android:paddingHorizontal="24dp"
             android:paddingVertical="14dp"
-            android:text="Done"
+            android:text="@string/done"
             android:textColor="@color/text_alt"
             android:textStyle="bold"
             android:textSize="20sp"

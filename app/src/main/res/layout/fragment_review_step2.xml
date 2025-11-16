@@ -20,7 +20,7 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_ctc_cross"
-            android:contentDescription="Close" />
+            android:contentDescription="@string/close" />
     </LinearLayout>
 
     <TextView
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Tell others about your\nexperience"
+        android:text="@string/tell_others_about_your_experience"
         android:textColor="@color/text_primary"
         android:textStyle="bold"
         android:textSize="28sp"/>
@@ -38,7 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="Share your experience with the community"
+        android:text="@string/share_your_experience_with_the_community"
         android:textColor="@color/text_primary"
         android:textSize="14sp"/>
 
@@ -49,7 +49,7 @@
         android:layout_margin="16dp"
         android:background="@drawable/rounded_square"
         android:gravity="top|start"
-        android:hint="Consider discussing the facilities, pricing and taste"
+        android:hint="@string/consider_discussing_the_facilities_pricing_and_taste"
         android:padding="16dp"
         android:textColorHint="@color/text_tip"/>
 
@@ -82,7 +82,7 @@
             android:paddingHorizontal="20dp"
             android:paddingVertical="12dp"
             android:layout_margin="20dp"
-            android:text="Next"
+            android:text="@string/next"
             android:textColor="@color/text_alt"
             android:textStyle="bold"
             android:background="@drawable/bg_pill_dark"/>
