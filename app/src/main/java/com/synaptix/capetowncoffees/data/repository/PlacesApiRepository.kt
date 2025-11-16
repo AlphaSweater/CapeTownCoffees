@@ -38,10 +38,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull.Companion.fields as fullFields
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite.Companion.fields as liteFields
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
 
 @Singleton
 class PlacesApiRepository @Inject constructor(
-    private val placesClient: PlacesClient
+    private val placesClient: PlacesClient,
+    private val isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase
 ) : IPlacesApiRepository {
 
     // -----------------------------
@@ -51,6 +53,11 @@ class PlacesApiRepository @Inject constructor(
         params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceLite>> {
+        // Short-circuit when app is offline: return empty list fast to avoid network attempts.
+        if (!isEffectivelyOnlineUseCase()) {
+            Timber.d("Offline: searchNearbyCoffeePlaces short-circuit returning empty list")
+            return Result.success(emptyList())
+        }
         return try {
             val request = buildNearbyRequest(params, userLatLng)
             val response = placesClient.searchNearby(request).await()
@@ -99,6 +106,10 @@ class PlacesApiRepository @Inject constructor(
     // Get full coffee place details
     // -----------------------------
     override suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull> {
+        if (!isEffectivelyOnlineUseCase()) {
+            Timber.d("Offline: getCoffeePlaceDetails short-circuit (id=$placeId)")
+            return Result.failure(IllegalStateException("Offline: not effectively online"))
+        }
         return try {
             val request = FetchPlaceRequest.builder(placeId, fullFields).build()
             val response = placesClient.fetchPlace(request).await()
@@ -114,6 +125,11 @@ class PlacesApiRepository @Inject constructor(
     // Get coffee place reviews
     // -----------------------------
     override suspend fun getCoffeePlaceReviews(placeId: String): Result<List<GooglePlaceReview>> {
+        // If offline, return empty reviews list immediately.
+        if (!isEffectivelyOnlineUseCase()) {
+            Timber.d("Offline: getCoffeePlaceReviews short-circuit returning empty list (id=$placeId)")
+            return Result.success(emptyList())
+        }
         return try {
             val request = FetchPlaceRequest.builder(placeId, listOf(Place.Field.REVIEWS)).build()
             val response = placesClient.fetchPlace(request).await()
@@ -132,6 +148,11 @@ class PlacesApiRepository @Inject constructor(
         params: CoffeeSearchParameters,
         userLatLng: LatLng
     ): Result<List<CoffeePlaceSuggestion>> {
+        // If offline, return no suggestions immediately to avoid network errors.
+        if (!isEffectivelyOnlineUseCase()) {
+            Timber.d("Offline: getSuggestions short-circuit returning empty list")
+            return Result.success(emptyList())
+        }
         return try {
             val request = buildAutocompleteRequest(params, userLatLng)
             val response = placesClient.findAutocompletePredictions(request).await()

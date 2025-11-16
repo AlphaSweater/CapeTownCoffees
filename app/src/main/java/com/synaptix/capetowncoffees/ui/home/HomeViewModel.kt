@@ -22,7 +22,6 @@ import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
 import com.synaptix.capetowncoffees.domain.usecase.search.SearchParamsUseCase
-import com.synaptix.capetowncoffees.domain.usecase.IsOfflineUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
@@ -36,11 +35,16 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.lifecycle.viewModelScope
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.ObserveConnectivityStateUseCase
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val searchNearby: SearchNearbyCoffeePlacesUseCase,
     private val searchParams: SearchParamsUseCase,
-    private val isOfflineUseCase: IsOfflineUseCase
+    private val isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase,
+    private val observeConnectivityStateUseCase: ObserveConnectivityStateUseCase,
 ) : SimpleViewModel() {
 
     // ─────────── Config ───────────
@@ -76,7 +80,10 @@ class HomeViewModel @Inject constructor(
     ) {
         val isRefreshing: Boolean get() = isRefreshingNear || isRefreshingFeatured
     }
+    // Ensure `ui` is initialized before any init block uses it
     val ui = state(Ui())
+
+    // init moved below to ensure `ui` is non-null when used by the connectivity observer
 
     // Lists bound by the Fragment; Loadable wraps loading/error/data.
     val nearMe = loadableState<List<CoffeePlaceLite>>()
@@ -91,6 +98,10 @@ class HomeViewModel @Inject constructor(
     )
     private var nearCache: CacheEntry? = null
     private var featuredCache: CacheEntry? = null
+
+    // Pending refresh flags (set when a refresh was requested while offline)
+    private var pendingNearRefresh: Boolean = false
+    private var pendingFeaturedRefresh: Boolean = false
 
     // ─────────── In-flight Jobs ───────────
     // Each section cancels its previous query before starting another.
@@ -148,20 +159,22 @@ class HomeViewModel @Inject constructor(
         return changed
     }
 
-    // runs when fragment is first opened
-    fun checkNetworkForBanner() {
-        val offline = isOfflineUseCase()
-        ui.update { it.copy(isOffline = offline) }
-    }
-
     // runs when user hits refresh button
     fun onOfflineBannerRetry() {
-        val offline = isOfflineUseCase()
-        ui.update { it.copy(isOffline = offline) }
-
-        if (!offline) {
-            // We just came back online → refetch from network
-            refresh(force = true)
+        val isOnline = isEffectivelyOnlineUseCase()
+        if (isOnline) {
+            // If we have pending flags just perform forced refreshes
+            if (pendingNearRefresh || pendingFeaturedRefresh) {
+                refresh(force = true)
+                pendingNearRefresh = false
+                pendingFeaturedRefresh = false
+            } else {
+                // Fallback: force refresh both sections
+                refresh(force = true)
+            }
+        } else {
+            // Remain offline; no state mutation needed (connectivity observer controls ui.isOffline)
+            main { send(Effect.Message("Still offline")) }
         }
     }
 
@@ -172,6 +185,18 @@ class HomeViewModel @Inject constructor(
             main { send(Effect.Message("Location not available yet")) }
             return
         }
+
+        if (!isEffectivelyOnlineUseCase()) {
+            // Defer until connectivity returns
+            pendingNearRefresh = true
+            if (nearMe.value !is Loadable.Data && nearMe.value !is Loadable.Loading) {
+                nearMe.error(Exception("Offline – will refresh when online").toUiError("Offline – will refresh when online"))
+            }
+            return
+        }
+
+        // Clear pending flag if we're executing now
+        pendingNearRefresh = false
 
         if (!force && hasFreshEnough(nearCache, loc)) {
             nearCache?.let { cache ->
@@ -199,8 +224,16 @@ class HomeViewModel @Inject constructor(
                         nearMe.data(filtered)
                     }
                     .onFailure { err ->
-                        if (nearMe.value !is Loadable.Data) {
-                            nearMe.error(err.toUiError("Couldn't load nearby"))
+                        // If the failure looks like a network/DNS error, mark UI as offline so the fragment hides heavy UI
+                        if (isNetworkIssue(err)) {
+                            ui.update { it.copy(isOffline = true) }
+                            if (nearMe.value !is Loadable.Data) {
+                                nearMe.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+                            }
+                        } else {
+                            if (nearMe.value !is Loadable.Data) {
+                                nearMe.error(err.toUiError("Couldn't load nearby"))
+                            }
                         }
                     }
 
@@ -216,6 +249,16 @@ class HomeViewModel @Inject constructor(
             main { send(Effect.Message("Location not available yet")) }
             return
         }
+
+        if (!isEffectivelyOnlineUseCase()) {
+            pendingFeaturedRefresh = true
+            if (featured.value !is Loadable.Data && featured.value !is Loadable.Loading) {
+                featured.error(Exception("Offline – will refresh when online").toUiError("Offline – will refresh when online"))
+            }
+            return
+        }
+
+        pendingFeaturedRefresh = false
 
         if (!force && hasFreshEnough(featuredCache, loc)) {
             featuredCache?.let { cache -> featured.data(cache.baseItems) }
@@ -240,14 +283,39 @@ class HomeViewModel @Inject constructor(
                         featured.data(list)
                     }
                     .onFailure { err ->
-                        if (featured.value !is Loadable.Data) {
-                            featured.error(err.toUiError("Couldn't load featured"))
+                        if (isNetworkIssue(err)) {
+                            ui.update { it.copy(isOffline = true) }
+                            if (featured.value !is Loadable.Data) {
+                                featured.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+                            }
+                        } else {
+                            if (featured.value !is Loadable.Data) {
+                                featured.error(err.toUiError("Couldn't load featured"))
+                            }
                         }
                     }
 
                 main { ui.update { it.copy(isRefreshingFeatured = false) } }
             }
         }
+    }
+
+    // Heuristic to detect network/DNS related failures from downstream APIs
+    private fun isNetworkIssue(t: Throwable?): Boolean {
+        if (t == null) return false
+        // Unwrap common cases: UnknownHostException / IOExceptions
+        var cur: Throwable? = t
+        while (cur != null) {
+            when (cur) {
+                is java.net.UnknownHostException -> return true
+                is java.io.IOException -> return true
+            }
+            // Some Google API failures wrap the real cause or contain the message
+            val msg = cur.message ?: ""
+            if (msg.contains("Unable to resolve host", ignoreCase = true) || msg.contains("Unable to resolve", ignoreCase = true)) return true
+            cur = cur.cause
+        }
+        return false
     }
 
     // ─────────── Helpers & Policy ───────────
@@ -283,4 +351,29 @@ class HomeViewModel @Inject constructor(
         val p = searchParams.current()
         return ParamsKey(p.radiusMeters, p.strictCoffeeOnly)
     }
+
+    // Now place the previously moved init block here so `ui` is ready when used.
+    init {
+        // Keep the UI offline flag in sync with the reactive connectivity flow
+        var lastEffectiveOnline: Boolean? = null
+        viewModelScope.launch {
+            observeConnectivityStateUseCase.observe().collect { state ->
+                val effectiveOnline = state.effectiveIsOnline
+                ui.update { it.copy(isOffline = !effectiveOnline) }
+
+                // If we transitioned offline -> online, perform any pending refreshes or refresh stale caches
+                if (lastEffectiveOnline == false && effectiveOnline) {
+                    val loc = ui.value.currentLocation
+                    if (loc != null) {
+                        if (pendingNearRefresh || !hasFreshEnough(nearCache, loc)) refreshNear(force = true)
+                        if (pendingFeaturedRefresh || !hasFreshEnough(featuredCache, loc)) refreshFeatured(force = true)
+                        pendingNearRefresh = false
+                        pendingFeaturedRefresh = false
+                    }
+                }
+                lastEffectiveOnline = effectiveOnline
+            }
+        }
+    }
+
 }

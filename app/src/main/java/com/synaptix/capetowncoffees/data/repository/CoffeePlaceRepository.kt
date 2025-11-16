@@ -12,6 +12,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeeSearchParameters
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
 import dagger.Lazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,15 +21,14 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Temporary global flag used to simulate/drive offline mode behaviour.
-// In future this can be replaced by a proper network / settings service.
-var offlineModeEnabled: Boolean = false
-
+// Offline behaviour is determined by `IsEffectivelyOnlineUseCase` (considers user toggle).
+// The previous global `offlineModeEnabled` flag was removed in favor of the injectable use-case.
 @Singleton
 class CoffeePlaceRepository @Inject constructor(
     firestore: FirebaseFirestore,
     private val placesApiRepository: IPlacesApiRepository,
-    private val coffeePlaceUtilsUseCase: Lazy<CoffeePlaceUtilsUseCase>
+    private val coffeePlaceUtilsUseCase: Lazy<CoffeePlaceUtilsUseCase>,
+    private val isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase
 ) : BaseRepository<CoffeePlaceDTO>(
     firestore = firestore,
     childCollection = "coffee_places"
@@ -55,8 +55,9 @@ class CoffeePlaceRepository @Inject constructor(
     // -----------------------------
     override suspend fun getCoffeePlaceDetails(placeId: String): Result<CoffeePlaceFull> {
         // ───── OFFLINE MODE: DB ONLY ─────
-        if (offlineModeEnabled) {
-            Timber.d("Offline mode enabled, loading coffee place from DB only (id=$placeId)")
+        // If the app is not effectively online, behave as offline and read DB only.
+        if (!isEffectivelyOnlineUseCase()) {
+            Timber.d("Offline mode active per IsEffectivelyOnlineUseCase; loading coffee place from DB only (id=$placeId)")
 
             val dbResult = getById(placeId)
             dbResult.onFailure {

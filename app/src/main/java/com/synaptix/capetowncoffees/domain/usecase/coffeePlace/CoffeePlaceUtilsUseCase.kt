@@ -32,13 +32,14 @@ import java.time.LocalTime
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import androidx.core.net.toUri
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
 
 class CoffeePlaceUtilsUseCase @Inject constructor(
     private val context: Context,
     private val placesClient: PlacesClient,
-    private val coffeePlaceRepository: ICoffeePlaceRepository
+    private val coffeePlaceRepository: ICoffeePlaceRepository,
+    private val isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase
 ) {
 
     suspend fun checkIfPlaceExists(placeId: String): Boolean {
@@ -143,6 +144,9 @@ class CoffeePlaceUtilsUseCase @Inject constructor(
 
         // 2) Not cached: allowed to call Places.
         if (photoMetadata == null) return null
+
+        // If app is effectively offline, don't attempt remote photo fetches.
+        if (!isEffectivelyOnlineUseCase()) return null
 
         return suspendCancellableCoroutine { cont ->
             val density = context.resources.displayMetrics.density

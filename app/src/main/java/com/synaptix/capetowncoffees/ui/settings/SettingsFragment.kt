@@ -22,6 +22,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.appbar.MaterialToolbar
@@ -30,6 +31,7 @@ import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.snackbar.Snackbar
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.ThemeManager
+import com.synaptix.capetowncoffees.data.connectivity.OfflineModeManager
 import com.synaptix.capetowncoffees.databinding.FragmentSettingsBinding
 import com.synaptix.capetowncoffees.domain.usecase.auth.AuthManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,6 +46,7 @@ import javax.inject.Inject
 class SettingsFragment : Fragment() {
 
     @Inject lateinit var authManager: AuthManager
+    @Inject lateinit var offlineModeManager: OfflineModeManager
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -92,6 +95,17 @@ class SettingsFragment : Fragment() {
         pushSwitch.setOnCheckedChangeListener { _, enabled ->
             // save to prefs / enable-disable notifications
             Snackbar.make(binding.settingsRoot, if (enabled) R.string.enabled else R.string.disabled, Snackbar.LENGTH_SHORT).show()
+        }
+
+        // Offline Mode toggle
+        val offlineSwitch: MaterialSwitch = binding.switchOfflineMode
+        offlineSwitch.isChecked = offlineModeManager.getUserOfflineMode()
+        offlineSwitch.setOnCheckedChangeListener { _, enabled ->
+            lifecycleScope.launch {
+                offlineModeManager.setUserOfflineMode(enabled)
+                val messageRes = if (enabled) R.string.offline_mode_enabled else R.string.offline_mode_disabled
+                Snackbar.make(binding.settingsRoot, messageRes, Snackbar.LENGTH_SHORT).show()
+            }
         }
 
         // --- Row clicks ---
