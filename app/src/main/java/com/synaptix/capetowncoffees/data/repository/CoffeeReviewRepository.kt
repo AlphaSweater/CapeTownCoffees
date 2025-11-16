@@ -38,6 +38,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -57,17 +59,48 @@ class CoffeeReviewRepository @Inject constructor(
     override suspend fun getReviewsForUser(
         reviewerId: String,
         limit: Int?
-    ): Result<List<CoffeeReview>> =
-        getAllByFieldFromCollectionGroup(
-            childCollection = "reviews",
-            fieldName = "reviewerId",
-            value = reviewerId,
-            limit = limit
-        ).map { dtos ->
-            val userDto = getUserProfileUseCase(reviewerId)
-                .getOrNull()?.toDTO() ?: placeholderUser(reviewerId)
-            dtos.toDomainListForSingleUser(userDto)
+    ): Result<List<CoffeeReview>> = runCatching {
+        // Fallback strategy: scan each coffee place's reviews subcollection and
+        // collect reviews for this userId. This avoids relying solely on
+        // collectionGroup behavior and works without extra composite indexes.
+
+        // 1) Load all coffee place ids
+        val placesSnapshot = firestore.collection("coffee_places").get().await()
+        val placeIds = placesSnapshot.documents.mapNotNull { it.id }
+
+        Timber.d("GamificationRepo: scanning %d coffee_places for userId=%s", placeIds.size, reviewerId)
+
+        if (placeIds.isEmpty()) return@runCatching emptyList<CoffeeReview>()
+
+        // 2) For each place, query reviews where userId == reviewerId
+        val allDtos = mutableListOf<AppReviewDTO>()
+        for (placeId in placeIds) {
+            val col = firestore
+                .collection("coffee_places")
+                .document(placeId)
+                .collection("reviews")
+                .whereEqualTo("userId", reviewerId)
+
+            val snapshot = if (limit != null) {
+                col.limit(limit.toLong()).get().await()
+            } else {
+                col.get().await()
+            }
+
+            snapshot.documents.mapNotNullTo(allDtos) { doc ->
+                runCatching { doc.toObject(AppReviewDTO::class.java) }.getOrNull()
+            }
+
+            if (limit != null && allDtos.size >= limit) break
         }
+
+        Timber.d("GamificationRepo: collected %d AppReviewDTOs for userId=%s", allDtos.size, reviewerId)
+
+        // 3) Map DTOs to domain using a single user profile
+        val userDto = getUserProfileUseCase(reviewerId).getOrNull()?.toDTO()
+            ?: placeholderUser(reviewerId)
+        allDtos.toDomainListForSingleUser(userDto)
+    }
 
     override suspend fun getReviewsForPlace(
         placeId: String,
@@ -131,7 +164,7 @@ class CoffeeReviewRepository @Inject constructor(
         key: String
     ): PaginatedResult<CoffeeReview> {
         val query = firestore.collectionGroup("reviews")
-            .whereEqualTo("reviewerId", reviewerId)
+            .whereEqualTo("userId", reviewerId)
 
         val dtoPage = fetchPageFromCollectionGroup(
             childCollection = "reviews",

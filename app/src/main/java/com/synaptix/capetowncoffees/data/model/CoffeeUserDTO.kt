@@ -28,7 +28,8 @@ data class CoffeeUserDTO(
     val photoBase64: String? = null,
     val createdAt: Long = CoffeeTimeUtils.nowSeconds(),
     val updatedAt: Long = CoffeeTimeUtils.nowSeconds(),
-    val lastLoginAt: Long = CoffeeTimeUtils.nowSeconds()
+    val lastLoginAt: Long = CoffeeTimeUtils.nowSeconds(),
+    val reviewCount: Int = 0
 ) {
     companion object {
         fun newUserDTO(
@@ -43,7 +44,8 @@ data class CoffeeUserDTO(
                 photoBase64 = null,
                 createdAt = CoffeeTimeUtils.nowSeconds(),
                 updatedAt = CoffeeTimeUtils.nowSeconds(),
-                lastLoginAt = CoffeeTimeUtils.nowSeconds()
+                lastLoginAt = CoffeeTimeUtils.nowSeconds(),
+                reviewCount = 0
             )
         }
     }
