@@ -17,9 +17,8 @@ package com.synaptix.capetowncoffees.domain.usecase.coffeeReview
 
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeReviewRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
-import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CreateCoffeePlaceUseCase
-import com.synaptix.capetowncoffees.data.model.CoffeePlaceDTO
 import com.synaptix.capetowncoffees.domain.model.InAppReview
+import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import javax.inject.Inject
 
 /**
@@ -34,11 +33,10 @@ import javax.inject.Inject
 class CreateCoffeeReviewUseCase @Inject constructor(
     private val coffeeReviewRepository: ICoffeeReviewRepository,
     private val coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase,
-    private val createCoffeePlaceUseCase: CreateCoffeePlaceUseCase
 ) {
     /**
      * Create a new review for a place.
-     * @param coffeeReview The review to add.
+     * @param coffeeReview The domain review to add. Only InAppReview instances are accepted for creation.
      * @param placeId The place's ID.
      * @return Result containing the new review's ID (or error).
      *
@@ -47,15 +45,19 @@ class CreateCoffeeReviewUseCase @Inject constructor(
      * val result = createCoffeeReviewUseCase(coffeeReview, placeId)
      * ```
      */
-    suspend operator fun invoke(coffeeReview: InAppReview, placeId: String): Result<String> {
+    suspend operator fun invoke(coffeeReview: CoffeeReview, placeId: String): Result<String> {
+        // Only in-app reviews can be created via this use case. If callers pass other
+        // CoffeeReview subtypes (e.g. GooglePlaceReview) they must map/convert them first.
+        if (coffeeReview !is InAppReview) {
+            return Result.failure(Exception("CreateCoffeeReviewUseCase only accepts InAppReview; convert other CoffeeReview types before calling"))
+        }
+
         val placeExists = coffeePlaceUtilsUseCase.checkIfPlaceExists(placeId)
         if (!placeExists) {
-            val newPlace = CoffeePlaceDTO.createNew(placeId)
-            val placeResult = createCoffeePlaceUseCase(newPlace, placeId)
-            if (placeResult.isFailure) {
-                return Result.failure(placeResult.exceptionOrNull() ?: Exception("Failed to create place"))
-            }
+            return Result.failure(Exception("Failed find place"))
         }
+
+        // Safe cast to InAppReview guaranteed by the instanceof check above
         return coffeeReviewRepository.addReview(coffeeReview, placeId)
     }
 }

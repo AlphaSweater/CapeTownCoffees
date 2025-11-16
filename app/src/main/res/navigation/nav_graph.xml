@@ -101,6 +101,14 @@
             android:name="placeId"
             android:defaultValue=""
             app:argType="string" />
+
+        <action
+            android:id="@+id/action_cafeDetailFragment_to_reviewContainerFragment"
+            app:destination="@id/reviewContainerFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -180,28 +188,10 @@
         tools:layout="@layout/fragment_favourites" />
 
     <fragment
-        android:id="@+id/reviewStep1Fragment"
-        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewStep1Fragment"
-        android:label="Review Step 1"
-        tools:layout="@layout/fragment_review_step1" />
-
-    <fragment
-        android:id="@+id/reviewStep2Fragment"
-        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewStep2Fragment"
-        android:label="Review Step 2"
-        tools:layout="@layout/fragment_review_step2" />
-
-    <fragment
-        android:id="@+id/reviewStep3Fragment"
-        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewStep3Fragment"
-        android:label="Review Step 3"
-        tools:layout="@layout/fragment_review_step3" />
-
-    <fragment
-        android:id="@+id/reviewCompleteFragment"
-        android:name="com.synaptix.capetowncoffees.ui.lists.review.ReviewCompleteFragment"
-        android:label="Review Complete"
-        tools:layout="@layout/fragment_review_complete" />
+        android:id="@+id/reviewContainerFragment"
+        android:name="com.synaptix.capetowncoffees.ui.review.ReviewContainerFragment"
+        android:label="Write Review"
+        tools:layout="@layout/fragment_review_container" />
 
     <fragment
         android:id="@+id/settingsFragment"

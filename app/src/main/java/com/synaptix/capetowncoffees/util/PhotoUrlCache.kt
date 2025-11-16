@@ -20,33 +20,55 @@ class PhotoUrlCache(
 ) {
     private val cache = mutableMapOf<String, String?>()
 
-    /** Returns cached if known; otherwise triggers async compute and returns null now. */
+    /** Returns cached if known; otherwise triggers async compute (using caching rules) and returns null now. */
     fun peekOrCompute(place: CoffeePlaceLite): String? {
-        val cached = cache[place.id]
-        if (cached != null || cache.containsKey(place.id)) return cached
+        // Already resolved (including null)?
+        cache[place.id]?.let { return it }
+        if (cache.containsKey(place.id)) return null
 
+        // Compute async using the new unified logic
         owner.lifecycleScope.launch {
-            val url = place.images?.firstOrNull()?.let { meta ->
-                utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString()
+            val uri = try {
+                utils.getPhotoUriFromMetadata(
+                    photoMetadata   = place.images?.firstOrNull(),
+                    isCached        = place.isCached,
+                    cachedImageUrl  = place.cachedImageUrl,
+                    maxWidthDp      = maxWidthDp
+                )
+            } catch (_: Throwable) {
+                null
             }
-            cache[place.id] = url
+
+            cache[place.id] = uri?.toString()
         }
+
         return null
     }
 
-    /** Eagerly compute first [take] URLs to avoid cold misses on initial bind/scroll. */
+    /** Eagerly compute the first [take] URLs using caching rules. */
     fun warm(items: List<CoffeePlaceLite>, take: Int) {
         if (items.isEmpty()) return
         val n = min(items.size, take)
+
         owner.lifecycleScope.launch {
             for (i in 0 until n) {
-                val p = items[i]
-                if (!cache.containsKey(p.id)) {
-                    val url = p.images?.firstOrNull()?.let { meta ->
-                        utils.getPhotoUriFromMetadata(meta, maxWidthDp)?.toString()
-                    }
-                    cache[p.id] = url
+                val place = items[i]
+
+                // Skip if already resolved
+                if (cache.containsKey(place.id)) continue
+
+                val uri = try {
+                    utils.getPhotoUriFromMetadata(
+                        photoMetadata   = place.images?.firstOrNull(),
+                        isCached        = place.isCached,
+                        cachedImageUrl  = place.cachedImageUrl,
+                        maxWidthDp      = maxWidthDp
+                    )
+                } catch (_: Throwable) {
+                    null
                 }
+
+                cache[place.id] = uri?.toString()
             }
         }
     }

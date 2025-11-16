@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -30,6 +31,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.synaptix.capetowncoffees.ui.review.ReviewViewModel
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -57,7 +59,7 @@ class CoffeeDetailFragment : Fragment() {
     // ─────────── Constants ───────────
     // Keep magic numbers/ids here for clarity and reuse.
     private companion object {
-        private const val PHOTO_MAX_WIDTH_DP = 1000
+        private const val PHOTO_MAX_HEIGHT_DP = 300
         private const val EFFECT_OPEN_MAP = "action_open_external_map"
         private const val EFFECT_DIAL = "action_dial_phone"
         private const val EFFECT_OPEN_REVIEW_GALLERY = "action_open_review_gallery"
@@ -124,6 +126,23 @@ class CoffeeDetailFragment : Fragment() {
     private fun setupUiListeners() = with(binding) {
         btnBack.setOnClickListener { findNavController().navigateUp() }
         tvDistance.setOnClickListener { getCurrentLocation() } // quick refresh for distance
+
+        // Open review flow
+        btnReview.setOnClickListener {
+            val placeId = vm.placeId ?: ""
+            val placeName = vm.ui.value.name
+
+            if (placeId.isBlank()) {
+                Toast.makeText(requireContext(), "Cannot open review: missing place id", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val args = Bundle().apply {
+                putString(ReviewViewModel.ScreenArgs.PLACE_ID, placeId)
+                putString(ReviewViewModel.ScreenArgs.PLACE_NAME, placeName)
+            }
+            findNavController().navigate(R.id.action_cafeDetailFragment_to_reviewContainerFragment, args)
+        }
     }
 
     // ─────────── Collectors (Effects & State) ───────────
@@ -232,6 +251,7 @@ class CoffeeDetailFragment : Fragment() {
         // Hook shimmer/skeleton view here when available
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun showReviewsError(msg: String, retry: () -> Unit) {
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         // Wire a retry button if a dedicated error view exists
@@ -240,19 +260,36 @@ class CoffeeDetailFragment : Fragment() {
     private fun updateImage(cafe: CoffeePlaceFull) {
         val imageView = binding.ivImage
         val placeholderRes = R.drawable.featured_placeholder
-        cafe.images?.firstOrNull()?.let { meta ->
-            viewLifecycleOwner.lifecycleScope.launch {
-                val uri = coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(meta, maxWidthDp = PHOTO_MAX_WIDTH_DP)
-                if (uri != null) {
-                    Glide.with(imageView.context)
-                        .load(uri)
-                        .placeholder(placeholderRes)
-                        .into(imageView)
-                } else {
-                    imageView.setImageResource(placeholderRes)
-                }
+
+        // Start from a known state
+        imageView.setImageResource(placeholderRes)
+        imageView.contentDescription = cafe.name?.let { "$it photo" }
+            ?: getString(R.string.coffee_image)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val uri = runCatching {
+                coffeePlaceUtilsUseCase.getPhotoUriFromMetadata(
+                    photoMetadata = cafe.images?.firstOrNull(),
+                    isCached = cafe.isCached,
+                    cachedImageUrl = cafe.cachedImageUrl,
+                    maxHeightDp = PHOTO_MAX_HEIGHT_DP
+                )
+            }.getOrNull()
+
+            if (!isAdded) return@launch
+
+            if (uri != null) {
+                imageView.loadWithGlide(uri, placeholderRes)
             }
-        } ?: imageView.setImageResource(placeholderRes)
+        }
+    }
+
+    private fun ImageView.loadWithGlide(source: Any, placeholderRes: Int) {
+        Glide.with(this)
+            .load(source)
+            .placeholder(placeholderRes)
+            .error(placeholderRes)
+            .into(this)
     }
 
     private fun showLoading(isLoading: Boolean) {

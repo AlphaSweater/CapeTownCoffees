@@ -17,19 +17,56 @@
 package com.synaptix.capetowncoffees.data.model
 
 import com.google.firebase.firestore.DocumentId
-import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
+import com.synaptix.capetowncoffees.data.mapper.CoffeePlaceMapper
+import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 
+//======================================================================================
+// CoffeePlaceDTO
+//======================================================================================
 data class CoffeePlaceDTO(
+
     @DocumentId
-    val id: String = "",      // Firestore document ID and Places API Place ID
-    val addedAt: Long,
+    val id: String = "",    // Firestore document ID == Google Place ID
+
+    // Basic info
+    val name: String? = null,
+    val address: String? = null,
+
+    // Location
+    val locationLat: Double? = null,
+    val locationLng: Double? = null,
+
+    // URLs
+    val googleMapsUrl: String? = null,
+    val websiteUrl: String? = null,
+    val imageUrl: String? = null,
+
+    // Ratings & counts
+    val googleRating: Double? = null,
+    val googleRatingCount: Int? = null,
+    val appRating: Double? = null,
+    val appRatingCount: Int? = null,
+
+    // Place types
+    val primaryType: String? = null,
+    val types: List<String> = emptyList(),
+
+    // Business hours & status
+    val businessStatus: String? = null,
+    val currentOpeningHours: List<String> = emptyList(),
+
+    // Contact info
+    val nationalPhoneNumber: String? = null,
+    val internationalPhoneNumber: String? = null,
+
+    // Pricing
+    val priceLevel: Int? = null,
+
+    // Metadata for caching
+    val addedAt: Long = 0L,
+    val updatedAt: Long? = null
 ) {
     companion object {
-        fun createNew(id: String): CoffeePlaceDTO {
-            return CoffeePlaceDTO(
-                id = id,
-                addedAt = CoffeeTimeUtils.nowSeconds()
-            )
-        }
+        fun fromFull(place: CoffeePlaceFull) = CoffeePlaceMapper.toDto(place)
     }
 }
