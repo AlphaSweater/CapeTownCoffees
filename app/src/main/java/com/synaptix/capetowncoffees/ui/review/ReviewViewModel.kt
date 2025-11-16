@@ -20,6 +20,10 @@ import android.os.Bundle
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
 import com.synaptix.capetowncoffees.ui.common.viewmodel.state
+import com.synaptix.capetowncoffees.domain.usecase.coffeeReview.CreateCoffeeReviewUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.model.CoffeeReview
+import com.synaptix.capetowncoffees.domain.model.InAppReview
 import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
 import javax.inject.Inject
@@ -39,8 +43,10 @@ import javax.inject.Inject
 @HiltViewModel
 @Suppress("unused")
 class ReviewViewModel @Inject constructor(
-    // TODO: Inject review submission use case when backend is ready
-    // private val submitReviewUseCase: SubmitReviewUseCase
+    // Use case to create (persist) an in-app coffee review
+    private val createCoffeeReviewUseCase: CreateCoffeeReviewUseCase,
+    // Use case to obtain current user profile (if any)
+    private val getUserProfileUseCase: GetUserProfileUseCase,
 ) : SimpleViewModel() {
 
     // ─────────── Screen Args ───────────
@@ -195,24 +201,33 @@ class ReviewViewModel @Inject constructor(
             Timber.i("Submitting review: placeId=${placeId.value}, rating=${rating.value}, text=${reviewText.value}")
 
             try {
-                // TODO: Replace with actual backend submission
-                // Create InAppReview from current state and submit via CreateCoffeeReviewUseCase
-                // val review = CoffeeReview.newInAppSubmission(
-                //     reviewerId = currentUserId,
-                //     placeId = placeId.value,
-                //     rating = rating.value.toDouble(),
-                //     text = reviewText.value
-                // )
-                // val result = createCoffeeReviewUseCase(review, placeId.value)
+                // Resolve the reviewer id from the current authenticated user if present
+                val reviewerId = try {
+                    getUserProfileUseCase().getOrNull()?.id ?: "anonymous"
+                } catch (_: Exception) {
+                    "anonymous"
+                }
 
-                // For now, just simulate success
-                kotlinx.coroutines.delay(1000) // Simulate network call
+                // Build an InAppReview from current state
+                val review: InAppReview = CoffeeReview.newInAppSubmission(
+                    reviewerId = reviewerId,
+                    placeId = placeId.value,
+                    rating = rating.value.toDouble(),
+                    text = reviewText.value
+                )
 
-                Timber.i("Review submitted successfully")
-                send(Effect.Message("Review submitted successfully!"))
+                // Call the use case to persist the review
+                val result = createCoffeeReviewUseCase(review, placeId.value)
 
-                // Move to completion screen, keep basic data for potential display
-                currentStep.set(ReviewStep.COMPLETE)
+                if (result.isSuccess) {
+                    Timber.i("Review submitted successfully: ${result.getOrNull()}")
+                    send(Effect.Message("Review submitted successfully!"))
+                    currentStep.set(ReviewStep.COMPLETE)
+                } else {
+                    val err = result.exceptionOrNull() ?: Exception("Unknown error")
+                    Timber.e(err, "Failed to submit review")
+                    send(Effect.Message("Failed to submit review: ${err.message}"))
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to submit review")
                 send(Effect.Message("Failed to submit review: ${e.message}"))

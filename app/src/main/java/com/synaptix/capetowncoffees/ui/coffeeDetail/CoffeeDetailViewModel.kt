@@ -80,7 +80,7 @@ class CafeDetailViewModel @Inject constructor(
 
     // ─────────── Internals ───────────
     // Keep inputs needed for derived data (e.g., distance).
-    private var placeId: String? = null
+    var placeId: String? = null
     private var userLocation: LatLng? = null
     private var placeLocation: LatLng? = null
 

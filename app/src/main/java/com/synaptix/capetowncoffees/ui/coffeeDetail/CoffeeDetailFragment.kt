@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.synaptix.capetowncoffees.ui.review.ReviewViewModel
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -125,6 +126,23 @@ class CoffeeDetailFragment : Fragment() {
     private fun setupUiListeners() = with(binding) {
         btnBack.setOnClickListener { findNavController().navigateUp() }
         tvDistance.setOnClickListener { getCurrentLocation() } // quick refresh for distance
+
+        // Open review flow
+        btnReview.setOnClickListener {
+            val placeId = vm.placeId ?: ""
+            val placeName = vm.ui.value.name
+
+            if (placeId.isBlank()) {
+                Toast.makeText(requireContext(), "Cannot open review: missing place id", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val args = Bundle().apply {
+                putString(ReviewViewModel.ScreenArgs.PLACE_ID, placeId)
+                putString(ReviewViewModel.ScreenArgs.PLACE_NAME, placeName)
+            }
+            findNavController().navigate(R.id.action_cafeDetailFragment_to_reviewContainerFragment, args)
+        }
     }
 
     // ─────────── Collectors (Effects & State) ───────────
@@ -233,6 +251,7 @@ class CoffeeDetailFragment : Fragment() {
         // Hook shimmer/skeleton view here when available
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun showReviewsError(msg: String, retry: () -> Unit) {
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         // Wire a retry button if a dedicated error view exists
