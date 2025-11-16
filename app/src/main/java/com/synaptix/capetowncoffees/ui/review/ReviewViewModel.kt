@@ -22,6 +22,7 @@ import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
 import com.synaptix.capetowncoffees.ui.common.viewmodel.state
 import com.synaptix.capetowncoffees.domain.usecase.coffeeReview.CreateCoffeeReviewUseCase
 import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.IncrementUserReviewCountUseCase
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.model.InAppReview
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +48,8 @@ class ReviewViewModel @Inject constructor(
     private val createCoffeeReviewUseCase: CreateCoffeeReviewUseCase,
     // Use case to obtain current user profile (if any)
     private val getUserProfileUseCase: GetUserProfileUseCase,
+    // Use case to bump the current user's reviewCount for gamification
+    private val incrementUserReviewCountUseCase: IncrementUserReviewCountUseCase,
 ) : SimpleViewModel() {
 
     // ─────────── Screen Args ───────────
@@ -221,6 +224,17 @@ class ReviewViewModel @Inject constructor(
 
                 if (result.isSuccess) {
                     Timber.i("Review submitted successfully: ${result.getOrNull()}")
+
+                    // Increment the user's review count for gamification; failure here
+                    // should not block the main review submission.
+                    try {
+                        incrementUserReviewCountUseCase().onFailure { e ->
+                            Timber.e(e, "Failed to increment user review count")
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Exception while incrementing user review count")
+                    }
+
                     send(Effect.Message("Review submitted successfully!"))
                     currentStep.set(ReviewStep.COMPLETE)
                 } else {

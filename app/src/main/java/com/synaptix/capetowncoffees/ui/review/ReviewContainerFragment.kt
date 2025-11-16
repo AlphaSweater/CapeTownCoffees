@@ -36,6 +36,9 @@ class ReviewContainerFragment : Fragment() {
     private lateinit var closeRating: View
     private lateinit var closeText: View
     private lateinit var closeImage: View
+    private var backRating: View? = null
+    private var backText: View? = null
+    private var backImage: View? = null
     private var closeComplete: View? = null
 
     override fun onCreateView(
@@ -77,6 +80,7 @@ class ReviewContainerFragment : Fragment() {
         }
         nextRating = stepRating.findViewById(R.id.btnNext)
         closeRating = stepRating.findViewById(R.id.btnClose)
+        backRating = stepRating.findViewById(R.id.btnBack)
 
         // Text step
         stepText.findViewById<android.widget.EditText>(R.id.etReview).apply {
@@ -86,13 +90,15 @@ class ReviewContainerFragment : Fragment() {
         }
         nextText = stepText.findViewById(R.id.btnNext)
         closeText = stepText.findViewById(R.id.btnClose)
+        backText = stepText.findViewById(R.id.btnBack)
 
-        // Image step
+        // Image / overview step
         stepImage.findViewById<View>(R.id.coffeeImage)?.setOnClickListener {
-            // Placeholder for image picker
+            // Placeholder for image picker or future enhancements
         }
         nextImage = stepImage.findViewById(R.id.btnNext)
         closeImage = stepImage.findViewById(R.id.btnClose)
+        backImage = stepImage.findViewById(R.id.btnBack)
 
         // Complete step
         doneComplete = stepComplete.findViewById(R.id.btnDone)
@@ -109,6 +115,10 @@ class ReviewContainerFragment : Fragment() {
         closeRating.setOnClickListener { cancel() }
         closeText.setOnClickListener { cancel() }
         closeImage.setOnClickListener { cancel() }
+
+        backRating?.setOnClickListener { vm.prevStep() }
+        backText?.setOnClickListener { vm.prevStep() }
+        backImage?.setOnClickListener { vm.prevStep() }
     }
 
     private fun setupCollectors() {
@@ -119,10 +129,23 @@ class ReviewContainerFragment : Fragment() {
             stepComplete.isVisible = step == ReviewViewModel.ReviewStep.COMPLETE
             updateEnablement(step)
         }
-        collect(vm.rating.flow) {
-            // keep rating bar synced
-            stepRating.findViewById<android.widget.RatingBar>(R.id.ratingBar)?.rating = vm.rating.value
+        collect(vm.rating.flow) { value ->
+            // keep rating bar on step 1 in sync
+            stepRating.findViewById<android.widget.RatingBar>(R.id.ratingBar)?.rating = value
+
+            // also reflect rating on the overview step's summary stars
+            stepImage.findViewById<android.widget.RatingBar>(R.id.coffeeImage)?.rating = value
+
             updateEnablement(vm.currentStep.value)
+        }
+        collect(vm.reviewText.flow) { text ->
+            // show the current review text (or a fallback) on the overview step
+            val summary = if (text.isNullOrBlank()) {
+                "You rated this place and didn’t add any text."
+            } else {
+                text
+            }
+            stepImage.findViewById<android.widget.TextView>(R.id.coffeeText)?.text = summary
         }
         collect(vm.isSubmitting.flow) { submitting ->
             if (vm.currentStep.value == ReviewViewModel.ReviewStep.IMAGE) {
