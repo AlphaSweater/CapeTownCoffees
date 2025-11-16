@@ -20,18 +20,24 @@
     <string name="password_change_failed">Failed to change password</string>
     <string name="password_mismatch">New passwords do not match</string>
     <string name="current_password_required">Please enter your current password to change it</string>
+    <string name="fullname_example">Jane Doe</string>
+    <string name="password_hash">••••••••</string>
 
     <!-- Existing resources below -->
     <string name="app_name">Cape Town Coffees</string>
 
-    <!-- Sign In Screen -->
+    <!-- Login + Register Screen -->
     <string name="app_logo">Cape Town Coffees Logo</string>
+    <string name="cape_towns">Cape Towns</string>
+    <string name="coffees">COFFEES</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
     <string name="forgot_password">Forgot Password?</string>
     <string name="sign_in">Sign In</string>
     <string name="or_continue_with">or continue with</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="continue_with_google">Continue with Google</string>
     <string name="dont_have_an_account">Don\'t have an account?</string>
     <string name="sign_up">Sign Up</string>
 
@@ -45,6 +51,7 @@
     <string name="scan_qr_code">Scan QR Code</string>
     <string name="search">Search</string>
     <string name="notifications">Notifications</string>
+    <string name="explore">Explore</string>
 
     <!-- Common Actions -->
     <string name="action_next">Next</string>
@@ -60,35 +67,30 @@
 
     <!-- privacy policy -->
     <string name="privacy_policy_title">Privacy Policy</string>
-
     <string name="privacy_section_overview">Overview</string>
-    <string name="privacy_overview_body">
-    We respect your privacy. This policy explains what data Cape Town Coffees collects, how we use it, and the choices you have. By using the app, you agree to the practices described here.
-</string>
-
-    <string name="privacy_section_data_we_collect">Data We Use</string>
-    <string name="privacy_collect_intro">
-    We Use only the data we need to run and improve the app. This may include:
-</string>
-
-    <string name="privacy_section_how_we_use_data">How We Use Your Data</string>
-
-    <string name="privacy_section_sharing">Sharing</string>
-    <string name="privacy_sharing_body">
-    We do not sell your personal data. We may share limited information with service providers (e.g., analytics, crash reporting, maps/places) strictly to operate features on our behalf, under confidentiality obligations, or when required by law.
-</string>
-
-    <string name="privacy_section_permissions">Permissions</string>
-    <string name="privacy_permissions_body">
-    Certain features require permissions (e.g., Location to find nearby coffee shops). You can grant or revoke them at any time in Android Settings. If you revoke a permission, related features may not work.
-</string>
-
-    <string name="privacy_section_your_choices">Your Choices &amp; Controls</string>
-
-    <string name="privacy_section_contact">Contact Us</string>
-    <string name="privacy_contact_body">
-    Questions about this policy or your data? Email us at support@capetowncoffees.example.
-</string>
+    <string name="privacy_overview_body">We respect your privacy. This policy explains what data Cape Town Coffees collects, how we use it, and the choices you have. By using the app, you agree to the practices described here.</string>
+    <string name="privacy_data_collect_intro">We collect only what we need to run the app and improve your experience. This may include:</string>
+    <string name="privacy_data_collect_bullet1">•  Account info (name, email)</string>
+    <string name="privacy_data_collect_bullet2">•  Usage data (interactions, crash logs)</string>
+    <string name="privacy_data_collect_bullet3">•  Location (if granted, to find nearby coffee places)</string>
+    <string name="privacy_data_collect_bullet4">•  Device identifiers (analytics/fraud prevention)</string>
+    <string name="privacy_use_data_title">How We Use Your Data</string>
+    <string name="privacy_use_data_bullet1">•  Provide and improve features</string>
+    <string name="privacy_use_data_bullet2">•  Personalize content</string>
+    <string name="privacy_use_data_bullet3">•  Authenticate and secure the app</string>
+    <string name="privacy_use_data_bullet4">•  Debug, analytics, and performance monitoring</string>
+    <string name="privacy_use_data_bullet5">•  Send push notifications (you can toggle this in Settings)</string>
+    <string name="privacy_sharing_title">Sharing</string>
+    <string name="privacy_sharing_body">We do not sell your personal data. We may share limited information with service providers (e.g., analytics, crash reporting, maps/places) strictly to operate features on our behalf, under confidentiality obligations, or when required by law.</string>
+    <string name="privacy_permissions_title">Permissions</string>
+    <string name="privacy_permissions_body">Certain features require permissions (e.g., Location to find nearby coffee shops). You can grant or revoke them at any time in Android Settings. If you revoke a permission, related features may not work.</string>
+    <string name="privacy_your_choices_title">Your Choices</string>
+    <string name="privacy_your_choices_bullet1">•  Manage permissions in Android Settings</string>
+    <string name="privacy_your_choices_bullet2">•  Toggle push notifications in Settings</string>
+    <string name="privacy_your_choices_bullet3">•  Request account deletion in Settings</string>
+    <string name="privacy_your_choices_bullet4">•  Clear cached data in Settings → Data</string>
+    <string name="privacy_contact_title">Contact Us</string>
+    <string name="privacy_contact_body">Questions or concerns? Email us at support@capetowncoffees.app</string>
 
     <!-- Home Page -->
     <string name="cafe_featured">Featured</string>
@@ -101,21 +103,17 @@
     <string name="cafe_rating">4.6 (5203)</string>
     <string name="distance">1.2 km away</string>
     <string name="featured_label">FEATURED</string>
-
     <string name="about">About</string>
     <string name="opening_hours">Opening Hours</string>
     <string name="contact">Contact</string>
     <string name="top_reviews">Top Reviews</string>
     <string name="address">Address</string>
     <string name="phone_number">021 201 7000</string>
-    <string name="description">
-        Description of the coffee place.
-    </string>
-
-    <!-- Profile -->
-    <string name="account_security">Account Security</string>
-    <string name="change">Change</string>
-    <string name="loading">Loading</string>
+    <string name="description">Description of the coffee place.</string>
+    <string name="_4_5">4.5</string>
+    <string name="_1_2_km_away">1.2 km away</string>
+    <string name="coffee_address">Address</string>
+    <string name="btn_review">Review</string>
     
     <!-- Change Password -->
     <string name="change_password">Change Password</string>
@@ -192,4 +190,113 @@
     <string name="private_label">Private</string>
     <string name="public_label">Public</string>
     <string name="profile_edit_image_load_failed">Failed to load profile image</string>
+
+    <!-- Favourites Page -->
+    <string name="favourites">Favourites</string>
+
+    <!-- Search Page -->
+    <string name="search_for_coffee_shops">Search for Coffee shops...</string>
+    <string name="search_filters">Filters</string>
+    <string name="search_radius_number">30 km</string>
+    <string name="category">Category</string>
+    <string name="search_radius_km">Search Radius (km)</string>
+
+    <!-- List Details Page -->
+    <string name="saved_list">Saved List</string>
+    <string name="chill_spots">Chill Spots</string>
+
+    <!-- List View Page -->
+    <string name="saved">Saved</string>
+    <string name="lists">Lists</string>
+    <string name="your_lists">Your lists</string>
+    <string name="create_new_list">Create new list</string>
+
+    <!-- Profile -->
+    <string name="account_security">Account Security</string>
+    <string name="change">Change</string>
+    <string name="loading">Loading...</string>
+    <string name="latte_lover">Latte Lover</string>
+    <string name="coffee_explorer">Coffee Explorer</string>
+    <string name="level_3">Level 3</string>
+    <string name="_65_100_points_to_next_level">65/100 points to next level</string>
+    <string name="points">Points</string>
+    <string name="progress">Progress</string>
+    <string name="badges">Badges</string>
+    <string name="review_posted">Review posted</string>
+    <string name="you_reviewed_truth_coffee_roasting">You reviewed Truth Coffee Roasting</string>
+    <string name="_1_day_ago">1 day ago</string>
+    <string name="view_all_activity">View All Activity</string>
+
+    <!-- Review Pages -->
+    <string name="close">Close</string>
+    <string name="completed_review">COMPLETED\nREVIEW</string>
+    <string name="done">Done</string>
+    <string name="how_was_your_experience">How was your\nexperience?</string>
+    <string name="share_your_experience_with_the_community">Share your experience with the community</string>
+    <string name="next">Next</string>
+    <string name="tell_others_about_your_experience">Tell others about your\nexperience</string>
+    <string name="consider_discussing_the_facilities_pricing_and_taste">Consider discussing the facilities, pricing and taste</string>
+    <string name="share_images">Share Images</string>
+    <string name="coffee_review">COFFEE\nREVIEW</string>
+    <string name="thanks_for_your_review">Thanks for your review!</string>
+    <string name="thank_you_message">Your feedback helps other locals find great coffee spots.</string>
+    <string name="review_step1_title">How was your visit?</string>
+    <string name="review_step1_message">Rate your experience so other coffee lovers can decide where to go.</string>
+    <string name="review_back">Back</string>
+    <string name="review_next">Next</string>
+    <string name="review_step2_title">Tell others about your experience</string>
+    <string name="review_step2_message">Optional, but super helpful: mention the vibe, service, and coffee.</string>
+    <string name="review_step2_example">E.g. Cosy space, friendly baristas, flat white was smooth and not too bitter.</string>
+    <string name="review_step3_title">Review overview</string>
+    <string name="review_step3_description">Check everything before you submit your review.</string>
+    <string name="review_step3_your_review">Your review</string>
+    <string name="review_step3_user_review">You rated this place and wrote a review.</string>
+    <string name="review_submit_button">Submit review</string>
+
+    <!-- Add Places to List -->
+    <string name="add_to_lists">Add to Lists</string>
+    <string name="search_lists">Search lists</string>
+    <string name="add">Add</string>
+    <string name="data_we_collect_title">Data We Collect</string>
+    <string name="distance_in_km">1 km</string>
+
+    <!-- Coffee Near Me Item -->
+    <string name="near_me_shop_name">Truth Coffee Roasting</string>
+    <string name="near_me_location">36 Buitenkant St, Cape Town</string>
+    <string name="near_me_distance">1.2 km</string>
+    <string name="near_me_rating">4.6 (1.2k)</string>
+
+    <!-- Coffee Review Item -->
+    <string name="coffee_review_name">Alex Johnson</string>
+    <string name="google">Google</string>
+    <string name="coffee_review_time_since_reviewed">2d ago</string>
+    <string name="coffee_review_rating">4.6</string>
+    <string name="coffee_review_comment">Smooth flat white, cozy vibes, friendly staff — solid Wi-Fi too.</string>
+
+    <!-- Favourites Item -->
+    <string name="favourite_cafe_name">Cafe Name</string>
+    <string name="favourite_location">Cape Town, City Centre</string>
+    <string name="favourite_rating">4,6 (5203)</string>
+
+    <!-- List Place Item -->
+    <string name="list_place_name">Truth Coffee Roasting</string>
+    <string name="list_place_location">36 Buitenkant St, Cape Town</string>
+    <string name="list_place_rating">4.6 (1.2k)</string>
+    <string name="list_place_distance">1.2 km</string>
+
+    <!-- Offline Item -->
+    <string name="offline_title">You’re offline</string>
+    <string name="offline_description">Data cannot be loaded. Tap refresh to try again.</string>
+    <string name="offline_refresh_button">Refresh</string>
+
+    <!-- Review Item -->
+    <string name="review_title">Truth Coffee</string>
+    <string name="review_time_since_created">2 days ago</string>
+    <string name="review_description">This place is the best!! So many different options</string>
+
+    <!-- Search Suggestion Item -->
+    <string name="search_suggestion_title">Truth Coffee Roasting</string>
+    <string name="search_suggestion_location">36 Buitenkant St, Cape Town City Centre asdasd asda sd asdasda</string>
+    <string name="search_suggestion_distance">1.2 km</string>
+    <string name="settings_display_language">Display Language</string>
 </resources>

@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Cape Towns"
+            android:text="@string/cape_towns"
             android:textColor="@color/text_primary"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:layout_gravity="center"
-            android:text="COFFEES"
+            android:text="@string/coffees"
             android:textAllCaps="true"
             android:letterSpacing="0.15"
             android:textColor="@color/text_primary"
@@ -67,7 +67,7 @@
             app:startIconTint="@color/button_category"
             app:endIconTint="@color/button_category"
             app:hintTextColor="@color/button_category"
-            android:hint="Full Name">
+            android:hint="@string/full_name">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/nameEditText"
@@ -99,7 +99,7 @@
             app:startIconTint="@color/button_category"
             app:endIconTint="@color/button_category"
             app:hintTextColor="@color/button_category"
-            android:hint="Email">
+            android:hint="@string/email">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/emailEditText"
@@ -165,7 +165,7 @@
             app:endIconMode="password_toggle"
             app:endIconTint="@color/button_category"
             app:hintTextColor="@color/button_category"
-            android:hint="Confirm Password">
+            android:hint="@string/confirm_password">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/confirmPasswordEditText"
@@ -187,7 +187,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="10dp"
             android:backgroundTint="@color/button_login"
-            android:text="Sign Up"
+            android:text="@string/sign_up"
             android:textAllCaps="false"
             android:textColor="@color/text_login"
             android:textSize="15sp"
@@ -212,7 +212,7 @@
                 android:layout_centerInParent="true"
                 android:background="@color/background"
                 android:paddingHorizontal="16dp"
-                android:text="or continue with"
+                android:text="@string/or_continue_with"
                 android:textColor="@color/text_secondary"/>
         </RelativeLayout>
 
@@ -228,7 +228,7 @@
             android:insetLeft="0dp"
             android:insetRight="0dp"
             android:minHeight="48dp"
-            android:text="Continue with Google"
+            android:text="@string/continue_with_google"
             android:textAllCaps="false"
             android:textColor="#3C4043"
             app:cornerRadius="28dp"

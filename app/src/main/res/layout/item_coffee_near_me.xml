@@ -10,7 +10,7 @@
     android:layout_marginVertical="8dp"
     android:foreground="?attr/selectableItemBackground"
     android:stateListAnimator="@animator/ctc_card_lift">
-
+-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -132,7 +132,7 @@
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textColor="@color/text_primary"
                     android:textStyle="bold"
-                    tools:text="Truth Coffee Roasting" />
+                    tools:text="@string/near_me_shop_name" />
 
                 <!-- 40dp touch target with ripple -->
                 <FrameLayout
@@ -183,7 +183,7 @@
                     android:ellipsize="end"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="@color/text_secondary"
-                    tools:text="36 Buitenkant St, Cape Town" />
+                    tools:text="@string/near_me_location" />
             </LinearLayout>
 
             <!-- Distance -->
@@ -208,7 +208,7 @@
                     android:layout_marginStart="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="@color/text_secondary"
-                    tools:text="1.2 km" />
+                    tools:text="@string/near_me_distance" />
             </LinearLayout>
 
             <!-- Rating + (optional) price -->
@@ -233,7 +233,7 @@
                     android:layout_marginStart="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="@color/text_secondary"
-                    tools:text="4.6 (1.2k)" />
+                    tools:text="@string/near_me_rating" />
 
                 <View
                     android:layout_width="0dp"

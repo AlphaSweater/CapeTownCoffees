@@ -21,7 +21,7 @@
             android:id="@+id/btnClose"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:contentDescription="Close"
+            android:contentDescription="@string/close"
             android:padding="8dp"
             android:src="@drawable/ic_ctc_cross" />
     </LinearLayout>
@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
-                android:text="Thanks for your review!"
+                android:text="@string/thanks_for_your_review"
                 android:textAlignment="center"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
-                android:text="Your feedback helps other locals find great coffee spots."
+                android:text="@string/thank_you_message"
                 android:textAlignment="center"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
@@ -79,7 +79,7 @@
                 android:layout_marginTop="24dp"
                 android:paddingHorizontal="24dp"
                 android:paddingVertical="14dp"
-                android:text="Done"
+                android:text="@string/done"
                 android:textColor="@color/text_alt"
                 android:textStyle="bold"
                 android:textSize="18sp"

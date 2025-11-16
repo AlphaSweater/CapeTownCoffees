@@ -1,0 +1,302 @@
+<resources>
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile">Redigeer Profiel</string>
+    <string name="profile_picture">Profielfoto</string>
+    <string name="change_photo">Verander Foto</string>
+    <string name="account_information">Rekeninginligting</string>
+    <string name="first_name">Eerste Naam</string>
+    <string name="last_name">Van</string>
+    <string name="full_name">Volle Naam</string>
+    <string name="current_password">Huidige Wagwoord</string>
+    <string name="new_password">Nuwe Wagwoord</string>
+    <string name="confirm_new_password">Bevestig Nuwe Wagwoord</string>
+    <string name="save_changes">Stoor Veranderinge</string>
+    <string name="saving">Stoor tans…</string>
+    <string name="profile_updated">Profiel suksesvol opgedateer</string>
+    <string name="error_updating_profile">Kon nie profiel opdateer nie</string>
+    <string name="password_updated">Wagwoord suksesvol opgedateer</string>
+    <string name="error_updating_password">Kon nie wagwoord opdateer nie</string>
+    <string name="password_change_success">Wagwoord suksesvol verander</string>
+    <string name="password_change_failed">Kon nie wagwoord verander nie</string>
+    <string name="password_mismatch">Nuwe wagwoorde stem nie ooreen nie</string>
+    <string name="current_password_required">Voer asseblief jou huidige wagwoord in om dit te verander</string>
+    <string name="fullname_example">Jane Doe</string>
+    <string name="password_hash">••••••••</string>
+
+    <!-- Existing resources below -->
+    <string name="app_name">Cape Town Coffees</string>
+
+    <!-- Login + Register Screen -->
+    <string name="app_logo">Cape Town Coffees Logo</string>
+    <string name="cape_towns">Kaapstad se</string>
+    <string name="coffees">KOFFIES</string>
+    <string name="email">E-pos</string>
+    <string name="password">Wagwoord</string>
+    <string name="confirm_password">Bevestig Wagwoord</string>
+    <string name="forgot_password">Wagwoord vergeet?</string>
+    <string name="sign_in">Teken in</string>
+    <string name="or_continue_with">of gaan voort met</string>
+    <string name="sign_in_with_google">Teken in met Google</string>
+    <string name="continue_with_google">Gaan voort met Google</string>
+    <string name="dont_have_an_account">Het jy nie \'n rekening nie?</string>
+    <string name="sign_up">Teken aan</string>
+
+    <!-- Home/Legacy placeholders to satisfy resource linking -->
+    <string name="good_morning">Goeie more</string>
+    <string name="guest">Gas</string>
+    <string name="order_now">Bestel nou</string>
+    <string name="coffee_illustration">Koffie-illustrasie</string>
+    <string name="popular_items">Gewilde Items</string>
+    <string name="categories">Kategorieë</string>
+    <string name="scan_qr_code">Skandeer QR-kode</string>
+    <string name="search">Soek</string>
+    <string name="notifications">Kennisgewings</string>
+    <string name="explore">Verken</string>
+
+    <!-- Common Actions -->
+    <string name="action_next">Volgende</string>
+    <string name="no_opening_hours_available">Openingstye nie beskikbaar nie</string>
+    <string name="directions">Kry aanwysings</string>
+    <string name="action_back">Terug</string>
+
+    <!-- Theme Menu -->
+    <string name="theme">Tema</string>
+    <string name="theme_light">Lig</string>
+    <string name="theme_dark">Donker</string>
+    <string name="theme_system">Stelsel verstek</string>
+
+    <!-- privacy policy -->
+    <string name="privacy_policy_title">Privaatheidsbeleid</string>
+    <string name="privacy_section_overview">Oorsig</string>
+    <string name="privacy_overview_body">Ons respekteer jou privaatheid. Hierdie beleid verduidelik watter data Cape Town Coffees insamel, hoe ons dit gebruik, en die keuses wat jy het. Deur die toepassing te gebruik, stem jy in tot die praktyke wat hier beskryf word.</string>
+    <string name="privacy_data_collect_intro">Ons samel slegs in wat ons nodig het om die toepassing te laat loop en jou ervaring te verbeter. Dit mag insluit:</string>
+    <string name="privacy_data_collect_bullet1">• Rekeninginligting (naam, e-pos)</string>
+    <string name="privacy_data_collect_bullet2">• Gebruiksdata (interaksies, foutslae)</string>
+    <string name="privacy_data_collect_bullet3">• Ligging (indien toegestaan, om nabygeleë koffieplekke te vind)</string>
+    <string name="privacy_data_collect_bullet4">• Toestelidentifiseerders (analise/bedrogvoorkoming)</string>
+    <string name="privacy_use_data_title">Hoe ons jou data gebruik</string>
+    <string name="privacy_use_data_bullet1">• Voorsien en verbeter kenmerke</string>
+    <string name="privacy_use_data_bullet2">• Personaliseer inhoud</string>
+    <string name="privacy_use_data_bullet3">• Verifieer en beveilig die toepassing</string>
+    <string name="privacy_use_data_bullet4">• Foutopsporing, analise, en prestasie-monitering</string>
+    <string name="privacy_use_data_bullet5">• Stuur stootkennisgewings (jy kan dit in Instellings wissel)</string>
+    <string name="privacy_sharing_title">Deel</string>
+    <string name="privacy_sharing_body">Ons verkoop nie jou persoonlike data nie. Ons mag beperkte inligting met diensverskaffers (bv. analise, foutslae, kaarte/plekke) deel, streng om kenmerke namens ons te bedryf, onder vertroulikheidsverpligtinge, of wanneer dit deur die wet vereis word.</string>
+    <string name="privacy_permissions_title">Toestemmings</string>
+    <string name="privacy_permissions_body">Sekere kenmerke vereis toestemmings (bv. Ligging om nabygeleë koffiewinkels te vind). Jy kan hulle enige tyd in Android-instellings toestaan of herroep. As jy \'n toestemming herroep, mag verwante kenmerke nie werk nie.</string>
+    <string name="privacy_your_choices_title">Jou Keuses</string>
+    <string name="privacy_your_choices_bullet1">• Bestuur toestemmings in Android-instellings</string>
+    <string name="privacy_your_choices_bullet2">• Wissel stootkennisgewings in Instellings</string>
+    <string name="privacy_your_choices_bullet3">• Versoek rekeninguitwissing in Instellings</string>
+    <string name="privacy_your_choices_bullet4">• Vee gekaste data uit in Instellings → Data</string>
+    <string name="privacy_contact_title">Kontak Ons</string>
+    <string name="privacy_contact_body">Vrae of bekommernisse? E-pos ons by support@capetowncoffees.app</string>
+
+    <!-- Home Page -->
+    <string name="cafe_featured">Uitgelig</string>
+    <string name="see_all">Sien Alles</string>
+    <string name="near_me">Naby My</string>
+
+    <!-- Near Me Item and Featured Item -->
+    <string name="cafe_name">Kafeenaam</string>
+    <string name="location">Kaapstad, Stad Sentrum</string>
+    <string name="cafe_rating">4.6 (5203)</string>
+    <string name="distance">1.2 km weg</string>
+    <string name="featured_label">UITGELIG</string>
+    <string name="about">Oor</string>
+    <string name="opening_hours">Openingstye</string>
+    <string name="contact">Kontak</string>
+    <string name="top_reviews">Top Resensies</string>
+    <string name="address">Adres</string>
+    <string name="phone_number">021 201 7000</string>
+    <string name="description">Beskrywing van die koffieplek.</string>
+    <string name="_4_5">4.5</string>
+    <string name="_1_2_km_away">1.2 km weg</string>
+    <string name="coffee_address">Adres</string>
+    <string name="btn_review">Resenseer</string>
+    
+    <!-- Change Password -->
+    <string name="change_password">Verander Wagwoord</string>
+    <string name="change_password_description">Om jou wagwoord op te dateer, voer asseblief jou huidige wagwoord in en skep \'n nuwe een. Maak seker jou nuwe wagwoord is sterk en veilig.</string>
+    <string name="empty_state">Niks Hier Nie</string>
+    <string name="retry">Probeer Weer</string>
+    <string name="addToList">Voeg plek by lys</string>
+    <string name="add_to_favorites">Voeg by gunstelinge</string>
+    <string name="cafe_image">Koffiewinkel Beeld</string>
+    <string name="add_to_list">Voeg by Lys</string>
+    <string name="profile_photo">Resensent se Profielfoto</string>
+    <string name="like">Hou van-knoppie</string>
+    <string name="dislike">Hou nie van-knoppie nie</string>
+    <string name="no_reviews_yet">Geen resensies vir hierdie plek gevind nie</string>
+    <string name="coffee_review_chip_in_app">Gemeenskap</string>
+    <string name="coffee_review_chip_google">Google</string>
+    <string name="coffee_image">Beeld van plek</string>
+    <string name="location_permission_required">Liggingstoestemmings word vereis vir hierdie toepassing om te funksioneer!</string>
+    <string name="location_fetch_failed">Kon nie ligging ophaal nie!!</string>
+    <string name="search_hint_coffee_shops">Koffiewinkels</string>
+    <string name="search_radius">Soekradius</string>
+    <string name="filters">Filters</string>
+    <string name="strict_coffee_only">Slegs Streng Koffieplekke</string>
+    <string name="suggestions">Voorstelle</string>
+    <string name="delete_list">Vee Lys Uit</string>
+    <string name="cafe_photo">Plekfoto</string>
+    <string name="remove_from_list">Verwyder item van lys</string>
+    <string name="unknown">Onbekend</string>
+    <string name="list_name">Lysnaam</string>
+    <string name="list_name_hint">Bv. Cool Studieplekke</string>
+    <string name="required_field">Vereiste Veld</string>
+    <string name="description_hint">Bv. Hou van die atmosfeer van hierdie plekke om te studeer</string>
+    <string name="privacy_level">Sigbaarheid</string>
+    <string name="privacy_public_dropdown">Privaat</string>
+    <string name="save">Stoor</string>
+    <string name="create_list">Skep Lys</string>
+    <string name="settings">Instellings</string>
+    <string name="account">Rekening</string>
+    <string name="push_notification">Stootkennisgewings</string>
+    <string name="privacy_policy">Privaatheidsbeleid</string>
+    <string name="delete_account">Vee Rekening Uit</string>
+    <string name="appearance">Voorkoms</string>
+    <string name="dark_mode">Lig / Donker Modus</string>
+    <string name="offline_mode">Aflynmodus</string>
+    <string name="offline_mode_description">Voorkom netwerkversoeke en werk slegs met gekaste data</string>
+    <string name="offline_mode_enabled">Aflynmodus geaktiveer</string>
+    <string name="offline_mode_disabled">Aflynmodus gedeaktiveer</string>
+    <string name="data">Toepassingsdata</string>
+    <string name="clear_cached_data">Vee alle gekaste data uit</string>
+    <string name="logout">Teken uit</string>
+    <string name="share_with_friends">Deel met Vriende</string>
+    <string name="cache_cleared">Kas Skoongemaak! (WIP)</string>
+    <string name="generic_error">Iets het verkeerd gegaan!</string>
+    <string name="delete_failed">Kon nie rekening uitvee nie</string>
+    <string name="account_deleted">Rekening Suksesvol uitgevee!</string>
+    <string name="logout_failed">Uitteken Misluk</string>
+    <string name="clear_cache">Vee Kas Uit</string>
+    <string name="clear_cache_confirm_message">Is jy seker jy wil die kas uitvee?</string>
+    <string name="cancel">Kanselleer</string>
+    <string name="delete_account_confirm_message">Is jy seker jy wil jou rekening uitvee??</string>
+    <string name="delete">Vee Rekening Uit</string>
+    <string name="logout_confirm_message">Teken nou uit?</string>
+    <string name="enabled">Geaktiveer</string>
+    <string name="disabled">Gedeaktiveer</string>
+    <string name="ctc_login_invalid_creds">Ongeldige geloofsbriewe. Probeer asseblief weer.</string>
+    <string name="ctc_login_success">Welkom terug!</string>
+    <string name="ctc_login_loading">Teken tans in...</string>
+    <string name="ctc_login_google_failed">Google-intekening het misluk. Probeer asseblief weer.</string>
+    <string name="ctc_register_loading">Skep tans jou rekening...</string>
+    <string name="ctc_register_success">Rekening geskep! Welkom 👋</string>
+    <string name="ctc_register_error_generic">Kon nie rekening skep nie. Probeer asseblief weer.</string>
+    <string name="ctc_register_fix_errors">Maak asseblief die gemerkte velde reg.</string>
+    <string name="ctc_register_google_failed">Google-aantekening het misluk. Probeer asseblief weer.</string>
+    <string name="private_label">Privaat</string>
+    <string name="public_label">Publiek</string>
+    <string name="profile_edit_image_load_failed">Kon nie profielbeeld laai nie</string>
+
+    <!-- Favourites Page -->
+    <string name="favourites">Gunstelinge</string>
+
+    <!-- Search Page -->
+    <string name="search_for_coffee_shops">Soek vir koffiewinkels...</string>
+    <string name="search_filters">Filters</string>
+    <string name="search_radius_number">30 km</string>
+    <string name="category">Kategorie</string>
+    <string name="search_radius_km">Soekradius (km)</string>
+
+    <!-- List Details Page -->
+    <string name="saved_list">Gestoorde Lys</string>
+    <string name="chill_spots">Ontspanplekke</string>
+
+    <!-- List View Page -->
+    <string name="saved">Gestoor</string>
+    <string name="lists">Lyste</string>
+    <string name="your_lists">Jou lyste</string>
+    <string name="create_new_list">Skep nuwe lys</string>
+
+    <!-- Profile -->
+    <string name="account_security">Rekeningsekuriteit</string>
+    <string name="change">Verander</string>
+    <string name="loading">Laai tans...</string>
+    <string name="latte_lover">Latte-liefhebber</string>
+    <string name="coffee_explorer">Koffieverkenner</string>
+    <string name="level_3">Vlak 3</string>
+    <string name="_65_100_points_to_next_level">65/100 punte tot volgende vlak</string>
+    <string name="points">Punte</string>
+    <string name="progress">Vordering</string>
+    <string name="badges">Wapens</string>
+    <string name="review_posted">Resensie geplaas</string>
+    <string name="you_reviewed_truth_coffee_roasting">Jy het Truth Coffee Roasting geresenseer</string>
+    <string name="_1_day_ago">1 dag gelede</string>
+    <string name="view_all_activity">Sien alle aktiwiteit</string>
+
+    <!-- Review Pages -->
+    <string name="close">Maak toe</string>
+    <string name="completed_review">VOLTOOIDE\nRESENSIE</string>
+    <string name="done">Klaar</string>
+    <string name="how_was_your_experience">Hoe was jou\nervaring?</string>
+    <string name="share_your_experience_with_the_community">Deel jou ervaring met die gemeenskap</string>
+    <string name="next">Volgende</string>
+    <string name="tell_others_about_your_experience">Vertel ander van jou\nervaring</string>
+    <string name="consider_discussing_the_facilities_pricing_and_taste">Oorweeg dit om die fasiliteite, pryse en smaak te bespreek</string>
+    <string name="share_images">Deel Beelde</string>
+    <string name="coffee_review">KOFFIE\nRESENSIE</string>
+    <string name="thanks_for_your_review">Dankie vir jou resensie!</string>
+    <string name="thank_you_message">Jou terugvoer help ander plaaslike inwoners om wonderlike koffieplekke te vind.</string>
+    <string name="review_step1_title">Hoe was jou besoek?</string>
+    <string name="review_step1_message">Gradeer jou ervaring sodat ander koffieliefhebbers kan besluit waarheen om te gaan.</string>
+    <string name="review_back">Terug</string>
+    <string name="review_next">Volgende</string>
+    <string name="review_step2_title">Vertel ander van jou ervaring</string>
+    <string name="review_step2_message">Opsioneel, maar baie nuttig: noem die atmosfeer, diens en koffie.</string>
+    <string name="review_step2_example">Bv. Gesellige ruimte, vriendelike baristas, plat wit was glad en nie te bitter nie.</string>
+    <string name="review_step3_title">Resensie-oorsig</string>
+    <string name="review_step3_description">Gaan alles na voordat jy jou resensie indien.</string>
+    <string name="review_step3_your_review">Jou resensie</string>
+    <string name="review_step3_user_review">Jy het hierdie plek gegradeer en \'n resensie geskryf.</string>
+    <string name="review_submit_button">Dien resensie in</string>
+
+    <!-- Add Places to List -->
+    <string name="add_to_lists">Voeg by Lyste</string>
+    <string name="search_lists">Soek lyste</string>
+    <string name="add">Voeg by</string>
+    <string name="data_we_collect_title">Data wat ons insamel</string>
+    <string name="distance_in_km">1 km</string>
+
+    <!-- Coffee Near Me Item -->
+    <string name="near_me_shop_name">Truth Coffee Roasting</string>
+    <string name="near_me_location">Buitenkantstraat 36, Kaapstad</string>
+    <string name="near_me_distance">1.2 km</string>
+    <string name="near_me_rating">4.6 (1.2k)</string>
+
+    <!-- Coffee Review Item -->
+    <string name="coffee_review_name">Alex Johnson</string>
+    <string name="google">Google</string>
+    <string name="coffee_review_time_since_reviewed">2d gelede</string>
+    <string name="coffee_review_rating">4.6</string>
+    <string name="coffee_review_comment">Glad plat wit, gesellige atmosfeer, vriendelike personeel — ook stewige Wi-Fi.</string>
+
+    <!-- Favourites Item -->
+    <string name="favourite_cafe_name">Kafeenaam</string>
+    <string name="favourite_location">Kaapstad, Stad Sentrum</string>
+    <string name="favourite_rating">4,6 (5203)</string>
+
+    <!-- List Place Item -->
+    <string name="list_place_name">Truth Coffee Roasting</string>
+    <string name="list_place_location">Buitenkantstraat 36, Kaapstad</string>
+    <string name="list_place_rating">4.6 (1.2k)</string>
+    <string name="list_place_distance">1.2 km</string>
+
+    <!-- Offline Item -->
+    <string name="offline_title">Jy is vanlyn</string>
+    <string name="offline_description">Data kan nie gelaai word nie. Tik herlaai om weer te probeer.</string>
+    <string name="offline_refresh_button">Herlaai</string>
+
+    <!-- Review Item -->
+    <string name="review_title">Truth Coffee</string>
+    <string name="review_time_since_created">2 dae gelede</string>
+    <string name="review_description">Hierdie plek is die beste!! Soveel verskillende opsies</string>
+
+    <!-- Search Suggestion Item -->
+    <string name="search_suggestion_title">Truth Coffee Roasting</string>
+    <string name="search_suggestion_location">Buitenkantstraat 36, Kaapstad Stad Sentrum asdasd asda sd asdasda</string>
+    <string name="search_suggestion_distance">1.2 km</string>
+    <string name="settings_display_language">Vertoon Taal</string>
+</resources>
