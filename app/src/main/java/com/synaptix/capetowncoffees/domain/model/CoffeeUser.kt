@@ -23,7 +23,8 @@ data class CoffeeUser(
     val photoBase64: String? = null,
     val createdAt: Long,
     val updatedAt: Long,
-    val lastLoginAt: Long
+    val lastLoginAt: Long,
+    val reviewCount: Int = 0
 ) {
     companion object {
         fun newUser(

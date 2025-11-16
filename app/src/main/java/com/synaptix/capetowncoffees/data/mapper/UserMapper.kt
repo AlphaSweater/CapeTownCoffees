@@ -36,7 +36,8 @@ public fun CoffeeUser.toDTO(): CoffeeUserDTO = CoffeeUserDTO(
     photoBase64 = photoBase64,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    lastLoginAt = lastLoginAt
+    lastLoginAt = lastLoginAt,
+    reviewCount = reviewCount
 )
 
 // DTO → Domain. We guard against a null fullName so UI logic can assume a string.
@@ -47,5 +48,6 @@ public fun CoffeeUserDTO.toDomain(): CoffeeUser = CoffeeUser(
     photoBase64 = photoBase64,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    lastLoginAt = lastLoginAt
+    lastLoginAt = lastLoginAt,
+    reviewCount = reviewCount
 )

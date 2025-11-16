@@ -183,6 +183,7 @@
                         android:padding="20dp">
 
                         <TextView
+                            android:id="@+id/tvGamificationTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:drawablePadding="8dp"
@@ -213,6 +214,7 @@
                                 android:progressTint="@color/coffee_accent_light" />
 
                             <TextView
+                                android:id="@+id/tvLevel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/bg_level_pill"
@@ -225,6 +227,7 @@
                         </LinearLayout>
 
                         <TextView
+                            android:id="@+id/tvLevelSummary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
@@ -255,6 +258,7 @@
                                 android:orientation="vertical">
 
                                 <TextView
+                                    android:id="@+id/tvPoints"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="42"
@@ -314,6 +318,7 @@
                                 android:orientation="vertical">
 
                                 <TextView
+                                    android:id="@+id/tvBadges"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="15"

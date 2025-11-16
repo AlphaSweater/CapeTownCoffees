@@ -151,7 +151,8 @@ class CoffeeUserRepository @Inject constructor(
                 photoBase64 = existing?.photoBase64, // keep your locally-stored photo if any
                 createdAt   = existing?.createdAt ?: CoffeeTimeUtils.nowSeconds(),
                 updatedAt   = CoffeeTimeUtils.nowSeconds(),
-                lastLoginAt = CoffeeTimeUtils.nowSeconds()
+                lastLoginAt = CoffeeTimeUtils.nowSeconds(),
+                reviewCount = existing?.reviewCount ?: 0
             )
             tx.set(docRef, merged, SetOptions.merge())
             true

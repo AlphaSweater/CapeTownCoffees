@@ -52,6 +52,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
 
         setupToolbar()
         observeUser()
+        observeGamification()
         viewModel.loadUserProfile()
 
         binding.btnEditProfile.setOnClickListener {
@@ -116,6 +117,44 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
                             // no-op; add shimmer here if needed
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun observeGamification() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.gamificationState.collect { state ->
+                    binding.progressBarExplorer.max = 100
+                    binding.progressBarExplorer.progress = state.progressPercent
+
+                    binding.tvLevel.text = "Level ${state.level}"
+
+                    // Level-based label used for both the header tagline and the
+                    // gamification card title so they always stay in sync.
+                    val levelLabel = when (state.level) {
+                        1 -> "Latte Lover"
+                        2 -> "Coffee Explorer"
+                        3 -> "Cafe Connoisseur"
+                        4 -> "Roast Master"
+                        else -> "Coffee Legend"
+                    }
+                    binding.tvUserTagline.text = levelLabel
+                    binding.tvGamificationTitle.text = levelLabel
+
+                    val next = state.nextTarget
+                    val summary = if (next != null) {
+                        val remaining = (next - state.reviewCount).coerceAtLeast(0)
+                        "${state.reviewCount}/${next} comments • ${remaining} to next badge"
+                    } else {
+                        "${state.reviewCount} comments • Max level reached"
+                    }
+                    binding.tvLevelSummary.text = summary
+
+                    binding.tvPoints.text = state.reviewCount.toString()
+                    binding.tvProgressPercentage.text = "${state.progressPercent}%"
+                    binding.tvBadges.text = state.badgeCount.toString()
                 }
             }
         }
