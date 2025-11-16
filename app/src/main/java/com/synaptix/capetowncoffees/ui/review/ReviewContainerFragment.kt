@@ -129,10 +129,23 @@ class ReviewContainerFragment : Fragment() {
             stepComplete.isVisible = step == ReviewViewModel.ReviewStep.COMPLETE
             updateEnablement(step)
         }
-        collect(vm.rating.flow) {
-            // keep rating bar synced
-            stepRating.findViewById<android.widget.RatingBar>(R.id.ratingBar)?.rating = vm.rating.value
+        collect(vm.rating.flow) { value ->
+            // keep rating bar on step 1 in sync
+            stepRating.findViewById<android.widget.RatingBar>(R.id.ratingBar)?.rating = value
+
+            // also reflect rating on the overview step's summary stars
+            stepImage.findViewById<android.widget.RatingBar>(R.id.coffeeImage)?.rating = value
+
             updateEnablement(vm.currentStep.value)
+        }
+        collect(vm.reviewText.flow) { text ->
+            // show the current review text (or a fallback) on the overview step
+            val summary = if (text.isNullOrBlank()) {
+                "You rated this place and didn’t add any text."
+            } else {
+                text
+            }
+            stepImage.findViewById<android.widget.TextView>(R.id.coffeeText)?.text = summary
         }
         collect(vm.isSubmitting.flow) { submitting ->
             if (vm.currentStep.value == ReviewViewModel.ReviewStep.IMAGE) {

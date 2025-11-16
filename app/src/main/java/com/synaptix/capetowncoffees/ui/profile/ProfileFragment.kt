@@ -143,6 +143,17 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
                     binding.tvUserTagline.text = levelLabel
                     binding.tvGamificationTitle.text = levelLabel
 
+                    // Set the current badge image based on level (mipmap icons)
+                    // in the gamification card header.
+                    val badgeRes = when (state.level) {
+                        1 -> R.mipmap.im_ctc_level_one_badge_foreground
+                        2 -> R.mipmap.im_ctc_level_two_badge_foreground
+                        3 -> R.mipmap.im_ctc_level_three_badge_foreground
+                        4 -> R.mipmap.im_ctc_level_one_badge_foreground
+                        else -> R.mipmap.im_ctc_level_one_badge_foreground
+                    }
+                    binding.ivGamificationBadge.setImageResource(badgeRes)
+
                     val next = state.nextTarget
                     val summary = if (next != null) {
                         val remaining = (next - state.reviewCount).coerceAtLeast(0)
