@@ -57,9 +57,8 @@ import com.synaptix.capetowncoffees.util.ImagePreloadUtil
 import com.synaptix.capetowncoffees.util.PhotoUrlCache
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-
 import com.synaptix.capetowncoffees.ui.common.showOfflineBannerWhenNeeded
-import com.synaptix.capetowncoffees.ui.common.executeIfOnline
+import com.synaptix.capetowncoffees.ui.common.observeConnectivity
 import com.synaptix.capetowncoffees.domain.usecase.connectivity.ObserveConnectivityStateUseCase
 import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
 
@@ -98,6 +97,10 @@ class HomeFragment : Fragment() {
     // Size providers let Glide preloader know the target image dimensions.
     private val popularSizeProvider = ViewPreloadSizeProvider<String>()
     private val nearSizeProvider = ViewPreloadSizeProvider<String>()
+
+    // Keep references to the preload scroll listeners so we can remove them when offline
+    private var popularPreloader: RecyclerView.OnScrollListener? = null
+    private var nearPreloader: RecyclerView.OnScrollListener? = null
 
     // ─────────── Scroll & Refresh State ───────────
     // Track app bar offset and refresh transitions to drive UX.
@@ -162,6 +165,18 @@ class HomeFragment : Fragment() {
         setupCollectors()
         ensureLocation()
 
+        // Show skeletons immediately (if online) so UI isn't blank while location/network begin
+        showSkeletonsIfEmpty()
+
+        // Simplified connectivity observation using extension + helpers
+        observeConnectivity(observeConnectivityStateUseCase) { state ->
+            val online = state.effectiveIsOnline && !vm.ui.value.isOffline
+            updateOnlineState(online)
+        }
+
+        // Initialize visibility based on current effective connectivity and VM offline flag to avoid flashes
+        updateOnlineState(isEffectivelyOnlineUseCase() && !vm.ui.value.isOffline)
+
         binding.searchCard.setOnClickListener { navigateToSearch(openFilters = false) }
         binding.root.findViewById<View?>(R.id.btnQuickFilterHit)?.setOnClickListener {
             navigateToSearch(openFilters = true)
@@ -174,25 +189,25 @@ class HomeFragment : Fragment() {
         // Show offline snackbar automatically when connectivity changes
         showOfflineBannerWhenNeeded(observeConnectivityStateUseCase, binding.root)
 
-        // Retry button uses the executeIfOnline helper to run refresh only when online
+        // Retry button uses simplified refresh logic
         binding.offlineBanner.btnRetry.setOnClickListener {
-            executeIfOnline(isEffectivelyOnlineUseCase, binding.root) {
-                vm.onOfflineBannerRetry()
-            }
+            if (effectiveOnline()) vm.onOfflineBannerRetry() else com.google.android.material.snackbar.Snackbar.make(binding.root, "Offline", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
         }
     }
 
     override fun onResume() {
         super.onResume()
         val hasLocation = vm.ui.value.currentLocation != null
-        if (hasLocation && vm.shouldRefreshForSearchParamsChange()) {
-            startNetworkRefresh()
+        if (hasLocation && vm.shouldRefreshForSearchParamsChange() && effectiveOnline()) {
+            // Keep old data; only show skeletons if empty
+            showSkeletonsIfEmpty()
             vm.refresh(force = true)
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        detachPreloaders()
         _binding = null
     }
 
@@ -266,35 +281,11 @@ class HomeFragment : Fragment() {
         rvFeatured.apply {
             tune(horizontal = true)
             adapter = popularConcat
-
-            ImagePreloadUtil.attachWithSkeleton(
-                recyclerView = this,
-                fragment = this@HomeFragment,
-                sizeProvider = popularSizeProvider,
-                maxPreload = PRELOAD_AHEAD,
-                skeletonCountProvider = { popularSkeleton.itemCount },
-                dataItemCountProvider = { popularItems.size },
-                urlProviderAtAdapterIndex = { idx ->
-                    popularItems.getOrNull(idx)?.let { place -> photoCache.peekOrCompute(place) }
-                }
-            )
         }
 
         rvNearMe.apply {
             tune(horizontal = false)
             adapter = nearConcat
-
-            ImagePreloadUtil.attachWithSkeleton(
-                recyclerView = this,
-                fragment = this@HomeFragment,
-                sizeProvider = nearSizeProvider,
-                maxPreload = PRELOAD_AHEAD,
-                skeletonCountProvider = { nearSkeleton.itemCount },
-                dataItemCountProvider = { nearItems.size },
-                urlProviderAtAdapterIndex = { idx ->
-                    nearItems.getOrNull(idx)?.let { place -> photoCache.peekOrCompute(place) }
-                }
-            )
         }
     }
 
@@ -302,51 +293,35 @@ class HomeFragment : Fragment() {
     // Ensures pull-to-refresh only works when content is at top and app bar is expanded.
     private fun setupPullToRefresh() = with(binding) {
         swipeRefresh.isEnabled = true
-
         appBar.doOnLayout {
             val start = appBar.height + dp(8)
             val end   = start + dp(64)
             swipeRefresh.setProgressViewOffset(true, start, end)
         }
-
-        appBar.addOnOffsetChangedListener { _, verticalOffset ->
-            appBarOffset = verticalOffset
-        }
-
+        appBar.addOnOffsetChangedListener { _, verticalOffset -> appBarOffset = verticalOffset }
         swipeRefresh.setOnChildScrollUpCallback { _, _ ->
             val contentNotAtTop = rootScroll.canScrollVertically(-1)
             val appBarCollapsed = appBarOffset != 0
             val currentlyRefreshing = vm.ui.value.isRefreshing
             contentNotAtTop || appBarCollapsed || currentlyRefreshing
         }
-
         swipeRefresh.setOnRefreshListener {
             swipeRefresh.isRefreshing = false
-            startNetworkRefresh()
-            vm.pullToRefresh()
+            if (effectiveOnline()) {
+                // Do not clear lists; keep showing old data while refreshing
+                vm.pullToRefresh()
+                // In case lists were empty, ensure skeletons shown
+                showSkeletonsIfEmpty()
+            } else {
+                com.google.android.material.snackbar.Snackbar.make(binding.root, "Offline", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+            }
         }
     }
 
-    // Batch suppresses layout while flipping skeletons to avoid jank.
-    private inline fun RecyclerView.batchLayout(block: () -> Unit) {
-        suppressLayout(true)
-        try { block() } finally { suppressLayout(false) }
-    }
-
-    // Kicks off a visible refresh: skeletons on, lists cleared, scroll to top.
-    private fun startNetworkRefresh() {
-        scrollHomeToTop()
-
-        binding.rvFeatured.batchLayout {
-            popularSkeleton.show(POPULAR_SKELETON_COUNT)
-            popularAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
-            popularItems = emptyList()
-        }
-        binding.rvNearMe.batchLayout {
-            nearSkeleton.show(NEAR_SKELETON_COUNT)
-            nearAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
-            nearItems = emptyList()
-        }
+    private fun showSkeletonsIfEmpty() {
+        if (!effectiveOnline()) return
+        if (popularItems.isEmpty()) popularSkeleton.show(POPULAR_SKELETON_COUNT)
+        if (nearItems.isEmpty()) nearSkeleton.show(NEAR_SKELETON_COUNT)
     }
 
     private fun hideSkeletons() {
@@ -365,63 +340,45 @@ class HomeFragment : Fragment() {
         collect(vm.ui.flow) { ui ->
             binding.progressBar.isGone = true
             categoryAdapter.updateCategories(ui.categories)
-
-            val combinedRefreshing = ui.isRefreshing
-            val hasDataAlready =
-                (vm.nearMe.value is Loadable.Data && (vm.nearMe.value as Loadable.Data).value.isNotEmpty()) ||
-                        (vm.featured.value is Loadable.Data && (vm.featured.value as Loadable.Data).value.isNotEmpty())
-
-            if (!lastIsRefreshing && combinedRefreshing && !hasDataAlready) {
-                startNetworkRefresh()
-            }
-            lastIsRefreshing = combinedRefreshing
-
-            // Offline banner visibility driven by VM state
+            lastIsRefreshing = ui.isRefreshing
             binding.offlineBanner.root.isVisible = ui.isOffline
+            updateSectionsVisibility()
         }
 
         collectLoadable(vm.featured) { loadable ->
             when (loadable) {
-                Loadable.Uninitialized, Loadable.Loading -> {
-                    popularSkeleton.show(POPULAR_SKELETON_COUNT)
-                    binding.rvFeatured.isVisible = true
-                }
+                Loadable.Uninitialized, Loadable.Loading ->
+                    if (effectiveOnline() && popularItems.isEmpty()) popularSkeleton.show(POPULAR_SKELETON_COUNT) else popularSkeleton.hide()
                 is Loadable.Data -> {
                     popularItems = loadable.value
                     binding.root.post { photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2) }
                     hideSkeletonsIfBothResolved(featuredResolved = true, nearResolved = vm.nearMe.value is Loadable.Data)
                     popularAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
-                    binding.rvFeatured.isVisible = loadable.value.isNotEmpty()
+                    attachPreloadersIfNeeded()
                 }
                 is Loadable.Error -> {
                     popularSkeleton.hide()
-                    binding.rvFeatured.isVisible = false
-                    Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                 }
             }
+            updateSectionsVisibility()
         }
 
         collectLoadable(vm.nearMe) { loadable ->
             when (loadable) {
-                Loadable.Uninitialized, Loadable.Loading -> {
-                    nearSkeleton.show(NEAR_SKELETON_COUNT)
-                    binding.rvNearMe.isVisible = true
-                }
+                Loadable.Uninitialized, Loadable.Loading ->
+                    if (effectiveOnline() && nearItems.isEmpty()) nearSkeleton.show(NEAR_SKELETON_COUNT) else nearSkeleton.hide()
                 is Loadable.Data -> {
                     nearItems = loadable.value
                     binding.root.post { photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2) }
-                    hideSkeletonsIfBothResolved(
-                        featuredResolved = vm.featured.value is Loadable.Data,
-                        nearResolved = true
-                    )
+                    hideSkeletonsIfBothResolved(featuredResolved = vm.featured.value is Loadable.Data, nearResolved = true)
                     nearAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
-                    binding.rvNearMe.isVisible = loadable.value.isNotEmpty()
+                    attachPreloadersIfNeeded()
                 }
                 is Loadable.Error -> {
                     nearSkeleton.hide()
-                    Toast.makeText(requireContext(), loadable.error.message, Toast.LENGTH_SHORT).show()
                 }
             }
+            updateSectionsVisibility()
         }
     }
 
@@ -468,17 +425,6 @@ class HomeFragment : Fragment() {
     }
 
     // ─────────── UI Helpers ───────────
-    // Resets scroll positions and expands the app bar before showing skeletons.
-    private fun scrollHomeToTop() {
-        binding.appBar.setExpanded(true, true)
-        binding.rootScroll.post { binding.rootScroll.smoothScrollTo(0, 0) }
-
-        binding.rvNearMe.stopScroll()
-        binding.rvNearMe.scrollToPosition(0)
-        binding.rvFeatured.stopScroll()
-        binding.rvFeatured.scrollToPosition(0)
-    }
-
     private fun navigateToSearch(
         openFilters: Boolean = false,
         prefill: String? = null,
@@ -504,4 +450,74 @@ class HomeFragment : Fragment() {
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun effectiveOnline(): Boolean = isEffectivelyOnlineUseCase() && !vm.ui.value.isOffline
+
+    private fun updateOnlineState(online: Boolean) {
+        if (!online) {
+            detachPreloaders()
+            if (popularItems.isEmpty()) popularSkeleton.hide()
+            if (nearItems.isEmpty()) nearSkeleton.hide()
+        } else {
+            attachPreloadersIfNeeded()
+            // If we regained connectivity and don't have data trigger refresh
+            if ((popularItems.isEmpty() || nearItems.isEmpty()) && vm.ui.value.currentLocation != null) {
+                showSkeletonsIfEmpty()
+                vm.refresh(force = true)
+            }
+        }
+        updateSectionsVisibility()
+    }
+
+    private fun attachPreloadersIfNeeded() {
+        if (!effectiveOnline()) return
+        if (popularPreloader == null && popularItems.isNotEmpty()) {
+            popularPreloader = ImagePreloadUtil.attachWithSkeleton(
+                recyclerView = binding.rvFeatured,
+                fragment = this,
+                sizeProvider = popularSizeProvider,
+                maxPreload = PRELOAD_AHEAD,
+                skeletonCountProvider = { popularSkeleton.itemCount },
+                dataItemCountProvider = { popularItems.size },
+                urlProviderAtAdapterIndex = { idx -> popularItems.getOrNull(idx)?.let { place -> photoCache.peekOrCompute(place) } }
+            )
+        }
+        if (nearPreloader == null && nearItems.isNotEmpty()) {
+            nearPreloader = ImagePreloadUtil.attachWithSkeleton(
+                recyclerView = binding.rvNearMe,
+                fragment = this,
+                sizeProvider = nearSizeProvider,
+                maxPreload = PRELOAD_AHEAD,
+                skeletonCountProvider = { nearSkeleton.itemCount },
+                dataItemCountProvider = { nearItems.size },
+                urlProviderAtAdapterIndex = { idx -> nearItems.getOrNull(idx)?.let { place -> photoCache.peekOrCompute(place) } }
+            )
+        }
+    }
+
+    private fun detachPreloaders() {
+        popularPreloader?.let { binding.rvFeatured.removeOnScrollListener(it) }
+        nearPreloader?.let { binding.rvNearMe.removeOnScrollListener(it) }
+        popularPreloader = null
+        nearPreloader = null
+    }
+
+    private fun updateSectionsVisibility() = with(binding) {
+        val online = effectiveOnline()
+        if (!online) {
+            tvFeaturedTitle.isGone = true
+            rvFeatured.isGone = true
+            tvNearTitle.isGone = true
+            rvNearMe.isGone = true
+            rvCategories.isGone = true
+            return
+        }
+        val showFeatured = popularItems.isNotEmpty() || popularSkeleton.itemCount > 0
+        val showNear = nearItems.isNotEmpty() || nearSkeleton.itemCount > 0
+        tvFeaturedTitle.isGone = !showFeatured
+        rvFeatured.isGone = !showFeatured
+        tvNearTitle.isGone = !showNear
+        rvNearMe.isGone = !showNear
+        rvCategories.isGone = false
+    }
 }

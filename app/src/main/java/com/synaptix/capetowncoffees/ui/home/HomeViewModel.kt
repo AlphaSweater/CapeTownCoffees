@@ -99,6 +99,10 @@ class HomeViewModel @Inject constructor(
     private var nearCache: CacheEntry? = null
     private var featuredCache: CacheEntry? = null
 
+    // Pending refresh flags (set when a refresh was requested while offline)
+    private var pendingNearRefresh: Boolean = false
+    private var pendingFeaturedRefresh: Boolean = false
+
     // ─────────── In-flight Jobs ───────────
     // Each section cancels its previous query before starting another.
     private var nearJob: Job? = null
@@ -158,11 +162,19 @@ class HomeViewModel @Inject constructor(
     // runs when user hits refresh button
     fun onOfflineBannerRetry() {
         val isOnline = isEffectivelyOnlineUseCase()
-        ui.update { it.copy(isOffline = !isOnline) }
-
         if (isOnline) {
-            // We just came back online → refetch from network
-            refresh(force = true)
+            // If we have pending flags just perform forced refreshes
+            if (pendingNearRefresh || pendingFeaturedRefresh) {
+                refresh(force = true)
+                pendingNearRefresh = false
+                pendingFeaturedRefresh = false
+            } else {
+                // Fallback: force refresh both sections
+                refresh(force = true)
+            }
+        } else {
+            // Remain offline; no state mutation needed (connectivity observer controls ui.isOffline)
+            main { send(Effect.Message("Still offline")) }
         }
     }
 
@@ -174,16 +186,17 @@ class HomeViewModel @Inject constructor(
             return
         }
 
-        // Don't attempt network fetches when effectively offline. Rely on the connectivity
-        // observer to retry when we come back online.
         if (!isEffectivelyOnlineUseCase()) {
-            ui.update { it.copy(isOffline = true) }
-            // If we already have data, show it; otherwise signal that data is unavailable offline
-            if (nearMe.value !is Loadable.Data) {
-                nearMe.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+            // Defer until connectivity returns
+            pendingNearRefresh = true
+            if (nearMe.value !is Loadable.Data && nearMe.value !is Loadable.Loading) {
+                nearMe.error(Exception("Offline – will refresh when online").toUiError("Offline – will refresh when online"))
             }
             return
         }
+
+        // Clear pending flag if we're executing now
+        pendingNearRefresh = false
 
         if (!force && hasFreshEnough(nearCache, loc)) {
             nearCache?.let { cache ->
@@ -211,8 +224,16 @@ class HomeViewModel @Inject constructor(
                         nearMe.data(filtered)
                     }
                     .onFailure { err ->
-                        if (nearMe.value !is Loadable.Data) {
-                            nearMe.error(err.toUiError("Couldn't load nearby"))
+                        // If the failure looks like a network/DNS error, mark UI as offline so the fragment hides heavy UI
+                        if (isNetworkIssue(err)) {
+                            ui.update { it.copy(isOffline = true) }
+                            if (nearMe.value !is Loadable.Data) {
+                                nearMe.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+                            }
+                        } else {
+                            if (nearMe.value !is Loadable.Data) {
+                                nearMe.error(err.toUiError("Couldn't load nearby"))
+                            }
                         }
                     }
 
@@ -229,14 +250,15 @@ class HomeViewModel @Inject constructor(
             return
         }
 
-        // Avoid network calls while offline; will auto-refresh when back online.
         if (!isEffectivelyOnlineUseCase()) {
-            ui.update { it.copy(isOffline = true) }
-            if (featured.value !is Loadable.Data) {
-                featured.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+            pendingFeaturedRefresh = true
+            if (featured.value !is Loadable.Data && featured.value !is Loadable.Loading) {
+                featured.error(Exception("Offline – will refresh when online").toUiError("Offline – will refresh when online"))
             }
             return
         }
+
+        pendingFeaturedRefresh = false
 
         if (!force && hasFreshEnough(featuredCache, loc)) {
             featuredCache?.let { cache -> featured.data(cache.baseItems) }
@@ -261,14 +283,39 @@ class HomeViewModel @Inject constructor(
                         featured.data(list)
                     }
                     .onFailure { err ->
-                        if (featured.value !is Loadable.Data) {
-                            featured.error(err.toUiError("Couldn't load featured"))
+                        if (isNetworkIssue(err)) {
+                            ui.update { it.copy(isOffline = true) }
+                            if (featured.value !is Loadable.Data) {
+                                featured.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+                            }
+                        } else {
+                            if (featured.value !is Loadable.Data) {
+                                featured.error(err.toUiError("Couldn't load featured"))
+                            }
                         }
                     }
 
                 main { ui.update { it.copy(isRefreshingFeatured = false) } }
             }
         }
+    }
+
+    // Heuristic to detect network/DNS related failures from downstream APIs
+    private fun isNetworkIssue(t: Throwable?): Boolean {
+        if (t == null) return false
+        // Unwrap common cases: UnknownHostException / IOExceptions
+        var cur: Throwable? = t
+        while (cur != null) {
+            when (cur) {
+                is java.net.UnknownHostException -> return true
+                is java.io.IOException -> return true
+            }
+            // Some Google API failures wrap the real cause or contain the message
+            val msg = cur.message ?: ""
+            if (msg.contains("Unable to resolve host", ignoreCase = true) || msg.contains("Unable to resolve", ignoreCase = true)) return true
+            cur = cur.cause
+        }
+        return false
     }
 
     // ─────────── Helpers & Policy ───────────
@@ -312,20 +359,18 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             observeConnectivityStateUseCase.observe().collect { state ->
                 val effectiveOnline = state.effectiveIsOnline
-                // Update UI offline flag
                 ui.update { it.copy(isOffline = !effectiveOnline) }
 
-                // If we just transitioned from offline -> online, attempt to refresh
+                // If we transitioned offline -> online, perform any pending refreshes or refresh stale caches
                 if (lastEffectiveOnline == false && effectiveOnline) {
                     val loc = ui.value.currentLocation
                     if (loc != null) {
-                        // Refresh only if cache is stale or empty
-                        if (!hasFreshEnough(nearCache, loc) || !hasFreshEnough(featuredCache, loc)) {
-                            refresh(force = true)
-                        }
+                        if (pendingNearRefresh || !hasFreshEnough(nearCache, loc)) refreshNear(force = true)
+                        if (pendingFeaturedRefresh || !hasFreshEnough(featuredCache, loc)) refreshFeatured(force = true)
+                        pendingNearRefresh = false
+                        pendingFeaturedRefresh = false
                     }
                 }
-
                 lastEffectiveOnline = effectiveOnline
             }
         }
