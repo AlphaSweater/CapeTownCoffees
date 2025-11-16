@@ -22,6 +22,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import com.synaptix.capetowncoffees.data.connectivity.OfflineModeManager
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
 import com.synaptix.capetowncoffees.util.LocationUtil
 import com.synaptix.capetowncoffees.util.UserPrefs
 import dagger.Module
@@ -40,9 +41,10 @@ object UtilsModule {
     fun provideCoffeePlaceUtilsUseCase(
         @ApplicationContext context: Context,
         placesClient: PlacesClient,
-        coffeePlaceRepository: ICoffeePlaceRepository
+        coffeePlaceRepository: ICoffeePlaceRepository,
+        isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase
     ): CoffeePlaceUtilsUseCase {
-        return CoffeePlaceUtilsUseCase(context, placesClient, coffeePlaceRepository)
+        return CoffeePlaceUtilsUseCase(context, placesClient, coffeePlaceRepository, isEffectivelyOnlineUseCase)
     }
 
     @Provides
