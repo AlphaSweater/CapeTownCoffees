@@ -16,11 +16,15 @@
 package com.synaptix.capetowncoffees.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.synaptix.capetowncoffees.data.connectivity.OfflineModeManager
 import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
 import com.synaptix.capetowncoffees.util.LocationUtil
+import com.synaptix.capetowncoffees.util.UserPrefs
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,9 +41,10 @@ object UtilsModule {
     fun provideCoffeePlaceUtilsUseCase(
         @ApplicationContext context: Context,
         placesClient: PlacesClient,
-        coffeePlaceRepository: ICoffeePlaceRepository
+        coffeePlaceRepository: ICoffeePlaceRepository,
+        isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase
     ): CoffeePlaceUtilsUseCase {
-        return CoffeePlaceUtilsUseCase(context, placesClient, coffeePlaceRepository)
+        return CoffeePlaceUtilsUseCase(context, placesClient, coffeePlaceRepository, isEffectivelyOnlineUseCase)
     }
 
     @Provides
@@ -49,5 +54,21 @@ object UtilsModule {
         fusedLocationProviderClient: FusedLocationProviderClient
     ): LocationUtil {
         return LocationUtil(context, fusedLocationProviderClient)
+    }
+
+    // Provide UserPrefs concrete implementation backed by SharedPreferences.
+    @Provides
+    @Singleton
+    fun provideUserPrefs(sharedPreferences: SharedPreferences): UserPrefs {
+        return UserPrefs(sharedPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOfflineModeManager(
+        @ApplicationContext context: Context,
+        userPrefs: UserPrefs
+    ): OfflineModeManager {
+        return OfflineModeManager(context, userPrefs)
     }
 }

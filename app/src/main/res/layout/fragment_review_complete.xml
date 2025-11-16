@@ -7,13 +7,14 @@
     android:background="@color/background"
     android:orientation="vertical">
 
+    <!-- Top bar: close button -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="40dp"
         android:layout_marginEnd="16dp">
 
         <ImageView
@@ -25,6 +26,7 @@
             android:src="@drawable/ic_ctc_cross" />
     </LinearLayout>
 
+    <!-- Center content in a rounded card -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -33,35 +35,56 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <ImageView
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:src="@drawable/ic_ctc_medal"
-            app:tint="@color/text_primary"
-            tools:ignore="UseAppTint" />
-
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/completed_review"
-            android:textAlignment="center"
-            android:textColor="@color/text_primary"
-            android:textStyle="bold"
-            android:textSize="28sp"/>
+            android:background="@drawable/bg_review_card"
+            android:orientation="vertical"
+            android:padding="24dp">
 
-        <TextView
-            android:id="@+id/btnDone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="14dp"
-            android:text="@string/done"
-            android:textColor="@color/text_alt"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:background="@drawable/bg_pill_dark"/>
+            <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/ic_ctc_medal"
+                app:tint="@color/text_primary"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:text="Thanks for your review!"
+                android:textAlignment="center"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Your feedback helps other locals find great coffee spots."
+                android:textAlignment="center"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/btnDone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp"
+                android:text="Done"
+                android:textColor="@color/text_alt"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:background="@drawable/bg_pill_dark" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

@@ -12,6 +12,9 @@ import com.bumptech.glide.util.ViewPreloadSizeProvider
  * Skeleton-aware Glide preloader:
  * • works with ConcatAdapter (skeleton + data)
  * • you pass the skeleton header size and an index→URL resolver (nullable for "not ready yet")
+ *
+ * Now returns the created RecyclerView.OnScrollListener so callers can remove it when needed
+ * (for example, to disable preloading while offline).
  */
 object ImagePreloadUtil {
 
@@ -23,7 +26,7 @@ object ImagePreloadUtil {
         skeletonCountProvider: () -> Int,
         dataItemCountProvider: () -> Int,
         urlProviderAtAdapterIndex: (Int) -> String?
-    ) {
+    ): RecyclerView.OnScrollListener {
         val requestManager = Glide.with(fragment)
 
         val provider = object : ListPreloader.PreloadModelProvider<String> {
@@ -42,13 +45,14 @@ object ImagePreloadUtil {
                     .centerCrop()
         }
 
-        recyclerView.addOnScrollListener(
-            RecyclerViewPreloader(
-                requestManager,
-                provider,
-                sizeProvider,   // supplied by your item ViewHolder via adapter
-                maxPreload
-            )
+        val preloader = RecyclerViewPreloader(
+            requestManager,
+            provider,
+            sizeProvider,   // supplied by your item ViewHolder via adapter
+            maxPreload
         )
+
+        recyclerView.addOnScrollListener(preloader)
+        return preloader
     }
 }

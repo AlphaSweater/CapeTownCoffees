@@ -29,9 +29,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
+import com.synaptix.capetowncoffees.data.connectivity.OfflineModeManager
 
 @HiltAndroidApp
 class CapeTownCoffeesApp : Application() {
+
+    @Inject
+    lateinit var offlineModeManager: OfflineModeManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -45,6 +51,14 @@ class CapeTownCoffeesApp : Application() {
 
         // Apply saved theme choice (defaults to SYSTEM)
         ThemeManager.applySavedTheme(this)
+
+        // Start connectivity monitoring for app-wide use
+        try {
+            offlineModeManager.start()
+            Timber.d("OfflineModeManager started from Application")
+        } catch (t: Throwable) {
+            Timber.w(t, "Failed to start OfflineModeManager")
+        }
 
         // Fetch and persist initial FCM token (if user logged in)
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
@@ -84,6 +98,16 @@ class CapeTownCoffeesApp : Application() {
             Timber.w(t, "Auth observer setup failed")
         }
     }
+
+    override fun onTerminate() {
+        try {
+            offlineModeManager.stop()
+            Timber.d("OfflineModeManager stopped from Application")
+        } catch (t: Throwable) {
+            Timber.w(t, "Failed to stop OfflineModeManager")
+        }
+        super.onTerminate()
+    }
 }
 
 @EntryPoint
@@ -91,4 +115,3 @@ class CapeTownCoffeesApp : Application() {
 interface AppEntryPoint {
     fun userRepository(): ICoffeeUserRepository
 }
-

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/settingsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -76,7 +74,7 @@
                 android:gravity="center_vertical"
                 android:visibility="gone"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="4dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -108,7 +106,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="8dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -139,7 +137,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="4dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -171,7 +169,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="4dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -208,7 +206,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="8dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -242,6 +240,55 @@
                 android:paddingTop="20dp"
                 android:paddingBottom="6dp" />
 
+            <!-- Offline Mode -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_marginEnd="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:foreground="?attr/selectableItemBackground">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/offline_mode"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchOfflineMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="false" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/offline_mode_description"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="4dp"
+                    android:alpha="0.8" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:alpha="0.15"
+                android:background="?android:attr/listDivider" />
+
             <!-- Clear cache -->
             <LinearLayout
                 android:id="@+id/layoutClearCache"
@@ -250,7 +297,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="4dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -282,8 +329,8 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:foreground="?attr/selectableItemBackground"
-                android:paddingEnd="4dp"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="0dp"
