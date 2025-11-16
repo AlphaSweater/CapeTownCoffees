@@ -5,7 +5,10 @@
 <h1 align="center">📊 Cape Town Coffees</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Made%20with-Kotlin-blue?logo=kotlin">
+  <img src="https://img.shields.io/badge/Made%20with-Kotlin-blue?logo=kotlin" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-UI%20Toolkit-blue?logo=android" alt="Jetpack Compose">
+  <img src="https://img.shields.io/badge/Firebase-Authentication-orange?stylelogo=firebase" alt="Firebase">
+  <img src="https://img.shields.io/badge/Material%203-Design%20System-purple?&logo=material-design" alt="Material 3">
 </p>
 
 ## 📝 Overview
@@ -16,36 +19,66 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 
 ## 📚 Table of Contents
 - [Features](#-features)
-- [Security Features](#security-features)
 - [Tech Stack](#-tech-stack)
 - [Security Features](#-security-features)
-- [Prerequisites](#️-prerequisites)
-- [How to Compile and Run](#-how-to-compile-and-run-the-application)
+- [Installation](#-Installation)
 - [Video Demonstration](#-video-demo)
 - [Screenshots](#-screenshots)
 - [Contributors](#-contributors)
 - [Learning Outcomes](#-learning-outcomes)
 - [References](#-references)
 
-## 🌟 Features
 
-- SignUp and Login: Users can securely create an account and log in. This ensures that all personal information is protected and personalized for each user.
+## ✨ Key Highlights
+- 🗺️ **Location-based Discovery** - Find cafés near you with real-time distance and status
+- ⭐ **Community Reviews** - Share your experiences and read others' opinions
+- 💾 **Offline Access** - Download café details for when you're off the grid
+- 🔐 **Secure Authentication** - Firebase Auth with Google Sign-In integration
+- 🎨 **Modern UI** - Built with Jetpack Compose and Material Design 3
 
-- Google SignUp: Users can choose to sign up through Google's secure authentication.
+---
 
-- Find Nearby Coffee Shops: The app uses location services to show users nearby cafés with distance, ratings, and open/closed status.
+## 🚀 Features
 
-- Advanced Search and Filters: The app allows users to search for coffee shops by name, and radius range from 1–50 km
+<table style="border: none; border-collapse: collapse; width: 100%;">
+<tr>
+<td width="50%" valign="top" style="border: none;">
 
-- Favourites List: For ease of access users can save their favourite cafés for quick access later on.
+### 🔐 Authentication & Security
+<ul style="margin-top: 0; padding-left: 20px;">
+<li><strong>Secure Sign-up/Login</strong> with Firebase Authentication</li>
+<li><strong>Google Single Sign-On</strong> for quick access</li>
+<li><strong>Input Validation</strong> and security measures</li>
+</ul>
 
-- Downloads List: Allows users to download cafes to be accessed when the app is offline.
+### ☕ Coffee Shop Discovery
+<ul style="margin-top: 0; padding-left: 20px;">
+<li><strong>Nearby Cafés</strong> with distance, ratings, and open/closed status</li>
+<li><strong>Advanced Search & Filters</strong> by name and radius</li>
+<li><strong>Real-time Location</strong> services integration</li>
+</ul>
 
-- Detailed View: Users can see a detailed overview of different coffee shops, showing information such as the shop's rating, description, distance away, etc.
+</td>
+<td width="50%" valign="top" style="border: none;">
 
-## 🔐 Security Features
-- Firebase Authentication for secure login and identity management.
-- Input validation and protection against improper input.
+### 💫 Personalization
+<ul style="margin-top: 0; padding-left: 20px;">
+<li><strong>Favorites System</strong> - Save your go-to spots</li>
+<li><strong>Downloads</strong> - Access café info offline</li>
+<li><strong>Detailed Café Views</strong> - Comprehensive information including ratings, descriptions, and hours</li>
+</ul>
+
+### 🛠️ Technical Excellence
+<ul style="margin-top: 0; padding-left: 20px;">
+<li><strong>Modern Architecture</strong> with clean separation of concerns</li>
+<li><strong>Smooth Performance</strong> with Kotlin Coroutines and Flow</li>
+<li><strong>Responsive UI</strong> that adapts to different screen sizes</li>
+</ul>
+
+</td>
+</tr>
+</table>
+
 
 ## 🔧 Tech Stack
 ### Core
@@ -103,20 +136,15 @@ app/
 └─ MainActivity        # NavHost, edge-to-edge, theming bridge
 </pre>
 
-## 🛠️ Prerequisites 
+## ⚡ Installation
 
-1. **Ensure that you have Android Studio downloaded or you won't be able to run the project.**
-Ensure that you have Android Studio installed on your computer.
+### Prerequisites
 
-2. If you do not have Android Studio, you can download it here:
-👉 https://developer.android.com/studio
+- **[Android Studio](https://developer.android.com/studio)** 
+- **Android SDK** 26+ (API 36+ recommended)
+- **Gradle** 8.0+
 
-3. Make sure you have the following installed within Android Studio:
-- Android SDK 26+
-- Gradle 8.0+
-
-4. Install an Android emulator or use a real device for testing.
-## 🚀 How to Compile and Run The Application
+### 🛠️ Build & Run
 
 1. Download and install Android Studio (Giraffe or newer) from the official site:
 https://developer.android.com/studio
@@ -179,14 +207,75 @@ https://developer.android.com/studio
 - Kayla Ferreira ST10259527
 - Nathan Teixeira ST10249266
 
-## 🧠 Learning Outcomes
 
-- Integration of Firestore for real-time data syncing
-- Creating custom mappers between database entities and domain models
-- Building responsive layouts and implementing state-driven UIs with Kotlin StateFlow
-- Using and managing coroutines for efficient thread utilization
-- Calling APIs and routing API data throughout the application
-- Making use of caching to reduce API calls and improve application efficiency 
+## 📚 Learning Outcomes
+
+This project provided hands-on experience with:
+
+<table style="border: none; border-collapse: collapse; width: 100%;">
+<tr>
+<td width="50%" valign="top" style="border: none;">
+
+### 🏗️ Architecture & Patterns
+<ul style="margin-top: 0; padding-left: 20px;">
+<li>Clean Architecture implementation</li>
+<li>Repository Pattern for data abstraction</li>
+<li>MVVM with state management</li>
+</ul>
+
+### 🔧 Technical Skills  
+<ul style="margin-top: 0; padding-left: 20px;">
+<li>Firestore Integration for real-time data syncing</li>
+<li>Custom Mappers between database entities and domain models</li>
+<li>State-driven UIs with Kotlin StateFlow</li>
+<li>Coroutine Management for efficient threading</li>
+</ul>
+
+</td>
+<td width="50%" valign="top" style="border: none;">
+
+### 🎨 UI/UX Development
+<ul style="margin-top: 0; padding-left: 20px;">
+<li>Jetpack Compose for modern declarative UI</li>
+<li>Material Design 3 implementation</li>
+<li>Responsive Layouts for various screen sizes</li>
+</ul>
+
+### ⚡ Performance Optimization
+<ul style="margin-top: 0; padding-left: 20px;">
+<li>API Caching strategies to reduce network calls</li>
+<li>Efficient Data Loading with pagination</li>
+<li>Offline Capabilities with local storage</li>
+</ul>
+
+</td>
+</tr>
+</table>
+
+## 📚 Learning Outcomes
+This project provided hands-on experience with:
+
+### 🏗️ Architecture & Patterns
+- Clean Architecture implementation
+- Repository Pattern for data abstraction
+- MVVM with state management
+
+### 🔧 Technical Skills
+- Firestore Integration for real-time data syncing
+- Custom Mappers between database entities and domain models
+- State-driven UIs with Kotlin StateFlow
+- Coroutine Management for efficient threading
+
+### 🎨 UI/UX Development
+- Jetpack Compose for modern declarative UI
+- Material Design 3 implementation
+- Responsive Layouts for various screen sizes
+
+### ⚡ Performance Optimization
+- API Caching strategies to reduce network calls
+- Efficient Data Loading with pagination
+- Offline Capabilities with local storage
+
 
 ## 📚 References
 
