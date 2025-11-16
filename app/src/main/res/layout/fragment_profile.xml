@@ -81,7 +81,7 @@
                             android:layout_height="wrap_content"
                             android:drawablePadding="8dp"
                             android:drawableStart="@drawable/ic_ctc_medal"
-                            android:text="Coffee Explorer"
+                            android:text="@string/coffee_explorer"
                             android:textColor="@color/text_primary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
@@ -111,7 +111,7 @@
                                 android:background="@drawable/bg_level_pill"
                                 android:paddingHorizontal="12dp"
                                 android:paddingVertical="4dp"
-                                android:text="Level 3"
+                                android:text="@string/level_3"
                                 android:textColor="@color/white"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
@@ -121,7 +121,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="65/100 points to next level"
+                            android:text="@string/_65_100_points_to_next_level"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp"
                             android:drawablePadding="4dp"
@@ -159,7 +159,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Points"
+                                    android:text="@string/points"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -188,7 +188,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Progress"
+                                    android:text="@string/progress"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -217,7 +217,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Badges"
+                                    android:text="@string/badges"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="12sp" />
                             </LinearLayout>
@@ -253,7 +253,7 @@
                                 android:layout_width="40dp"
                                 android:layout_height="40dp"
                                 android:src="@drawable/ic_ctc_bell_ring"
-                                android:contentDescription="Review posted"
+                                android:contentDescription="@string/review_posted"
                                 android:layout_marginEnd="12dp"/>
 
                             <LinearLayout
@@ -265,7 +265,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="You reviewed Truth Coffee Roasting"
+                                    android:text="@string/you_reviewed_truth_coffee_roasting"
                                     android:textColor="@color/text_primary"
                                     android:textSize="14sp"
                                     android:maxLines="2"
@@ -274,7 +274,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="1 day ago"
+                                    android:text="@string/_1_day_ago"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="12sp"
                                     android:layout_marginTop="4dp"/>
@@ -287,7 +287,7 @@
                             android:layout_gravity="end"
                             android:layout_marginTop="8dp"
                             android:backgroundTint="@android:color/transparent"
-                            android:text="View All Activity"
+                            android:text="@string/view_all_activity"
                             android:textColor="@color/text_primary"
                             app:icon="@drawable/gs_arrow_forward_ios_vd_20"
                             app:iconGravity="textEnd"
@@ -399,7 +399,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:alpha="0.9"
-                    android:text="Latte Lover"
+                    android:text="@string/latte_lover"
                     android:textColor="@color/white"
                     android:textSize="14sp" />
 

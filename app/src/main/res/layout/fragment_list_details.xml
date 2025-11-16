@@ -24,7 +24,7 @@
             android:background="@color/background"
             app:navigationIcon="@drawable/ic_ctc_arrow_back"
             app:navigationIconTint="@color/text_primary"
-            app:title="Saved List"
+            app:title="@string/saved_list"
             app:titleTextColor="@color/text_primary" />
 
         <!-- Pinned title row: privacy icon + list title (does not scroll) -->
@@ -52,7 +52,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Chill Spots"
+                android:text="@string/chill_spots"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold"

@@ -24,7 +24,7 @@
             android:background="@color/background"
             app:titleTextColor="@color/text_primary"
             app:navigationIconTint="@color/text_primary"
-            app:title="Explore" />
+            app:title="@string/explore" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/searchCard"
