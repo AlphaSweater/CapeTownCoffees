@@ -166,7 +166,7 @@ class HomeFragment : Fragment() {
         ensureLocation()
 
         // Show skeletons immediately (if online) so UI isn't blank while location/network begin
-        showSkeletonsIfEmpty()
+        showInitialSkeletonsIfNeeded()
 
         // Simplified connectivity observation using extension + helpers
         observeConnectivity(observeConnectivityStateUseCase) { state ->
@@ -200,7 +200,7 @@ class HomeFragment : Fragment() {
         val hasLocation = vm.ui.value.currentLocation != null
         if (hasLocation && vm.shouldRefreshForSearchParamsChange() && effectiveOnline()) {
             // Keep old data; only show skeletons if empty
-            showSkeletonsIfEmpty()
+            showInitialSkeletonsIfNeeded()
             vm.refresh(force = true)
         }
     }
@@ -308,25 +308,14 @@ class HomeFragment : Fragment() {
         swipeRefresh.setOnRefreshListener {
             swipeRefresh.isRefreshing = false
             if (effectiveOnline()) {
-                // Do not clear lists; keep showing old data while refreshing
+                // Mark pull-to-refresh mode and force skeletons on both sections
+                pullToRefreshInProgress = true
+                showPullToRefreshSkeletons()
                 vm.pullToRefresh()
-                // In case lists were empty, ensure skeletons shown
-                showSkeletonsIfEmpty()
             } else {
                 com.google.android.material.snackbar.Snackbar.make(binding.root, "Offline", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun showSkeletonsIfEmpty() {
-        if (!effectiveOnline()) return
-        if (popularItems.isEmpty()) popularSkeleton.show(POPULAR_SKELETON_COUNT)
-        if (nearItems.isEmpty()) nearSkeleton.show(NEAR_SKELETON_COUNT)
-    }
-
-    private fun hideSkeletons() {
-        popularSkeleton.hide()
-        nearSkeleton.hide()
     }
 
     // ─────────── Collectors ───────────
@@ -346,45 +335,152 @@ class HomeFragment : Fragment() {
         }
 
         collectLoadable(vm.featured) { loadable ->
+            updateFeaturedSkeletonForLoadState(loadable)
             when (loadable) {
-                Loadable.Uninitialized, Loadable.Loading ->
-                    if (effectiveOnline() && popularItems.isEmpty()) popularSkeleton.show(POPULAR_SKELETON_COUNT) else popularSkeleton.hide()
                 is Loadable.Data -> {
                     popularItems = loadable.value
                     binding.root.post { photoCache.warm(popularItems, take = PRELOAD_AHEAD * 2) }
-                    hideSkeletonsIfBothResolved(featuredResolved = true, nearResolved = vm.nearMe.value is Loadable.Data)
+                    hideSkeletonsIfBothResolved(
+                        featuredResolved = true,
+                        nearResolved = vm.nearMe.value is Loadable.Data
+                    )
                     popularAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     attachPreloadersIfNeeded()
                 }
                 is Loadable.Error -> {
-                    popularSkeleton.hide()
+                    // If one section errors but the other succeeds, we still want to hide skeletons
+                    hideSkeletonsIfBothResolved(
+                        featuredResolved = true,
+                        nearResolved = vm.nearMe.value is Loadable.Data || vm.nearMe.value is Loadable.Error
+                    )
                 }
+                Loadable.Uninitialized, Loadable.Loading -> Unit
             }
             updateSectionsVisibility()
         }
 
         collectLoadable(vm.nearMe) { loadable ->
+            updateNearSkeletonForLoadState(loadable)
             when (loadable) {
-                Loadable.Uninitialized, Loadable.Loading ->
-                    if (effectiveOnline() && nearItems.isEmpty()) nearSkeleton.show(NEAR_SKELETON_COUNT) else nearSkeleton.hide()
                 is Loadable.Data -> {
                     nearItems = loadable.value
                     binding.root.post { photoCache.warm(nearItems, take = PRELOAD_AHEAD * 2) }
-                    hideSkeletonsIfBothResolved(featuredResolved = vm.featured.value is Loadable.Data, nearResolved = true)
+                    hideSkeletonsIfBothResolved(
+                        featuredResolved = vm.featured.value is Loadable.Data,
+                        nearResolved = true
+                    )
                     nearAdapter.updateItems(loadable.value, vm.ui.value.currentLocation)
                     attachPreloadersIfNeeded()
                 }
                 is Loadable.Error -> {
-                    nearSkeleton.hide()
+                    hideSkeletonsIfBothResolved(
+                        featuredResolved = vm.featured.value is Loadable.Data || vm.featured.value is Loadable.Error,
+                        nearResolved = true
+                    )
                 }
+                Loadable.Uninitialized, Loadable.Loading -> Unit
             }
             updateSectionsVisibility()
         }
     }
 
-    // Hide both skeletons only after both sections have produced Data at least once.
+    // ─────────── Skeleton helpers ───────────
+    /** Show skeletons for sections that are currently empty, keeping lists visible. */
+    private fun showInitialSkeletonsIfNeeded() {
+        if (!effectiveOnline()) return
+        if (popularItems.isEmpty()) popularSkeleton.show(POPULAR_SKELETON_COUNT)
+        if (nearItems.isEmpty()) nearSkeleton.show(NEAR_SKELETON_COUNT)
+        updateSectionsVisibility()
+    }
+
+    /** Show skeletons for both sections during a pull-to-refresh, regardless of existing data. */
+    private fun showPullToRefreshSkeletons() {
+        if (!effectiveOnline()) return
+        // Expand and bring content to top so skeletons are visible
+        binding.appBar.setExpanded(true, true)
+        binding.rootScroll.post { binding.rootScroll.smoothScrollTo(0, 0) }
+
+        popularSkeleton.show(POPULAR_SKELETON_COUNT)
+        nearSkeleton.show(NEAR_SKELETON_COUNT)
+
+        // Swap to skeleton-only adapters so the skeletons visually replace data without clearing adapters' state
+        try {
+            if (!showingSkeletonOnlyForPull) {
+                binding.rvFeatured.adapter = ConcatAdapter(concatConfig, popularSkeleton)
+                binding.rvNearMe.adapter = ConcatAdapter(concatConfig, nearSkeleton)
+                showingSkeletonOnlyForPull = true
+            }
+        } catch (_: Throwable) {
+            // best-effort swap; fall back to scrolling to top if swap fails
+            binding.rvFeatured.post { binding.rvFeatured.scrollToPosition(0) }
+            binding.rvNearMe.post { binding.rvNearMe.scrollToPosition(0) }
+        }
+
+        // Ensure recycler views are at position 0 so skeleton rows (which are prepended via ConcatAdapter)
+        // are visible to the user even when data exists.
+        binding.rvFeatured.post {
+            try {
+                binding.rvFeatured.stopScroll()
+                binding.rvFeatured.scrollToPosition(0)
+            } catch (_: Throwable) { /* best effort */ }
+        }
+        binding.rvNearMe.post {
+            try {
+                binding.rvNearMe.stopScroll()
+                binding.rvNearMe.scrollToPosition(0)
+            } catch (_: Throwable) { /* best effort */ }
+        }
+
+        updateSectionsVisibility()
+    }
+
+    /** Update skeletons for FEATURED based on load state and current items. */
+    private fun updateFeaturedSkeletonForLoadState(loadable: Loadable<*>) {
+        when (loadable) {
+            Loadable.Uninitialized, Loadable.Loading -> {
+                // If we're in pull-to-refresh mode, skeletons are already forced on.
+                if (!pullToRefreshInProgress && effectiveOnline() && popularItems.isEmpty() && popularSkeleton.itemCount == 0) {
+                    popularSkeleton.show(POPULAR_SKELETON_COUNT)
+                }
+            }
+            is Loadable.Data, is Loadable.Error -> {
+                // handled in hideSkeletonsIfBothResolved
+            }
+        }
+    }
+
+    private fun updateNearSkeletonForLoadState(loadable: Loadable<*>) {
+        when (loadable) {
+            Loadable.Uninitialized, Loadable.Loading -> {
+                if (!pullToRefreshInProgress && effectiveOnline() && nearItems.isEmpty() && nearSkeleton.itemCount == 0) {
+                    nearSkeleton.show(NEAR_SKELETON_COUNT)
+                }
+            }
+            is Loadable.Data, is Loadable.Error -> { }
+        }
+    }
+
     private fun hideSkeletonsIfBothResolved(featuredResolved: Boolean, nearResolved: Boolean) {
-        if (featuredResolved && nearResolved) hideSkeletons()
+        if (featuredResolved && nearResolved) {
+            hideSkeletons()
+            pullToRefreshInProgress = false
+        }
+        updateSectionsVisibility()
+    }
+
+    private fun hideSkeletons() {
+        popularSkeleton.hide()
+        nearSkeleton.hide()
+        // If we temporarily swapped adapters for pull-to-refresh, restore the original concat adapters
+        if (showingSkeletonOnlyForPull) {
+            try {
+                binding.rvFeatured.adapter = popularConcat
+                binding.rvNearMe.adapter = nearConcat
+            } catch (_: Throwable) { /* ignore */ }
+            showingSkeletonOnlyForPull = false
+            // Reattach preloaders now that the real adapters are back
+            attachPreloadersIfNeeded()
+        }
     }
 
     // ─────────── Location Permissions & Fetch ───────────
@@ -462,7 +558,7 @@ class HomeFragment : Fragment() {
             attachPreloadersIfNeeded()
             // If we regained connectivity and don't have data trigger refresh
             if ((popularItems.isEmpty() || nearItems.isEmpty()) && vm.ui.value.currentLocation != null) {
-                showSkeletonsIfEmpty()
+                showInitialSkeletonsIfNeeded()
                 vm.refresh(force = true)
             }
         }
@@ -520,4 +616,10 @@ class HomeFragment : Fragment() {
         rvNearMe.isGone = !showNear
         rvCategories.isGone = false
     }
+
+    // ─────────── State ───────────
+    // Track pull-to-refresh state to avoid conflicts with load states.
+    private var pullToRefreshInProgress: Boolean = false
+    // When true we temporarily show skeleton-only adapters to visibly replace content during pull-to-refresh
+    private var showingSkeletonOnlyForPull: Boolean = false
 }
