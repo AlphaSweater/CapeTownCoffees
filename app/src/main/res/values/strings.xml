@@ -227,7 +227,7 @@
     <string name="_1_day_ago">1 day ago</string>
     <string name="view_all_activity">View All Activity</string>
 
-    <!-- Review -->
+    <!-- Review Pages -->
     <string name="close">Close</string>
     <string name="completed_review">COMPLETED\nREVIEW</string>
     <string name="done">Done</string>
@@ -238,6 +238,20 @@
     <string name="consider_discussing_the_facilities_pricing_and_taste">Consider discussing the facilities, pricing and taste</string>
     <string name="share_images">Share Images</string>
     <string name="coffee_review">COFFEE\nREVIEW</string>
+    <string name="thanks_for_your_review">Thanks for your review!</string>
+    <string name="thank_you_message">Your feedback helps other locals find great coffee spots.</string>
+    <string name="review_step1_title">How was your visit?</string>
+    <string name="review_step1_message">Rate your experience so other coffee lovers can decide where to go.</string>
+    <string name="review_back">Back</string>
+    <string name="review_next">Next</string>
+    <string name="review_step2_title">Tell others about your experience</string>
+    <string name="review_step2_message">Optional, but super helpful: mention the vibe, service, and coffee.</string>
+    <string name="review_step2_example">E.g. Cosy space, friendly baristas, flat white was smooth and not too bitter.</string>
+    <string name="review_step3_title">Review overview</string>
+    <string name="review_step3_description">Check everything before you submit your review.</string>
+    <string name="review_step3_your_review">Your review</string>
+    <string name="review_step3_user_review">You rated this place and wrote a review.</string>
+    <string name="review_submit_button">Submit review</string>
 
     <!-- Add Places to List -->
     <string name="add_to_lists">Add to Lists</string>
