@@ -252,30 +252,6 @@ This project provided hands-on experience with:
 </tr>
 </table>
 
-## 📚 Learning Outcomes
-This project provided hands-on experience with:
-
-### 🏗️ Architecture & Patterns
-- Clean Architecture implementation
-- Repository Pattern for data abstraction
-- MVVM with state management
-
-### 🔧 Technical Skills
-- Firestore Integration for real-time data syncing
-- Custom Mappers between database entities and domain models
-- State-driven UIs with Kotlin StateFlow
-- Coroutine Management for efficient threading
-
-### 🎨 UI/UX Development
-- Jetpack Compose for modern declarative UI
-- Material Design 3 implementation
-- Responsive Layouts for various screen sizes
-
-### ⚡ Performance Optimization
-- API Caching strategies to reduce network calls
-- Efficient Data Loading with pagination
-- Offline Capabilities with local storage
-
 
 ## 📚 References
 
