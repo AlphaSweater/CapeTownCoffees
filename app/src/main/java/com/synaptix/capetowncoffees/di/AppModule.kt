@@ -16,6 +16,7 @@
 package com.synaptix.capetowncoffees.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
@@ -71,11 +72,10 @@ object AppModule {
     @Singleton
     fun provideAppContext(@ApplicationContext context: Context): Context = context
 
-    // Example: SharedPreferences
-//    @Provides
-//    @Singleton
-//    fun provideSharedPreferences(@ApplicationContext context: Context) =
-//        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context) =
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
     // =================== END APP CONTEXT =========================
 }

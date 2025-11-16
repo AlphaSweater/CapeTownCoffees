@@ -30,6 +30,12 @@ We are following MVVM + Clean Architecture with Jetpack Navigation as our naviga
 - Dynamic Theming
   - Managed via a ThemeManager class.
 
+- Offline Mode & Connectivity Detection
+  - NetworkStatusService monitors real network status
+  - OfflineModeManager combines network status with user preference
+  - User can toggle offline mode in settings to prevent network requests
+  - Repositories can use OfflineAwareRepository interface for offline-aware operations
+
 # 📂 Project File Structure
 
 ```
@@ -44,17 +50,25 @@ app/
 │   │   └── FirestoreUserDataSource.kt
 │   ├── maps/
 │   │   └── MapsRepository.kt
+│   ├── connectivity/
+│   │   ├── NetworkStatusService.kt       # Monitors actual network status
+│   │   ├── OfflineModeManager.kt         # Manages user offline preference
+│   │   └── OfflineAwareRepository.kt     # Interface for offline-aware repos
 │   └── common/
 │       └── Resource.kt     # Wrapper for success/error loading
 │
 ├── domain/     # Business logic layer
 │   ├── models/
 │   │   ├── User.kt
-│   │   └── Location.kt
+│   │   ├── Location.kt
+│   │   ├── NetworkState.kt           # Network connectivity state model
+│   │   └── OfflineReason.kt          # Enum for why app is offline
 │   ├── usecases/
 │   │   ├── LoginUserUseCase.kt
 │   │   ├── RegisterUserUseCase.kt
-│   │   └── GetUserLocationUseCase.kt
+│   │   ├── GetUserLocationUseCase.kt
+│   │   └── connectivity/
+│   │       └── CheckConnectivityUseCase.kt  # Simple connectivity check use case
 │   └── utils/
 │       └── ValidationUtils.kt
 │

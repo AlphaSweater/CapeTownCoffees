@@ -17,6 +17,7 @@ package com.synaptix.capetowncoffees
 
 import android.app.Application
 import com.google.firebase.messaging.FirebaseMessaging
+import com.synaptix.capetowncoffees.data.connectivity.NetworkStatusService
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.EntryPointAccessors
@@ -29,9 +30,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @HiltAndroidApp
 class CapeTownCoffeesApp : Application() {
+    
+    @Inject
+    lateinit var networkStatusService: NetworkStatusService
+    
     override fun onCreate() {
         super.onCreate()
 
@@ -45,6 +51,10 @@ class CapeTownCoffeesApp : Application() {
 
         // Apply saved theme choice (defaults to SYSTEM)
         ThemeManager.applySavedTheme(this)
+        
+        // Start network monitoring
+        networkStatusService.start()
+        Timber.d("NetworkStatusService started")
 
         // Fetch and persist initial FCM token (if user logged in)
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->

@@ -160,6 +160,10 @@
     <string name="appearance">Appearance</string>
     <string name="dark_mode">Light / Dark Mode</string>
     <string name="data">App Data</string>
+    <string name="offline_mode">Offline Mode</string>
+    <string name="offline_mode_description">Prevent network requests and work with cached data only</string>
+    <string name="offline_mode_enabled">Offline mode enabled</string>
+    <string name="offline_mode_disabled">Offline mode disabled</string>
     <string name="clear_cached_data">Clear all cached data</string>
     <string name="logout">Logout</string>
     <string name="share_with_friends">Share with Friends</string>
