@@ -111,37 +111,56 @@ class CoffeePlaceUtilsUseCase @Inject constructor(
             .trim()
 
     /**
-     * Helper: Retrieves the photo URI for a given PhotoMetadata using PlacesClient.
-     * Converts dp to pixels for maxHeight/maxWidth.
-     * @param photoMetadata The PhotoMetadata object from Google Places API.
-     * @param maxWidthDp Optional max width in dp.
-     * @param maxHeightDp Optional max height in dp.
-     * @return The Uri of the photo, or null if failed.
+     * Caching-aware helper:
+     *
+     *  • If isCached == true:
+     *      - NEVER calls Google Places.
+     *      - Returns cachedImageUrl (converted to Uri) if non-blank.
+     *      - Returns null if cachedImageUrl is null/blank (caller should show placeholder).
+     *
+     *  • If isCached == false:
+     *      - Uses PhotoMetadata and PlacesClient to resolve a Uri (may be null on failure).
+     *
+     *  @param photoMetadata Google Places PhotoMetadata (may be null if none available).
+     *  @param isCached Whether this place is already cached in your DB.
+     *  @param cachedImageUrl The cached image URL from your DB (may be null).
+     *  @param maxWidthDp Optional max width in dp.
+     *  @param maxHeightDp Optional max height in dp.
      */
     suspend fun getPhotoUriFromMetadata(
-        photoMetadata: PhotoMetadata,
+        photoMetadata: PhotoMetadata?,
+        isCached: Boolean,
+        cachedImageUrl: String?,
         maxWidthDp: Int? = null,
-        maxHeightDp: Int? = null
+        maxHeightDp: Int? = 300
     ): Uri? {
-        // Original code commented out for cost.
-        /*
+        // 1) Cached: NEVER hit Places. Trust only cachedImageUrl.
+        if (isCached) {
+            return cachedImageUrl
+                ?.takeIf { it.isNotBlank() }
+                ?.toUri() // may still be null if no cached URL
+        }
+
+        // 2) Not cached: allowed to call Places.
+        if (photoMetadata == null) return null
+
         return suspendCancellableCoroutine { cont ->
             val density = context.resources.displayMetrics.density
             val builder = FetchResolvedPhotoUriRequest.builder(photoMetadata)
+
             maxWidthDp?.let { builder.setMaxWidth((it * density).toInt()) }
             maxHeightDp?.let { builder.setMaxHeight((it * density).toInt()) }
-            val request = builder.build()
-            placesClient.fetchResolvedPhotoUri(request)
-                .addOnSuccessListener { response ->
-                    cont.resume(response.uri)
-                }
-                .addOnFailureListener { exception ->
-                    cont.resume(null)
-                }
-        }
-        */
 
-        // Return a hardcoded URL instead.
-        return "https://media.discordapp.net/attachments/1277334380012109875/1416054067368562798/caleb1.JPG?ex=691686de&is=6915355e&hm=02ac126ed346a0849700813f7edc7558fb1311dddbf3c5abdc30815826548281&=&format=webp&width=1280&height=960".toUri()
+            val request = builder.build()
+            val task = placesClient.fetchResolvedPhotoUri(request)
+
+            task.addOnSuccessListener { response ->
+                if (cont.isActive) cont.resume(response.uri)
+            }
+
+            task.addOnFailureListener {
+                if (cont.isActive) cont.resume(null)
+            }
+        }
     }
 }

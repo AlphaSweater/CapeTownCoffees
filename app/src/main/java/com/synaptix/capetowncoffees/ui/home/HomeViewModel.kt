@@ -8,9 +8,9 @@
 //======================================================================================
 //References:
 //======================================================================================
-//* ChatGPT provided assistance in designing ViewModel logic, LiveData handling, and
-//implementing clean MVVM architecture principles.
-//* It also helped refine data flow between repositories and UI layers.
+//* ChatGPT was used to guide the structure of this Adapter, including the ViewHolder
+//setup, data binding logic, and handling click listeners.
+//* Assistance was also provided for optimizing RecyclerView performance and readability.
 //* It also helped generate useful comments
 //======================================================================================
 
@@ -22,6 +22,7 @@ import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
 import com.synaptix.capetowncoffees.domain.usecase.search.SearchParamsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.IsOfflineUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
@@ -38,7 +39,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val searchNearby: SearchNearbyCoffeePlacesUseCase,
-    private val searchParams: SearchParamsUseCase
+    private val searchParams: SearchParamsUseCase,
+    private val isOfflineUseCase: IsOfflineUseCase
 ) : SimpleViewModel() {
 
     // ─────────── Config ───────────
@@ -69,7 +71,8 @@ class HomeViewModel @Inject constructor(
         val selectedCategory: Category = DEFAULT_CATEGORIES.first(),
         val currentLocation: LatLng? = null,
         val isRefreshingNear: Boolean = false,
-        val isRefreshingFeatured: Boolean = false
+        val isRefreshingFeatured: Boolean = false,
+        val isOffline: Boolean = false
     ) {
         val isRefreshing: Boolean get() = isRefreshingNear || isRefreshingFeatured
     }
@@ -93,6 +96,10 @@ class HomeViewModel @Inject constructor(
     // Each section cancels its previous query before starting another.
     private var nearJob: Job? = null
     private var featuredJob: Job? = null
+
+    // Track the last applied (radius, strict) to decide if we need a refetch.
+    private data class ParamsKey(val radiusM: Int, val strict: Boolean)
+    private var lastAppliedKey: ParamsKey? = null
 
     // ─────────── Public API ───────────
     // Location arrival paints from cache (if valid) and kicks refreshes independently.
@@ -139,6 +146,23 @@ class HomeViewModel @Inject constructor(
         val changed = lastAppliedKey != keyNow
         if (changed) lastAppliedKey = keyNow
         return changed
+    }
+
+    // runs when fragment is first opened
+    fun checkNetworkForBanner() {
+        val offline = isOfflineUseCase()
+        ui.update { it.copy(isOffline = offline) }
+    }
+
+    // runs when user hits refresh button
+    fun onOfflineBannerRetry() {
+        val offline = isOfflineUseCase()
+        ui.update { it.copy(isOffline = offline) }
+
+        if (!offline) {
+            // We just came back online → refetch from network
+            refresh(force = true)
+        }
     }
 
     // ─────────── Refresh: NEAR ───────────
@@ -244,20 +268,17 @@ class HomeViewModel @Inject constructor(
         source: List<CoffeePlaceLite>,
         user: LatLng?
     ): List<CoffeePlaceLite> = when (category.name.lowercase()) {
-        "popular" -> source.sortedByDescending { it.ratingCount ?: 0 }
-        "rated"   -> source.sortedByDescending { it.rating ?: 0.0 }
+        "popular" -> source.sortedByDescending { it.combinedRatingCount }
+        "rated"   -> source.sortedByDescending { it.combinedRating }
         "nearby"  -> if (user == null) source else source.sortedBy {
             it.location?.let { ll -> LocationFormattingUtil.distanceMeters(user, ll) } ?: Float.MAX_VALUE
         }
         "dates"   -> source.sortedByDescending {
-            (it.rating ?: 0.0) + ((it.ratingCount ?: 0) / 100f)
+            it.combinedRating + (it.combinedRatingCount / 100f)
         }
         else      -> source
     }
 
-    // Track the last applied (radius, strict) to decide if we need a refetch.
-    private data class ParamsKey(val radiusM: Int, val strict: Boolean)
-    private var lastAppliedKey: ParamsKey? = null
     private fun paramsKeyFromUseCase(): ParamsKey {
         val p = searchParams.current()
         return ParamsKey(p.radiusMeters, p.strictCoffeeOnly)

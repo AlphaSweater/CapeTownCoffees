@@ -18,6 +18,8 @@ package com.synaptix.capetowncoffees.di
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.firestoreSettings
 import com.google.firebase.messaging.FirebaseMessaging
 import com.synaptix.capetowncoffees.BuildConfig
 import dagger.Module
@@ -46,7 +48,17 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+    fun provideFirestore(): FirebaseFirestore {
+        val db = FirebaseFirestore.getInstance()
+
+        val settings = firestoreSettings {
+            isPersistenceEnabled = true
+            cacheSizeBytes = FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED
+        }
+
+        db.firestoreSettings = settings
+        return db
+    }
 
     @Provides
     @Singleton

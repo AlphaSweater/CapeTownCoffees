@@ -25,6 +25,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeList
 import com.synaptix.capetowncoffees.domain.repository.IPlacesApiRepository
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeListRepository
+import com.synaptix.capetowncoffees.domain.repository.ICoffeePlaceRepository
 import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -35,7 +36,7 @@ import timber.log.Timber
 class ListDetailsViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val savedRepo: ICoffeeListRepository,
-    private val placesRepo: IPlacesApiRepository
+    private val placesRepo: ICoffeePlaceRepository
 ) : ViewModel() {
 
     private val _userId = MutableLiveData<String?>()
@@ -87,8 +88,6 @@ class ListDetailsViewModel @Inject constructor(
             Timber.d("Loaded ${results.size} place details")
         }
     }
-
-
 
     fun deleteListAndReturn(id: String, onDone: () -> Unit, onError: (Throwable) -> Unit) {
         viewModelScope.launch {

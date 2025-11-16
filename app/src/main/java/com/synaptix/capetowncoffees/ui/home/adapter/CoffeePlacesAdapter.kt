@@ -22,7 +22,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -66,7 +65,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         sameContent = { o, n -> o == n },
         payload = { o, n ->
             when {
-                o.rating != n.rating || o.ratingCount != n.ratingCount -> Payload.Rating
+                o.combinedRating != n.combinedRating || o.combinedRatingCount != n.combinedRatingCount -> Payload.Rating
                 else -> null
             }
         }
@@ -171,7 +170,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
 
                 renderAddress(item.address)
                 renderDistance(item)
-                renderRating(item.rating, item.ratingCount)
+                renderRating(item.combinedRating, item.combinedRatingCount)
 
                 tvCafePrice.visibility = View.GONE
 
@@ -180,11 +179,21 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     ?: root.context.getString(R.string.coffee_image)
             }
 
+            // If it's not cached and we also have no images, bail early.
+            if (!item.isCached && item.images.isNullOrEmpty()) {
+                vb.bindImage(null, item.id) // optional; keeps placeholder
+                return
+            }
+
             scope.launch {
                 val url = try {
-                    item.images?.firstOrNull()
-                        ?.let { meta -> coffeePlaceUtils.getPhotoUriFromMetadata(meta, maxWidthDp = 500) }
-                        ?.toString()
+                    val uri = coffeePlaceUtils.getPhotoUriFromMetadata(
+                        photoMetadata   = item.images?.firstOrNull(),
+                        isCached        = item.isCached,
+                        cachedImageUrl  = item.cachedImageUrl,
+                        maxWidthDp      = 500
+                    )
+                    uri?.toString()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (t: Throwable) {
@@ -192,8 +201,10 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                     null
                 }
 
+                // ViewHolder reused for another item? bail out
                 if (tokenAtBind != bindToken) return@launch
-                vb.bindImage(url, item.id)
+
+                vb.bindImage(url, item.id) // url may be null -> placeholder stays
             }
         }
 
@@ -202,7 +213,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
             if (payloads.isEmpty()) { bind(item); return }
             payloads.forEach { p ->
                 when (p) {
-                    Payload.Rating   -> vb.renderRating(item.rating, item.ratingCount)
+                    Payload.Rating   -> vb.renderRating(item.combinedRating, item.combinedRatingCount)
                     Payload.Distance -> vb.renderDistance(item)
                 }
             }
@@ -237,7 +248,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
                 .error(R.drawable.featured_placeholder)
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .centerCrop()
-                .listener(GLIDE_LOGGER(id))
+                .listener(glideLogger(id))
                 .into(ivImage)
         }
     }
@@ -254,7 +265,7 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
         private const val ID_NAMESPACE: Long = 0x10_0000_0000L
         private val RATING_FMT = DecimalFormat("0.0")
 
-        private fun GLIDE_LOGGER(id: String) = object : RequestListener<Drawable> {
+        private fun glideLogger(id: String) = object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?, model: Any?, target: Target<Drawable>?, isFirstResource: Boolean
             ): Boolean = false

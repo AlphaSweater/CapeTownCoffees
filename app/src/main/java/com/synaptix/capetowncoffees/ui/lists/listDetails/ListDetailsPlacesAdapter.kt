@@ -102,8 +102,8 @@ class ListDetailsPlacesAdapter @AssistedInject constructor(
             tvName.text = item.name ?: itemView.context.getString(R.string.unknown)
             tvAddress.text = item.address.orEmpty()
 
-            val rating = item.rating ?: 0.0
-            val count = item.ratingCount ?: 0
+            val rating = item.combinedRating
+            val count = item.combinedRatingCount
             tvRating.text = String.format(Locale.getDefault(), "%.1f (%d)", rating, count)
 
             // Distance label
@@ -152,7 +152,15 @@ class ListDetailsPhotoResolver @Inject constructor(
     private val coffeePlaceUtils: CoffeePlaceUtilsUseCase
 ) {
     suspend fun url(place: CoffeePlaceFull): String? {
-        val meta = place.images?.firstOrNull() ?: return null
-        return coffeePlaceUtils.getPhotoUriFromMetadata(meta, maxWidthDp = 500)?.toString()
+        return try {
+            coffeePlaceUtils.getPhotoUriFromMetadata(
+                photoMetadata   = place.images?.firstOrNull(),
+                isCached        = place.isCached,
+                cachedImageUrl  = place.cachedImageUrl,
+                maxWidthDp      = 500
+            )?.toString()
+        } catch (t: Throwable) {
+            null
+        }
     }
 }

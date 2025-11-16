@@ -80,7 +80,7 @@ class CafeDetailViewModel @Inject constructor(
 
     // ─────────── Internals ───────────
     // Keep inputs needed for derived data (e.g., distance).
-    private var placeId: String? = null
+    var placeId: String? = null
     private var userLocation: LatLng? = null
     private var placeLocation: LatLng? = null
 
@@ -168,8 +168,8 @@ class CafeDetailViewModel @Inject constructor(
     private fun updateUiFrom(place: CoffeePlaceFull) {
         placeLocation = place.location
 
-        val rating = place.rating
-        val ratingCountText = place.ratingCount?.let { "($it)" }
+        val rating = place.combinedRating
+        val ratingCountText = place.combinedRatingCount.let { "($it)" }
         val phone = place.nationalPhoneNumber ?: place.internationalPhoneNumber
         val hours = formatOpeningHours(place.currentOpeningHours)
         val imageAvailable = !place.images.isNullOrEmpty()
@@ -184,7 +184,7 @@ class CafeDetailViewModel @Inject constructor(
                 phoneNumber = phone,
                 rating = rating,
                 ratingCountText = ratingCountText,
-                showRating = rating != null,
+                showRating = true,
                 imageAvailable = imageAvailable,
                 showDistance = false,
                 distanceText = null
