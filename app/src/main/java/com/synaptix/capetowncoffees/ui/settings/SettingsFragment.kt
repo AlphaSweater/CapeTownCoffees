@@ -21,6 +21,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
@@ -40,13 +42,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
 
-    @Inject lateinit var authManager: AuthManager
-    @Inject lateinit var offlineModeManager: OfflineModeManager
+    @Inject
+    lateinit var authManager: AuthManager
+    @Inject
+    lateinit var offlineModeManager: OfflineModeManager
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -118,6 +123,39 @@ class SettingsFragment : Fragment() {
         binding.layoutDeleteAccount.setOnClickListener { confirmDeleteAccount() }
 
         binding.layoutLogout.setOnClickListener { confirmLogout() }
+
+        // Language Selection
+        updateSelectedLanguage()
+        binding.layoutLanguage.setOnClickListener { showLanguageSelectionDialog() }
+    }
+
+    private fun updateSelectedLanguage() {
+        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
+        val language = currentLocale?.displayLanguage ?: "English"
+        binding.selectedLanguage.text = language
+    }
+
+
+    private fun showLanguageSelectionDialog() {
+        val languages = arrayOf("English", "Afrikaans", "Xhosa")
+        val languageCodes = arrayOf("en", "af", "xh")
+
+        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
+        val currentLanguageCode = currentLocale?.language ?: "en"
+        val checkedItem = languageCodes.indexOf(currentLanguageCode).coerceAtLeast(0)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.settings_display_language)
+            .setSingleChoiceItems(languages, checkedItem) { dialog, which ->
+                val selectedLanguageCode = languageCodes[which]
+                val locale = Locale(selectedLanguageCode)
+                val localeList = LocaleListCompat.create(locale)
+                AppCompatDelegate.setApplicationLocales(localeList)
+                updateSelectedLanguage()
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     // region Confirmations
