@@ -16,12 +16,11 @@
 package com.synaptix.capetowncoffees.data.connectivity
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.synaptix.capetowncoffees.util.UserPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -30,19 +29,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class OfflineModeManager @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val sharedPreferences: SharedPreferences
+class OfflineModeManager(
+    private val context: Context,
+    private val userPrefs: UserPrefs
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-    companion object {
-        private const val PREF_KEY_USER_OFFLINE_MODE = "user_forced_offline_mode"
-    }
 
     // Raw network availability (true when platform reports network with INTERNET capability)
     private val _networkIsOnline = MutableStateFlow(false)
@@ -151,11 +143,11 @@ class OfflineModeManager @Inject constructor(
     fun getLastNetworkStatus(): Boolean = _networkIsOnline.value
 
     private fun loadUserOfflineMode(): Boolean {
-        return sharedPreferences.getBoolean(PREF_KEY_USER_OFFLINE_MODE, false)
+        return userPrefs.isUserOfflineMode()
     }
 
     private fun saveUserOfflineMode(enabled: Boolean) {
-        sharedPreferences.edit().putBoolean(PREF_KEY_USER_OFFLINE_MODE, enabled).apply()
+        userPrefs.setUserOfflineMode(enabled)
     }
 }
 
@@ -166,6 +158,7 @@ class OfflineModeManager @Inject constructor(
  * previously imported `com.synaptix.capetowncoffees.domain.model.NetworkState`
  * should now import `com.synaptix.capetowncoffees.data.connectivity.NetworkState`.
  */
+
 data class NetworkState(
     val isOnline: Boolean,
     val isUserForcedOffline: Boolean,
@@ -184,6 +177,7 @@ data class NetworkState(
 /**
  * Reasons why the app might be offline.
  */
+
 enum class OfflineReason {
     NO_NETWORK,
     USER_FORCED

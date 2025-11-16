@@ -22,7 +22,6 @@ import com.synaptix.capetowncoffees.domain.model.Category
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceLite
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.SearchNearbyCoffeePlacesUseCase
 import com.synaptix.capetowncoffees.domain.usecase.search.SearchParamsUseCase
-import com.synaptix.capetowncoffees.domain.usecase.IsOfflineUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
@@ -36,11 +35,16 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import androidx.lifecycle.viewModelScope
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.ObserveConnectivityStateUseCase
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val searchNearby: SearchNearbyCoffeePlacesUseCase,
     private val searchParams: SearchParamsUseCase,
-    private val isOfflineUseCase: IsOfflineUseCase
+    private val isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase,
+    private val observeConnectivityStateUseCase: ObserveConnectivityStateUseCase,
 ) : SimpleViewModel() {
 
     // ─────────── Config ───────────
@@ -76,7 +80,10 @@ class HomeViewModel @Inject constructor(
     ) {
         val isRefreshing: Boolean get() = isRefreshingNear || isRefreshingFeatured
     }
+    // Ensure `ui` is initialized before any init block uses it
     val ui = state(Ui())
+
+    // init moved below to ensure `ui` is non-null when used by the connectivity observer
 
     // Lists bound by the Fragment; Loadable wraps loading/error/data.
     val nearMe = loadableState<List<CoffeePlaceLite>>()
@@ -148,18 +155,12 @@ class HomeViewModel @Inject constructor(
         return changed
     }
 
-    // runs when fragment is first opened
-    fun checkNetworkForBanner() {
-        val offline = isOfflineUseCase()
-        ui.update { it.copy(isOffline = offline) }
-    }
-
     // runs when user hits refresh button
     fun onOfflineBannerRetry() {
-        val offline = isOfflineUseCase()
-        ui.update { it.copy(isOffline = offline) }
+        val isOnline = isEffectivelyOnlineUseCase()
+        ui.update { it.copy(isOffline = !isOnline) }
 
-        if (!offline) {
+        if (isOnline) {
             // We just came back online → refetch from network
             refresh(force = true)
         }
@@ -170,6 +171,17 @@ class HomeViewModel @Inject constructor(
     fun refreshNear(force: Boolean) {
         val loc = ui.value.currentLocation ?: run {
             main { send(Effect.Message("Location not available yet")) }
+            return
+        }
+
+        // Don't attempt network fetches when effectively offline. Rely on the connectivity
+        // observer to retry when we come back online.
+        if (!isEffectivelyOnlineUseCase()) {
+            ui.update { it.copy(isOffline = true) }
+            // If we already have data, show it; otherwise signal that data is unavailable offline
+            if (nearMe.value !is Loadable.Data) {
+                nearMe.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+            }
             return
         }
 
@@ -214,6 +226,15 @@ class HomeViewModel @Inject constructor(
     fun refreshFeatured(force: Boolean) {
         val loc = ui.value.currentLocation ?: run {
             main { send(Effect.Message("Location not available yet")) }
+            return
+        }
+
+        // Avoid network calls while offline; will auto-refresh when back online.
+        if (!isEffectivelyOnlineUseCase()) {
+            ui.update { it.copy(isOffline = true) }
+            if (featured.value !is Loadable.Data) {
+                featured.error(Exception("Offline — will refresh when online").toUiError("Offline — will refresh when online"))
+            }
             return
         }
 
@@ -283,4 +304,31 @@ class HomeViewModel @Inject constructor(
         val p = searchParams.current()
         return ParamsKey(p.radiusMeters, p.strictCoffeeOnly)
     }
+
+    // Now place the previously moved init block here so `ui` is ready when used.
+    init {
+        // Keep the UI offline flag in sync with the reactive connectivity flow
+        var lastEffectiveOnline: Boolean? = null
+        viewModelScope.launch {
+            observeConnectivityStateUseCase.observe().collect { state ->
+                val effectiveOnline = state.effectiveIsOnline
+                // Update UI offline flag
+                ui.update { it.copy(isOffline = !effectiveOnline) }
+
+                // If we just transitioned from offline -> online, attempt to refresh
+                if (lastEffectiveOnline == false && effectiveOnline) {
+                    val loc = ui.value.currentLocation
+                    if (loc != null) {
+                        // Refresh only if cache is stale or empty
+                        if (!hasFreshEnough(nearCache, loc) || !hasFreshEnough(featuredCache, loc)) {
+                            refresh(force = true)
+                        }
+                    }
+                }
+
+                lastEffectiveOnline = effectiveOnline
+            }
+        }
+    }
+
 }

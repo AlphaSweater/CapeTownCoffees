@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.SimpleItemAnimator
 import com.bumptech.glide.util.ViewPreloadSizeProvider
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.transition.platform.MaterialSharedAxis
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentHomeBinding
@@ -59,6 +58,11 @@ import com.synaptix.capetowncoffees.util.PhotoUrlCache
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+import com.synaptix.capetowncoffees.ui.common.showOfflineBannerWhenNeeded
+import com.synaptix.capetowncoffees.ui.common.executeIfOnline
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.ObserveConnectivityStateUseCase
+import com.synaptix.capetowncoffees.domain.usecase.connectivity.IsEffectivelyOnlineUseCase
+
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
@@ -72,6 +76,8 @@ class HomeFragment : Fragment() {
     // Photo resolver + factory for item adapters shared across sections.
     @Inject lateinit var coffeePlaceUtils: CoffeePlaceUtilsUseCase
     @Inject lateinit var placeItemAdapterFactory: CoffeePlaceItemAdapter.Factory
+    @Inject lateinit var observeConnectivityStateUseCase: ObserveConnectivityStateUseCase
+    @Inject lateinit var isEffectivelyOnlineUseCase: IsEffectivelyOnlineUseCase
     private lateinit var photoCache: PhotoUrlCache
 
     // ─────────── Adapters & Data ───────────
@@ -165,10 +171,14 @@ class HomeFragment : Fragment() {
             true
         }
 
-        vm.checkNetworkForBanner()
+        // Show offline snackbar automatically when connectivity changes
+        showOfflineBannerWhenNeeded(observeConnectivityStateUseCase, binding.root)
 
+        // Retry button uses the executeIfOnline helper to run refresh only when online
         binding.offlineBanner.btnRetry.setOnClickListener {
-            vm.onOfflineBannerRetry()
+            executeIfOnline(isEffectivelyOnlineUseCase, binding.root) {
+                vm.onOfflineBannerRetry()
+            }
         }
     }
 
@@ -299,9 +309,9 @@ class HomeFragment : Fragment() {
             swipeRefresh.setProgressViewOffset(true, start, end)
         }
 
-        appBar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { _, verticalOffset ->
+        appBar.addOnOffsetChangedListener { _, verticalOffset ->
             appBarOffset = verticalOffset
-        })
+        }
 
         swipeRefresh.setOnChildScrollUpCallback { _, _ ->
             val contentNotAtTop = rootScroll.canScrollVertically(-1)
@@ -339,21 +349,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showSkeletons(popularCount: Int, nearCount: Int) {
-        popularSkeleton.show(popularCount)
-        nearSkeleton.show(nearCount)
-    }
-
     private fun hideSkeletons() {
         popularSkeleton.hide()
         nearSkeleton.hide()
-    }
-
-    private fun clearDataAdapters() {
-        popularAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
-        nearAdapter.updateItems(emptyList(), vm.ui.value.currentLocation)
-        popularItems = emptyList()
-        nearItems = emptyList()
     }
 
     // ─────────── Collectors ───────────
