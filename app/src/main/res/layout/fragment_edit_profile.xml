@@ -282,7 +282,7 @@
                                     android:paddingStart="16dp"
                                     android:textColor="@color/text_primary"
                                     android:textColorHint="@color/text_secondary"
-                                    android:text="@string/_dots"
+                                    android:text="@string/password_hash"
                                     android:ellipsize="end"
                                     android:singleLine="true" />
                             </com.google.android.material.textfield.TextInputLayout>
