@@ -56,7 +56,7 @@
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="Alex Johnson" />
+                tools:text="@string/coffee_review_name" />
 
             <!-- Date -->
             <TextView
@@ -68,7 +68,7 @@
                 android:textColor="@color/text_tip"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="2d ago" />
+                tools:text="@string/coffee_review_time_since_reviewed" />
 
             <!-- Rating container -->
             <LinearLayout
@@ -100,7 +100,7 @@
                     android:layout_marginStart="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textColor="@color/text_secondary"
-                    tools:text="4.6" />
+                    tools:text="@string/coffee_review_rating" />
 
                 <!-- Source Chip -->
                 <TextView
@@ -114,7 +114,7 @@
                     android:paddingVertical="2dp"
                     android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                     android:textColor="@color/text_secondary"
-                    tools:text="Google" />
+                    tools:text="@string/google" />
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -131,7 +131,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/constraintLayout"
-            tools:text="Smooth flat white, cozy vibes, friendly staff — solid Wi-Fi too." />
+            tools:text="@string/coffee_review_comment" />
 
         <!-- ───────────────────── MOSAIC (adaptive) ───────────────────── -->
         <androidx.constraintlayout.widget.ConstraintLayout

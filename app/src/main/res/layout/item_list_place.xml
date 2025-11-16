@@ -42,7 +42,7 @@
             android:textSize="16sp"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="Truth Coffee Roasting" />
+            tools:text="@string/list_place_name" />
 
         <!-- Address -->
         <TextView
@@ -54,7 +54,7 @@
             android:textSize="13sp"
             android:maxLines="1"
             android:ellipsize="end"
-            tools:text="36 Buitenkant St, Cape Town" />
+            tools:text="@string/list_place_location" />
 
         <!-- Meta: rating • distance -->
         <LinearLayout
@@ -78,7 +78,7 @@
                 android:layout_marginStart="4dp"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
-                tools:text="4.6 (1.2k)" />
+                tools:text="@string/list_place_rating" />
 
             <!-- dot separator -->
             <TextView
@@ -103,7 +103,7 @@
                 android:layout_marginStart="4dp"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
-                tools:text="1.2 km" />
+                tools:text="@string/list_place_distance" />
         </LinearLayout>
     </LinearLayout>
 

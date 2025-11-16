@@ -242,8 +242,42 @@
     <string name="data_we_collect_title">Data We Collect</string>
     <string name="distance_in_km">1 km</string>
 
+    <!-- Coffee Near Me Item -->
+    <string name="near_me_shop_name">Truth Coffee Roasting</string>
+    <string name="near_me_location">36 Buitenkant St, Cape Town</string>
+    <string name="near_me_distance">1.2 km</string>
+    <string name="near_me_rating">4.6 (1.2k)</string>
 
-    <!-- Search Page -->
+    <!-- Coffee Review Item -->
+    <string name="coffee_review_name">Alex Johnson</string>
+    <string name="google">Google</string>
+    <string name="coffee_review_time_since_reviewed">2d ago</string>
+    <string name="coffee_review_rating">4.6</string>
+    <string name="coffee_review_comment">Smooth flat white, cozy vibes, friendly staff — solid Wi-Fi too.</string>
 
+    <!-- Favourites Item -->
+    <string name="favourite_cafe_name">Cafe Name</string>
+    <string name="favourite_location">Cape Town, City Centre</string>
+    <string name="favourite_rating">4,6 (5203)</string>
 
+    <!-- List Place Item -->
+    <string name="list_place_name">Truth Coffee Roasting</string>
+    <string name="list_place_location">36 Buitenkant St, Cape Town</string>
+    <string name="list_place_rating">4.6 (1.2k)</string>
+    <string name="list_place_distance">1.2 km</string>
+
+    <!-- Offline Item -->
+    <string name="offline_title">You’re offline</string>
+    <string name="offline_description">Data cannot be loaded. Tap refresh to try again.</string>
+    <string name="offline_refresh_button">Refresh</string>
+
+    <!-- Review Item -->
+    <string name="review_title">Truth Coffee</string>
+    <string name="review_time_since_created">2 days ago</string>
+    <string name="review_description">This place is the best!! So many different options</string>
+
+    <!-- Search Suggestion Item -->
+    <string name="search_suggestion_title">Truth Coffee Roasting</string>
+    <string name="search_suggestion_location">36 Buitenkant St, Cape Town City Centre asdasd asda sd asdasda</string>
+    <string name="search_suggestion_distance">1.2 km</string>
 </resources>
