@@ -43,7 +43,7 @@ interface ICoffeeReviewRepository {
      * @param limit Optional max number of reviews to return.
      * @return Result containing a list of domain Review objects.
      */
-    suspend fun getReviewsForPlace(placeId: String, limit: Int?): Result<List<CoffeeReview>>
+    suspend fun getReviewsForPlace(placeId: String, userId: String, limit: Int?): Result<List<CoffeeReview>>
 
     /**
      * Adds a new review for a place. Only IN_APP reviews are allowed.
@@ -52,6 +52,26 @@ interface ICoffeeReviewRepository {
      * @return Result containing the Firestore document ID of the new review.
      */
     suspend fun addReview(coffeeReview: InAppReview, placeId: String): Result<String>
+
+    /**
+     * Toggle a user's reaction on a review.
+     *
+     * Rules:
+     *  - If user has no reaction:
+     *      isLike=true  -> set to "like"
+     *      isLike=false -> set to "dislike"
+     *  - If user already has the same reaction -> remove it (clear)
+     *  - If user has the opposite reaction    -> switch to the new one
+     *
+     * Also keeps `likeCount` and `dislikeCount` on the review document in sync.
+     */
+    suspend fun reactToReview(
+        placeId: String,
+        reviewId: String,
+        userId: String,
+        isLike: Boolean
+    ): Result<Unit>
+
 
     /**
      * Deletes a review for a place by its document ID.

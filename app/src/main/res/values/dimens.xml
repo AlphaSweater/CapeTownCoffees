@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Card outer spacing -->
-    <dimen name="ctc_card_margin_h">16dp</dimen>
+    <dimen name="ctc_card_margin_h">10dp</dimen>
     <dimen name="ctc_card_margin_v">8dp</dimen>
 
     <!-- Hero image height matches your real item -->
