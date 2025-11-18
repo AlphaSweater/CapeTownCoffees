@@ -76,32 +76,6 @@
                 android:ellipsize="end"/>
         </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/btnFavorite"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:foreground="?attr/selectableItemBackgroundBorderless"
-            android:foregroundGravity="center"
-            android:layout_gravity="top|start"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="@string/add_to_list"
-            android:layout_margin="12dp"
-            app:layout_constraintEnd_toEndOf="@id/ivImage"
-            app:layout_constraintTop_toTopOf="@id/ivImage">
-
-            <!-- 32dp visual chip (circle bg + plus icon) -->
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="center"
-                android:background="@drawable/ctc_circle_chip"
-                android:padding="8dp"
-                android:src="@drawable/ic_ctc_heart"
-                android:contentDescription="@null"
-                app:tint="@color/white"/>
-        </FrameLayout>
-
         <!-- Content -->
         <LinearLayout
             android:id="@+id/contentContainer"

@@ -137,8 +137,8 @@ class ReviewsAdapter @AssistedInject constructor(
                     tvLikeCount.text = likeCount.toString()
                     tvDislikeCount.text = dislikeCount.toString()
 
-                    tvLikeCount.isVisible = likeCount > 0
-                    tvDislikeCount.isVisible = dislikeCount > 0
+                    tvLikeCount.isVisible = true
+                    tvDislikeCount.isVisible = true
 
                     val currentReaction = inAppItem?.userReactionType
                     val ctx = root.context

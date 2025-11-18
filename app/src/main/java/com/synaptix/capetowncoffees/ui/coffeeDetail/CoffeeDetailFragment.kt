@@ -246,7 +246,7 @@ class CoffeeDetailFragment : Fragment() {
             )
 
             result
-                .onFailure {
+                .onFailure { it ->
                     Timber.e(it, "Failed to react to review (reviewId=$reviewId)")
                     Toast.makeText(requireContext(), it.message ?: "Failed to update reaction", Toast.LENGTH_SHORT).show()
 
