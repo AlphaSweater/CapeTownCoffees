@@ -40,6 +40,8 @@ import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentCoffeeDetailBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
+import com.synaptix.capetowncoffees.domain.model.GooglePlaceReview
+import com.synaptix.capetowncoffees.domain.model.InAppReview
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
@@ -261,8 +263,8 @@ class CoffeeDetailFragment : Fragment() {
     // Small view helpers to keep collectors tidy.
     private fun renderReviews(list: List<CoffeeReview>) = with(binding) {
         // Separate reviews by type
-        val inAppReviews = list.filterIsInstance<com.synaptix.capetowncoffees.domain.model.InAppReview>()
-        val googleReviews = list.filterIsInstance<com.synaptix.capetowncoffees.domain.model.GooglePlaceReview>()
+        val inAppReviews = list.filterIsInstance<InAppReview>()
+        val googleReviews = list.filterIsInstance<GooglePlaceReview>()
 
         // Store all in-app reviews and reset pagination
         allInAppReviews = inAppReviews

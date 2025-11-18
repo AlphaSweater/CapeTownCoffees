@@ -151,6 +151,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:contentDescription="@string/like"
+                android:visibility="gone"
                 app:backgroundTint="@color/error_red"
                 app:icon="@drawable/ic_ctc_thumbs_down"
                 app:iconGravity="textStart"

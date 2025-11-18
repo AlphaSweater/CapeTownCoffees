@@ -306,8 +306,7 @@
                     android:clipToPadding="false"
                     android:paddingTop="8dp"
                     android:nestedScrollingEnabled="false"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    tools:listitem="@layout/item_coffee_review"/>
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
                 <TextView
                     android:id="@+id/tvShowMoreInApp"
@@ -334,12 +333,6 @@
                 android:orientation="vertical"
                 android:visibility="gone"
                 tools:visibility="visible">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@color/icon_divider"/>
 
                 <TextView
                     android:layout_width="wrap_content"
