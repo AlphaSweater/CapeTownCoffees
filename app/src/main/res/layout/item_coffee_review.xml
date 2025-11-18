@@ -6,8 +6,7 @@
     style="@style/Widget.Ctc.ElevatedCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="@dimen/ctc_card_margin_h"
-    android:layout_marginVertical="@dimen/ctc_card_margin_v"
+    android:layout_marginBottom="12dp"
     android:foreground="?attr/selectableItemBackground"
     android:stateListAnimator="@animator/ctc_card_lift">
 
@@ -150,8 +149,7 @@
                 style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:contentDescription="@string/like"
-                android:visibility="gone"
+                android:contentDescription="@string/dislike"
                 app:backgroundTint="@color/error_red"
                 app:icon="@drawable/ic_ctc_thumbs_down"
                 app:iconGravity="textStart"
@@ -292,6 +290,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="10dp"
             android:background="@color/divider_soft"
+            android:visibility="gone"
             app:layout_constraintStart_toStartOf="@id/tvBody"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/photosMosaic" />

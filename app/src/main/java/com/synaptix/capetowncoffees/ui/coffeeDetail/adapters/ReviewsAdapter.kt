@@ -125,7 +125,6 @@ class ReviewsAdapter @AssistedInject constructor(
                 // In-app reviews expose like/dislike; Google is read-only
                 val inApp = item.isInApp
                 actionsContainer.isVisible = inApp
-                dividerActions.isVisible = inApp
                 if (inApp) {
                     val key = item.safeReviewKey()
                     btnLike.setOnClickListener { onClick(Click.Like(key)) }
