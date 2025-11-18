@@ -225,7 +225,7 @@
     <!-- Profile -->
     <string name="account_security">Ukhuseleko lweakhawunti</string>
     <string name="change">Tshintsha</string>
-    <string name="loading">Ilayisha...</string>
+    <string name="loading">Ilayisha…</string>
     <string name="latte_lover">Umthandi weLatte</string>
     <string name="coffee_explorer">Umphandi wekofu</string>
     <string name="level_3">Inqanaba 3</string>
@@ -239,30 +239,24 @@
     <string name="view_all_activity">Jonga yonke imisebenzi</string>
 
     <!-- Review Pages -->
-    <string name="close">Vala</string>
     <string name="completed_review">UPHONONONGO\nLUGQITYIWE</string>
     <string name="done">Kugqityiwe</string>
     <string name="how_was_your_experience">Ibikunjani\namava akho?</string>
     <string name="share_your_experience_with_the_community">Yabelana ngamava akho noluntu</string>
     <string name="next">Okulandelayo</string>
     <string name="tell_others_about_your_experience">Xelela abanye\nngamava akho</string>
-    <string name="consider_discussing_the_facilities_pricing_and_taste">Ungakhankanya indawo, amaxabiso, kunye nencasa</string>
+    <string name="consider_discUSSING_THE_FACILITIES_PRICING_AND_TASTE">Ungakhankanya indawo, amaxabiso, kunye nencasa</string>
     <string name="share_images">Yabelana ngemifanekiso</string>
     <string name="coffee_review">UPHONONONGO\nLWEEKOFU</string>
     <string name="thanks_for_your_review">Enkosi ngokuphonononga!</string>
     <string name="thank_you_message">Ingxelo yakho inceda abanye bafumane iindawo ezintle zekofu.</string>
-    <string name="review_step1_title">Ibikunjani utyelelo?</string>
-    <string name="review_step1_message">Nika inqanaba lamava akho ukuze abanye bakwazi ukhetho.</string>
     <string name="review_back">Emva</string>
     <string name="review_next">Okulandelayo</string>
     <string name="review_step2_title">Xelela abanye ngamava akho</string>
     <string name="review_step2_message">Ayinamsebenzi ukuyizalisa kodwa iyanceda: khankanya imo, inkonzo, kunye nekofu.</string>
-    <string name="review_step2_example">Umzekelo: Indawo intle, iibarista bayancuma, i-flat white imnandi kwaye ayibukhali.</string>
     <string name="review_step3_title">Isishwankathelo sophononongo</string>
     <string name="review_step3_description">Qinisekisa yonke into phambi kokuba uthumele.</string>
-    <string name="review_step3_your_review">Uphononongo lwakho</string>
     <string name="review_step3_user_review">Ulinike inqanaba kwaye wabhala uphononongo.</string>
-    <string name="review_submit_button">Thumela</string>
 
     <!-- Add Places to List -->
     <string name="add_to_lists">Yongeza kwiiluhlu</string>
@@ -304,6 +298,37 @@
     <string name="review_title">Truth Coffee</string>
     <string name="review_time_since_created">2 iintsuku ezidlulileyo</string>
     <string name="review_description">Indawo ilungile kakhulu!! Zininzi iindlela onokukhetha ngazo</string>
+
+    <!-- Title when place name is known -->
+    <string name="review_title_with_place">Ireyiti %1$s</string>
+
+    <!-- Generic title (fallback) -->
+    <string name="review_step1_title">Nika ingxelo ngale ndawo</string>
+
+    <!-- Subtitle under the title -->
+    <string name="review_step1_message">Ibelunjani amava akho?</string>
+
+    <!-- Label above the text box -->
+    <string name="review_step3_your_review">Uphononongo lwakho</string>
+
+    <!-- Hint for review text input -->
+    <string name="review_step2_example">Xelela abanye into oyithandileyo (ukunganyanzelekanga)</string>
+
+    <!-- Submit button -->
+    <string name="review_submit_button">Ngenisa</string>
+
+    <!-- While submitting -->
+    <string name="review_submitting">Iyangeniswa…</string>
+
+    <!-- Close button description -->
+    <string name="close">Vala</string>
+
+    <!-- “Not now” / cancel button -->
+    <string name="review_not_now">Hayi ngoku</string>
+
+    <string name="show_more_with_count">Bonisa okungakumbi (%1$d)</string>
+    <string name="show_more_reviews">Bonisa uphononongo oluninzi</string>
+    <string name="show_less_reviews">Bonisa ngaphantsi</string>
 
     <!-- Search Suggestion Item -->
     <string name="search_suggestion_title">Truth Coffee Roasting</string>

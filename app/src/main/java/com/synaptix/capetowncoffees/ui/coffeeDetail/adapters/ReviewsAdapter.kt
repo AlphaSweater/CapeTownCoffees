@@ -201,7 +201,7 @@ class ReviewsAdapter @AssistedInject constructor(
                 }
             }
 
-            public override fun bind(item: CoffeeReview, payloads: List<Any>) = bind(item)
+            override fun bind(item: CoffeeReview, payloads: List<Any>) = bind(item)
 
             // ─────────── Mosaic Helpers ───────────
             // Computes a responsive layout in a ConstraintLayout for 0..N photos.

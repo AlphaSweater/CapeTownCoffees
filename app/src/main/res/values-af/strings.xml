@@ -228,7 +228,6 @@
     <string name="view_all_activity">Sien alle aktiwiteit</string>
 
     <!-- Review Pages -->
-    <string name="close">Maak toe</string>
     <string name="completed_review">VOLTOOIDE\nRESENSIE</string>
     <string name="done">Klaar</string>
     <string name="how_was_your_experience">Hoe was jou\nervaring?</string>
@@ -240,18 +239,13 @@
     <string name="coffee_review">KOFFIE\nRESENSIE</string>
     <string name="thanks_for_your_review">Dankie vir jou resensie!</string>
     <string name="thank_you_message">Jou terugvoer help ander plaaslike inwoners om wonderlike koffieplekke te vind.</string>
-    <string name="review_step1_title">Hoe was jou besoek?</string>
-    <string name="review_step1_message">Gradeer jou ervaring sodat ander koffieliefhebbers kan besluit waarheen om te gaan.</string>
     <string name="review_back">Terug</string>
     <string name="review_next">Volgende</string>
     <string name="review_step2_title">Vertel ander van jou ervaring</string>
     <string name="review_step2_message">Opsioneel, maar baie nuttig: noem die atmosfeer, diens en koffie.</string>
-    <string name="review_step2_example">Bv. Gesellige ruimte, vriendelike baristas, plat wit was glad en nie te bitter nie.</string>
     <string name="review_step3_title">Resensie-oorsig</string>
     <string name="review_step3_description">Gaan alles na voordat jy jou resensie indien.</string>
-    <string name="review_step3_your_review">Jou resensie</string>
     <string name="review_step3_user_review">Jy het hierdie plek gegradeer en \'n resensie geskryf.</string>
-    <string name="review_submit_button">Dien resensie in</string>
 
     <!-- Add Places to List -->
     <string name="add_to_lists">Voeg by Lyste</string>
@@ -293,6 +287,37 @@
     <string name="review_title">Truth Coffee</string>
     <string name="review_time_since_created">2 dae gelede</string>
     <string name="review_description">Hierdie plek is die beste!! Soveel verskillende opsies</string>
+
+    <!-- Title when place name is known -->
+    <string name="review_title_with_place">Koers %1$s</string>
+
+    <!-- Generic title (fallback) -->
+    <string name="review_step1_title">Gradeer hierdie plek</string>
+
+    <!-- Subtitle under the title -->
+    <string name="review_step1_message">Hoe was jou ervaring?</string>
+
+    <!-- Label above the text box -->
+    <string name="review_step3_your_review">Jou resensie</string>
+
+    <!-- Hint for review text input -->
+    <string name="review_step2_example">Vertel ander wat jy geniet het (opsioneel)</string>
+
+    <!-- Submit button -->
+    <string name="review_submit_button">Indien</string>
+
+    <!-- While submitting -->
+    <string name="review_submitting">Dien in…</string>
+
+    <!-- Close button description -->
+    <string name="close">Sluit</string>
+
+    <!-- “Not now” / cancel button -->
+    <string name="review_not_now">Nie nou nie</string>
+
+    <string name="show_more_with_count">Wys meer (%1$d)</string>
+    <string name="show_more_reviews">Wys meer resensies</string>
+    <string name="show_less_reviews">Wys minder</string>
 
     <!-- Search Suggestion Item -->
     <string name="search_suggestion_title">Truth Coffee Roasting</string>
