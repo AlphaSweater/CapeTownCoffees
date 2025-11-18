@@ -16,6 +16,7 @@
 package com.synaptix.capetowncoffees
 
 import android.app.Application
+import android.content.Context
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
@@ -128,6 +129,15 @@ class CapeTownCoffeesApp : Application() {
     private fun startReviewLikeListener(authorUserId: String) {
         reactionsListener?.remove()
         Timber.d("Starting review like listener for authorUserId=%s", authorUserId)
+
+        val prefs = getSharedPreferences("review_like_notifications", Context.MODE_PRIVATE)
+        val lastSeenKey = "last_seen_like_ts_" + authorUserId
+        if (!prefs.contains(lastSeenKey)) {
+            val nowSeconds = System.currentTimeMillis() / 1000L
+            prefs.edit().putLong(lastSeenKey, nowSeconds).apply()
+            Timber.d("Review like: initializing lastSeen for %s to %d", authorUserId, nowSeconds)
+        }
+
         reactionsListener = FirebaseFirestore.getInstance()
             .collectionGroup("reactions")
             .whereEqualTo("reviewAuthorId", authorUserId)
@@ -141,6 +151,9 @@ class CapeTownCoffeesApp : Application() {
                     return@addSnapshotListener
                 }
 
+                val lastSeen = prefs.getLong(lastSeenKey, 0L)
+                var maxSeen = lastSeen
+
                 for (change in snapshots.documentChanges) {
                     if (change.type == DocumentChange.Type.ADDED) {
                         Timber.d(
@@ -149,35 +162,77 @@ class CapeTownCoffeesApp : Application() {
                             change.document.data
                         )
 
+                        val updatedAt = change.document.getTimestamp("updatedAt")
+                        val tsSeconds = updatedAt?.seconds ?: 0L
+                        if (tsSeconds != 0L && tsSeconds <= lastSeen) {
+                            Timber.d(
+                                "Review like: skipping old reaction ts=%d lastSeen=%d path=%s",
+                                tsSeconds,
+                                lastSeen,
+                                change.document.reference.path
+                            )
+                            continue
+                        }
+                        if (tsSeconds > maxSeen) {
+                            maxSeen = tsSeconds
+                        }
+
                         val likerId = change.document.getString("userId")
                         if (likerId.isNullOrBlank()) {
+                            Timber.d("Review like: missing likerId, showing generic notification")
                             NotificationHelper.showSimple(
                                 applicationContext,
                                 "Your comment was liked",
                                 "Someone liked your comment."
                             )
-                        } else {
-                            FirebaseFirestore.getInstance()
-                                .collection("users")
-                                .document(likerId)
-                                .get()
-                                .addOnSuccessListener { snap ->
-                                    val likerName = snap.getString("fullName") ?: "Someone"
-                                    NotificationHelper.showSimple(
-                                        applicationContext,
-                                        "Your comment was liked",
-                                        "$likerName liked your comment."
-                                    )
-                                }
-                                .addOnFailureListener {
-                                    NotificationHelper.showSimple(
-                                        applicationContext,
-                                        "Your comment was liked",
-                                        "Someone liked your comment."
-                                    )
-                                }
+                            continue
                         }
+
+                        // Skip self-likes (when author likes their own comment)
+                        if (likerId == authorUserId) {
+                            Timber.d("Review like: skipping self-like for userId=%s", likerId)
+                            continue
+                        }
+
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(likerId)
+                            .get()
+                            .addOnSuccessListener { snap ->
+                                val likerName = snap.getString("fullName")
+                                    ?: snap.getString("email")
+                                    ?: "Someone"
+                                Timber.d(
+                                    "Review like: resolved likerId=%s to name=%s (exists=%s)",
+                                    likerId,
+                                    likerName,
+                                    snap.exists()
+                                )
+                                NotificationHelper.showSimple(
+                                    applicationContext,
+                                    "Your comment was liked",
+                                    "$likerName liked your comment."
+                                )
+                            }
+                            .addOnFailureListener { ex ->
+                                Timber.w(ex, "Review like: failed to load liker user doc for userId=%s", likerId)
+                                NotificationHelper.showSimple(
+                                    applicationContext,
+                                    "Your comment was liked",
+                                    "Someone liked your comment."
+                                )
+                            }
                     }
+                }
+
+                if (maxSeen > lastSeen) {
+                    prefs.edit().putLong(lastSeenKey, maxSeen).apply()
+                    Timber.d(
+                        "Review like: updated lastSeen for %s from %d to %d",
+                        authorUserId,
+                        lastSeen,
+                        maxSeen
+                    )
                 }
             }
     }
