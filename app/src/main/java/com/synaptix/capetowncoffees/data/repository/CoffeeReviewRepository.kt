@@ -142,7 +142,6 @@ class CoffeeReviewRepository @Inject constructor(
             val reactionMap: Map<String, String?> = if (reviewIds.isEmpty()) {
                 emptyMap()
             } else {
-                // Launch parallel reads for each review's reaction doc for this user
                 try {
                     val reactions = reviewIds.map { rid ->
                         async {
@@ -168,7 +167,11 @@ class CoffeeReviewRepository @Inject constructor(
                 }
             }
 
-            dtos.toDomainListWithUsers(users = users, strict = false, reviewIdToReaction = reactionMap)
+            dtos.toDomainListWithUsers(
+                users = users,
+                strict = false,
+                reviewIdToReaction = reactionMap
+            )
         }
 
         // --- Google reviews: failure -> empty list (don’t block in-app) ---
@@ -180,7 +183,54 @@ class CoffeeReviewRepository @Inject constructor(
     override suspend fun addReview(
         coffeeReview: InAppReview,
         placeId: String
-    ): Result<String> = create(coffeeReview.toDto(), parentDocId = placeId)
+    ): Result<String> = runCatching {
+        val placeRef = firestore.collection("coffee_places").document(placeId)
+        val reviewsCol = placeRef.collection("reviews")
+
+        firestore.runTransaction { tx ->
+            // 1) Generate / resolve review id + ref
+            val existingIdFromDomain = coffeeReview.id?.takeIf { it.isNotBlank() }
+            val reviewId = existingIdFromDomain ?: reviewsCol.document().id
+            val reviewRef = reviewsCol.document(reviewId)
+
+            // 2) Read current aggregate from place
+            val placeSnap = tx.get(placeRef)
+            val oldCount = (placeSnap.getLong("appRatingCount") ?: 0L).toInt()
+            val oldAvg = placeSnap.getDouble("appRating") ?: 0.0
+
+            val rating = coffeeReview.rating
+            require(rating != null) {
+                "InAppReview.rating must not be null when creating a review"
+            }
+
+            // 3) Compute new aggregate values
+            val newCount = oldCount + 1
+            val newAvg = if (newCount > 0) {
+                (oldAvg * oldCount + rating) / newCount
+            } else {
+                rating.toDouble()
+            }
+
+            // 4) Write the review document
+            val dto: AppReviewDTO = coffeeReview.toDto().copy(
+                id = reviewId,
+                placeId = placeId
+            )
+            tx.set(reviewRef, dto)
+
+            // 5) Update place aggregates
+            tx.update(
+                placeRef,
+                mapOf(
+                    "appRating" to newAvg,
+                    "appRatingCount" to newCount
+                )
+            )
+
+            // Return the newly created review id
+            reviewId
+        }.await()
+    }
 
     override suspend fun deleteReview(
         reviewId: String,
