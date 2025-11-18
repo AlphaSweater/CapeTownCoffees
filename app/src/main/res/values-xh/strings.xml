@@ -250,7 +250,6 @@
     <string name="share_your_experience_with_the_community">Yabelana ngamava akho noluntu</string>
     <string name="next">Okulandelayo</string>
     <string name="tell_others_about_your_experience">Xelela abanye\nngamava akho</string>
-    <string name="consider_discUSSING_THE_FACILITIES_PRICING_AND_TASTE">Ungakhankanya indawo, amaxabiso, kunye nencasa</string>
     <string name="share_images">Yabelana ngemifanekiso</string>
     <string name="coffee_review">UPHONONONGO\nLWEEKOFU</string>
     <string name="thanks_for_your_review">Enkosi ngokuphonononga!</string>
@@ -356,8 +355,6 @@
     <string name="nav_saved">Gciniwe</string>
     <string name="nav_profile">Iprofayile</string>
 
-
-    <string name="in_app_reviews_title">Uphengululo lwe-App</string>
     <string name="google_reviews_title">Uphengululo lweGoogle</string>
     <string name="show_more">Bonisa Okungakumbi</string>
 </resources>

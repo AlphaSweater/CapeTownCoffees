@@ -29,16 +29,15 @@ android {
 
     defaultConfig {
         applicationId = "com.synaptix.capetowncoffees"
-        // minSdk increased from 24 to 26 to support features/libraries that require Android 8.0 (API 26) or higher.
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "3.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
-        compose = true // Will be removed after fixing usages
+        compose = true
         viewBinding = true
         buildConfig = true
         dataBinding = true
@@ -89,13 +88,12 @@ dependencies {
     implementation(libs.places.ktx)
 
     // Play Services - location & maps
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
 
     // --- Material Design ---
     implementation(libs.androidx.material)
     implementation(libs.androidx.material3.android)
-
 
     // --- Kotlin Coroutines ---
     implementation(libs.kotlinx.coroutines.core)
@@ -114,23 +112,22 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
-    //allows for google sign in
+    // allows for google sign in
     implementation(libs.play.services.auth)
 
     // Storage for profile photo uploads
-    implementation("com.google.firebase:firebase-storage")
+    implementation(libs.firebase.storage)
 
     // Firebase Cloud Messaging
-    implementation("com.google.firebase:firebase-messaging")
+    implementation(libs.firebase.messaging)
 
     implementation(libs.androidx.ui.graphics.android)
     implementation(libs.androidx.foundation.android)
 
-
     // --- Optional helpers ---
-    implementation("de.hdodenhof:circleimageview:3.1.0") // Circle Image View
+    implementation(libs.circleimageview) // Circle Image View
 
-    //Facebook shimmer
+    // Facebook shimmer
     implementation(libs.shimmer)
 
     // --- Image loading ---
@@ -145,6 +142,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     // --- Biometrics & Encrypted storage ---
-    implementation("androidx.biometric:biometric:1.1.0")
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.security.crypto)
 }
