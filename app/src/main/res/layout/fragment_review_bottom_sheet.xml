@@ -80,6 +80,7 @@
             android:isIndicator="false"
             android:numStars="5"
             android:stepSize="1"
+            android:padding="0dp"
             android:progressTint="@color/icon_star"
             android:secondaryProgressTint="@color/icon_star"
             android:progressBackgroundTint="@color/coffee_dark" />
