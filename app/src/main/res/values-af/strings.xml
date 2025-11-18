@@ -130,7 +130,6 @@
     <string name="no_reviews_yet">Geen resensies vir hierdie plek gevind nie</string>
     <string name="coffee_review_chip_in_app">Gemeenskap</string>
     <string name="coffee_review_chip_google">Google</string>
-    <string name="show_more_with_count">Wys Meer (%d oor)</string>
     <string name="coffee_image">Beeld van plek</string>
     <string name="location_permission_required">Liggingstoestemmings word vereis vir hierdie toepassing om te funksioneer!</string>
     <string name="location_fetch_failed">Kon nie ligging ophaal nie!!</string>

@@ -92,8 +92,11 @@ class CoffeeReviewRepository @Inject constructor(
                 col.get().await()
             }
 
+            // Only collect DTOs that have a non-blank `text` field.
             snapshot.documents.mapNotNullTo(allDtos) { doc ->
-                runCatching { doc.toObject(AppReviewDTO::class.java) }.getOrNull()
+                runCatching { doc.toObject(AppReviewDTO::class.java) }
+                    .getOrNull()
+                    ?.takeIf { it.text?.isNotBlank() == true }
             }
 
             if (limit != null && allDtos.size >= limit) break
@@ -123,7 +126,9 @@ class CoffeeReviewRepository @Inject constructor(
         val apiResult = apiDeferred.await()
 
         // --- In-app reviews: only fetch users if there are any dtos ---
+        // Filter out reviews with blank `text` coming from the DB.
         val dtos: List<AppReviewDTO> = dbResult.getOrElse { emptyList() }
+            .filter { it.text?.isNotBlank() == true }
 
         val inApp: List<InAppReview> = if (dtos.isEmpty()) {
             // Nothing in DB => skip user fetch entirely
@@ -208,7 +213,7 @@ class CoffeeReviewRepository @Inject constructor(
             val newAvg = if (newCount > 0) {
                 (oldAvg * oldCount + rating) / newCount
             } else {
-                rating.toDouble()
+                rating
             }
 
             // 4) Write the review document
@@ -241,11 +246,14 @@ class CoffeeReviewRepository @Inject constructor(
         reviewId: String,
         placeId: String
     ): Result<CoffeeReview?> =
+        // If the DB review exists but has a blank `text`, treat it as not-found here
         getById(reviewId, parentDocId = placeId).map { dto ->
             val uid = dto?.userId.orEmpty()
             val userDto = getUserProfileUseCase(uid).getOrNull()?.toDTO()
                 ?: placeholderUser(uid.ifBlank { "unknown" })
-            dto?.toDomain(userDto)
+
+            // Return null when review text is blank to avoid exposing empty-message reviews
+            dto?.takeIf { it.text?.isNotBlank() == true }?.toDomain(userDto)
         }
 
     override suspend fun reactToReview(
@@ -339,11 +347,14 @@ class CoffeeReviewRepository @Inject constructor(
             key = key
         )
 
+        // Filter out blank-text reviews before mapping
+        val filteredDtos = dtoPage.data.filter { it.text?.isNotBlank() == true }
+
         val userDto = getUserProfileUseCase(reviewerId)
             .getOrNull()?.toDTO() ?: placeholderUser(reviewerId)
 
         return PaginatedResult(
-            data = dtoPage.data.toDomainListForSingleUser(userDto),
+            data = filteredDtos.toDomainListForSingleUser(userDto),
             hasMore = dtoPage.hasMore
         )
     }
@@ -364,13 +375,16 @@ class CoffeeReviewRepository @Inject constructor(
             key = key
         )
 
+        // Filter out blank-text reviews and build users map from filtered data
+        val filtered = dtoPage.data.filter { it.text?.isNotBlank() == true }
+
         val users = buildUserMapFromUseCase(
-            dtoPage.data.mapNotNull { it.userId }.distinct(),
+            filtered.mapNotNull { it.userId }.distinct(),
             strict = false
         )
 
         return PaginatedResult(
-            data = dtoPage.data.toDomainListWithUsers(users = users, strict = false),
+            data = filtered.toDomainListWithUsers(users = users, strict = false),
             hasMore = dtoPage.hasMore
         )
     }

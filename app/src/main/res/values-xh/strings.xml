@@ -142,7 +142,6 @@
     <string name="no_reviews_yet">Akukho kuphononongwa kufunyenweyo</string>
     <string name="coffee_review_chip_in_app">Uluntu</string>
     <string name="coffee_review_chip_google">Google</string>
-    <string name="show_more_with_count">Bonisa Okungakumbi (%d kuseleyo)</string>
     <string name="coffee_image">Umfanekiso wendawo</string>
     <string name="location_permission_required">Imvume yendawo iyafuneka ukuze usetyenziso lusebenze!</string>
     <string name="location_fetch_failed">Ayiphumelelanga ukufumana indawo!!</string>
