@@ -192,11 +192,11 @@ https://developer.android.com/studio
   
 | Login | Sign Up | Home Page | Cafe Details |
 |-----------------|------------------------|-------------------|-----------------|
-| <img src="https://i.postimg.cc/V6BhJT5p/Login-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/cLnXKjb5/Register-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/vmyL4m9c/Home-Page-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/FKzC4Gjz/cafe-Screen-Cape-Town-Coffees.jpg" width="200"/> |
+| <img src="https://i.postimg.cc/V6BhJT5p/Login-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/cLnXKjb5/Register-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/kgzr5pmy/image.png" width="200"/> | <img src="https://i.postimg.cc/FKzC4Gjz/cafe-Screen-Cape-Town-Coffees.jpg" width="200"/> |
 
 | List Screen | Saved Cafes | Profile Page | Settings Page |
 |-----------------|-------------------|--------------------|-----------|
-| <img src="https://i.postimg.cc/d0g6KFQF/saved-Lists-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/g0Lys7Vq/list-Screen-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/0jZ5j3ds/Profile-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/1XWPsFss/Settings-Cape-Town-Coffees.jpg" width="200"/> |
+| <img src="https://i.postimg.cc/d0g6KFQF/saved-Lists-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/g0Lys7Vq/list-Screen-Cape-Town-Coffees.jpg" width="200"/> | <img src="https://i.postimg.cc/gjFk60bT/image.png" width="200"/> | <img src="https://i.postimg.cc/3RgQVCPQ/image.png" width="200"/> |
 </div>
 
 
