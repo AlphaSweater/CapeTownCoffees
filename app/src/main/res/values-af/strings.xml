@@ -299,4 +299,11 @@
     <string name="search_suggestion_location">Buitenkantstraat 36, Kaapstad Stad Sentrum asdasd asda sd asdasda</string>
     <string name="search_suggestion_distance">1.2 km</string>
     <string name="settings_display_language">Vertoon Taal</string>
+
+    <!-- Categories -->
+    <string name="category_all">Alles</string>
+    <string name="category_popular">Gewild</string>
+    <string name="category_pet_friendly">Troeteldiervriendelik</string>
+    <string name="category_nearby">Naby</string>
+    <string name="category_dates">Datums</string>
 </resources>
