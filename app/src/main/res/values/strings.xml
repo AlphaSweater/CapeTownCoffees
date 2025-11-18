@@ -217,8 +217,14 @@
     <string name="loading">Loading...</string>
     <string name="latte_lover">Latte Lover</string>
     <string name="coffee_explorer">Coffee Explorer</string>
-    <string name="level_3">Level 3</string>
-    <string name="_65_100_points_to_next_level">65/100 points to next level</string>
+    <string name="cafe_connoisseur">Cafe Connoisseur</string>
+    <string name="roast_master">Roast Master</string>
+    <string name="coffee_legend">Coffee Legend</string>
+    <string name="level_dynamic">Level %d</string>
+    <string name="gamification_summary">%d/%d comments • %d to next badge</string>
+    <string name="gamification_summary_max_level">%d comments • Max level reached</string>
+    <string name="level">Level 1</string>
+    <string name="comments_to_next_badge">1/5 comments 4 to next badge</string>
     <string name="points">Points</string>
     <string name="progress">Progress</string>
     <string name="badges">Badges</string>
@@ -340,4 +346,12 @@
     <string name="category_pet_friendly">Pet Friendly</string>
     <string name="category_nearby">Nearby</string>
     <string name="category_dates">Dates</string>
+
+    <!-- Popular Tag -->
+    <string name="popular_tag">Popular</string>
+
+    <!-- Nav Bar -->
+    <string name="nav_explore">Popular</string>
+    <string name="nav_saved">Saved</string>
+    <string name="nav_profile">Profile</string>
 </resources>

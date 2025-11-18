@@ -16,7 +16,12 @@
 package com.synaptix.capetowncoffees
 
 import android.app.Application
+import android.content.Context
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.synaptix.capetowncoffees.notifications.NotificationHelper
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.EntryPointAccessors
@@ -37,6 +42,8 @@ class CapeTownCoffeesApp : Application() {
 
     @Inject
     lateinit var offlineModeManager: OfflineModeManager
+
+    private var reactionsListener: ListenerRegistration? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -91,6 +98,15 @@ class CapeTownCoffeesApp : Application() {
                         }.addOnFailureListener { e ->
                             Timber.w(e, "Failed to get FCM token after login")
                         }
+
+                        val currentUserId = entryPoint.userRepository().getCurrentUserId()
+                        if (currentUserId != null) {
+                            startReviewLikeListener(currentUserId)
+                        } else {
+                            stopReviewLikeListener()
+                        }
+                    } else {
+                        stopReviewLikeListener()
                     }
                 }
             }
@@ -102,11 +118,129 @@ class CapeTownCoffeesApp : Application() {
     override fun onTerminate() {
         try {
             offlineModeManager.stop()
+            stopReviewLikeListener()
             Timber.d("OfflineModeManager stopped from Application")
         } catch (t: Throwable) {
             Timber.w(t, "Failed to stop OfflineModeManager")
         }
         super.onTerminate()
+    }
+
+    private fun startReviewLikeListener(authorUserId: String) {
+        reactionsListener?.remove()
+        Timber.d("Starting review like listener for authorUserId=%s", authorUserId)
+
+        val prefs = getSharedPreferences("review_like_notifications", Context.MODE_PRIVATE)
+        val lastSeenKey = "last_seen_like_ts_" + authorUserId
+        if (!prefs.contains(lastSeenKey)) {
+            val nowSeconds = System.currentTimeMillis() / 1000L
+            prefs.edit().putLong(lastSeenKey, nowSeconds).apply()
+            Timber.d("Review like: initializing lastSeen for %s to %d", authorUserId, nowSeconds)
+        }
+
+        reactionsListener = FirebaseFirestore.getInstance()
+            .collectionGroup("reactions")
+            .whereEqualTo("reviewAuthorId", authorUserId)
+            .whereEqualTo("type", "like")
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Timber.w(e, "Failed to listen for review like reactions")
+                    return@addSnapshotListener
+                }
+                if (snapshots == null) {
+                    return@addSnapshotListener
+                }
+
+                val lastSeen = prefs.getLong(lastSeenKey, 0L)
+                var maxSeen = lastSeen
+
+                for (change in snapshots.documentChanges) {
+                    if (change.type == DocumentChange.Type.ADDED) {
+                        Timber.d(
+                            "Review like change: type=ADDED path=%s data=%s",
+                            change.document.reference.path,
+                            change.document.data
+                        )
+
+                        val updatedAt = change.document.getTimestamp("updatedAt")
+                        val tsSeconds = updatedAt?.seconds ?: 0L
+                        if (tsSeconds != 0L && tsSeconds <= lastSeen) {
+                            Timber.d(
+                                "Review like: skipping old reaction ts=%d lastSeen=%d path=%s",
+                                tsSeconds,
+                                lastSeen,
+                                change.document.reference.path
+                            )
+                            continue
+                        }
+                        if (tsSeconds > maxSeen) {
+                            maxSeen = tsSeconds
+                        }
+
+                        val likerId = change.document.getString("userId")
+                        if (likerId.isNullOrBlank()) {
+                            Timber.d("Review like: missing likerId, showing generic notification")
+                            NotificationHelper.showSimple(
+                                applicationContext,
+                                "Your comment was liked",
+                                "Someone liked your comment."
+                            )
+                            continue
+                        }
+
+                        // Skip self-likes (when author likes their own comment)
+                        if (likerId == authorUserId) {
+                            Timber.d("Review like: skipping self-like for userId=%s", likerId)
+                            continue
+                        }
+
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(likerId)
+                            .get()
+                            .addOnSuccessListener { snap ->
+                                val likerName = snap.getString("fullName")
+                                    ?: snap.getString("email")
+                                    ?: "Someone"
+                                Timber.d(
+                                    "Review like: resolved likerId=%s to name=%s (exists=%s)",
+                                    likerId,
+                                    likerName,
+                                    snap.exists()
+                                )
+                                NotificationHelper.showSimple(
+                                    applicationContext,
+                                    "Your comment was liked",
+                                    "$likerName liked your comment."
+                                )
+                            }
+                            .addOnFailureListener { ex ->
+                                Timber.w(ex, "Review like: failed to load liker user doc for userId=%s", likerId)
+                                NotificationHelper.showSimple(
+                                    applicationContext,
+                                    "Your comment was liked",
+                                    "Someone liked your comment."
+                                )
+                            }
+                    }
+                }
+
+                if (maxSeen > lastSeen) {
+                    prefs.edit().putLong(lastSeenKey, maxSeen).apply()
+                    Timber.d(
+                        "Review like: updated lastSeen for %s from %d to %d",
+                        authorUserId,
+                        lastSeen,
+                        maxSeen
+                    )
+                }
+            }
+    }
+
+    private fun stopReviewLikeListener() {
+        Timber.d("Stopping review like listener")
+        reactionsListener?.remove()
+        reactionsListener = null
     }
 }
 

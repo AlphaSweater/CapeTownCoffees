@@ -261,6 +261,7 @@ class CoffeeReviewRepository @Inject constructor(
         firestore.runTransaction { tx ->
             val reviewSnap = tx.get(reviewRef)
             val reactionSnap = tx.get(reactionRef)
+            val reviewAuthorId = reviewSnap.getString("userId")
 
             val currentType: String? =
                 if (reactionSnap.exists()) reactionSnap.getString("type") else null
@@ -298,6 +299,7 @@ class CoffeeReviewRepository @Inject constructor(
                     reactionRef,
                     mapOf(
                         "userId" to userId,
+                        "reviewAuthorId" to reviewAuthorId,
                         "type" to newType,
                         "updatedAt" to FieldValue.serverTimestamp()
                     )
