@@ -60,11 +60,11 @@ class HomeViewModel @Inject constructor(
         private const val FEATURED_SORT_BY_DISTANCE = false
 
         private val DEFAULT_CATEGORIES = listOf(
-            Category(1, "All", R.drawable.ic_ctc_medal),
-            Category(2, "Popular", R.drawable.ic_ctc_star),
-            Category(3, "Pet Friendly", R.drawable.ic_ctc_pet),
-            Category(4, "Nearby", R.drawable.ic_ctc_location),
-            Category(5, "Dates", R.drawable.ic_ctc_heart)
+            Category(R.string.category_all, R.drawable.ic_ctc_medal),
+            Category(R.string.category_popular, R.drawable.ic_ctc_star),
+            Category(R.string.category_pet_friendly, R.drawable.ic_ctc_pet),
+            Category(R.string.category_nearby, R.drawable.ic_ctc_location),
+            Category(R.string.category_dates, R.drawable.ic_ctc_heart)
         )
     }
 
@@ -335,13 +335,12 @@ class HomeViewModel @Inject constructor(
         category: Category,
         source: List<CoffeePlaceLite>,
         user: LatLng?
-    ): List<CoffeePlaceLite> = when (category.name.lowercase()) {
-        "popular" -> source.sortedByDescending { it.combinedRatingCount }
-        "rated"   -> source.sortedByDescending { it.combinedRating }
-        "nearby"  -> if (user == null) source else source.sortedBy {
+    ): List<CoffeePlaceLite> = when (category.nameResId) {
+        R.string.category_popular -> source.sortedByDescending { it.combinedRatingCount }
+        R.string.category_nearby  -> if (user == null) source else source.sortedBy {
             it.location?.let { ll -> LocationFormattingUtil.distanceMeters(user, ll) } ?: Float.MAX_VALUE
         }
-        "dates"   -> source.sortedByDescending {
+        R.string.category_dates   -> source.sortedByDescending {
             it.combinedRating + (it.combinedRatingCount / 100f)
         }
         else      -> source

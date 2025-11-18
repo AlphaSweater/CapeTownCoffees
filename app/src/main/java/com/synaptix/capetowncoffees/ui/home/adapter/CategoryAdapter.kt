@@ -46,7 +46,7 @@ class CategoryAdapter(
             val ctx = itemView.context
 
             // Text & icon reflect the domain model
-            button.text = category.name
+            button.text = ctx.getString(category.nameResId)
             button.setIconResource(category.iconResId)
 
             // Apply selected vs unselected styling

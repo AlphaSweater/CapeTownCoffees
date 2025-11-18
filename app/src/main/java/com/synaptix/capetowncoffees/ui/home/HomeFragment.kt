@@ -376,7 +376,7 @@ class HomeFragment : Fragment() {
 
         collect(vm.ui.flow) { ui ->
             binding.progressBar.isGone = true
-            categoryAdapter.updateCategories(ui.categories)
+            categoryAdapter.updateCategories(ui.categories ?: emptyList())
             lastIsRefreshing = ui.isRefreshing
             binding.offlineBanner.root.isVisible = ui.isOffline
             updateSectionsVisibility()

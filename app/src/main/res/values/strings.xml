@@ -299,4 +299,11 @@
     <string name="search_suggestion_location">36 Buitenkant St, Cape Town City Centre asdasd asda sd asdasda</string>
     <string name="search_suggestion_distance">1.2 km</string>
     <string name="settings_display_language">Display Language</string>
+
+    <!-- Categories -->
+    <string name="category_all">All</string>
+    <string name="category_popular">Popular</string>
+    <string name="category_pet_friendly">Pet Friendly</string>
+    <string name="category_nearby">Nearby</string>
+    <string name="category_dates">Dates</string>
 </resources>
