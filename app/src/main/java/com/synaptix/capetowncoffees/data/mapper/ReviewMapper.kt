@@ -51,7 +51,9 @@ public object ReviewMapper {
             order = defaultOrder,
             isEdited = false,
             helpfulCount = 0,
-            userReactionType = userReactionType
+            userReactionType = userReactionType,
+            likeCount = (dto.likeCount ?: 0L).toInt(),
+            dislikeCount = (dto.dislikeCount ?: 0L).toInt()
         )
     }
 

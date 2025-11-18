@@ -16,9 +16,11 @@
 
 package com.synaptix.capetowncoffees.ui.coffeeDetail.adapters
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
@@ -129,75 +131,52 @@ class ReviewsAdapter @AssistedInject constructor(
                 if (inApp) {
                     val inAppItem = item as? InAppReview
                     val reviewDocId = inAppItem?.id
+                    val likeCount = inAppItem?.likeCount ?: 0
+                    val dislikeCount = inAppItem?.dislikeCount ?: 0
 
-                    // Initialize button visibility based on whether current user reacted
+                    tvLikeCount.text = likeCount.toString()
+                    tvDislikeCount.text = dislikeCount.toString()
+
+                    tvLikeCount.isVisible = likeCount > 0
+                    tvDislikeCount.isVisible = dislikeCount > 0
+
                     val currentReaction = inAppItem?.userReactionType
-                    when (currentReaction) {
-                        null -> {
-                            btnLike.isVisible = true
-                            btnDislike.isVisible = true
-                        }
-                        "like" -> {
-                            btnLike.isVisible = true
-                            btnDislike.isVisible = false
-                        }
-                        "dislike" -> {
-                            btnLike.isVisible = false
-                            btnDislike.isVisible = true
-                        }
-                        else -> {
-                            btnLike.isVisible = true
-                            btnDislike.isVisible = true
-                        }
-                    }
+                    val ctx = root.context
+
+                    val green = ContextCompat.getColor(ctx, R.color.success_green)
+                    val red = ContextCompat.getColor(ctx, R.color.error_red)
+                    val transparent = ContextCompat.getColor(ctx, android.R.color.transparent)
+                    val textTip = ContextCompat.getColor(ctx, R.color.text_tip)
+                    val white = ContextCompat.getColor(ctx, R.color.white)
+
+                    val likeSelected = currentReaction == "like"
+                    val dislikeSelected = currentReaction == "dislike"
+
+                    btnLike.backgroundTintList = ColorStateList.valueOf(if (likeSelected) green else transparent)
+                    btnLike.strokeColor = ColorStateList.valueOf(green)
+                    btnLike.iconTint = ColorStateList.valueOf(if (likeSelected) white else green)
+
+                    btnDislike.backgroundTintList = ColorStateList.valueOf(if (dislikeSelected) red else transparent)
+                    btnDislike.strokeColor = ColorStateList.valueOf(red)
+                    btnDislike.iconTint = ColorStateList.valueOf(if (dislikeSelected) white else red)
+
+                    tvLikeCount.setTextColor(if (likeSelected) green else textTip)
+                    tvDislikeCount.setTextColor(if (dislikeSelected) red else textTip)
 
                     if (reviewDocId.isNullOrBlank()) {
                         // Cannot perform server reaction without a document id; disable clicks.
                         btnLike.setOnClickListener(null)
                         btnDislike.setOnClickListener(null)
                     } else {
-                        // Optimistic UI toggle: update buttons immediately, then call host to persist
-                        btnLike.setOnClickListener {
-                            val cur = inAppItem.userReactionType
-                            val willBe = if (cur == "like") null else "like"
-
-                            // Apply optimistic UI change
-                            when (willBe) {
-                                null -> {
-                                    btnLike.isVisible = true
-                                    btnDislike.isVisible = true
-                                }
-                                "like" -> {
-                                    btnLike.isVisible = true
-                                    btnDislike.isVisible = false
-                                }
-                            }
-
-                            onClick(Click.Like(reviewDocId))
-                        }
-
-                        btnDislike.setOnClickListener {
-                            val cur = inAppItem.userReactionType
-                            val willBe = if (cur == "dislike") null else "dislike"
-
-                            // Apply optimistic UI change
-                            when (willBe) {
-                                null -> {
-                                    btnLike.isVisible = true
-                                    btnDislike.isVisible = true
-                                }
-                                "dislike" -> {
-                                    btnLike.isVisible = false
-                                    btnDislike.isVisible = true
-                                }
-                            }
-
-                            onClick(Click.Dislike(reviewDocId))
-                        }
+                        // Delegate optimistic state changes to the fragment; adapter just forwards clicks.
+                        btnLike.setOnClickListener { onClick(Click.Like(reviewDocId)) }
+                        btnDislike.setOnClickListener { onClick(Click.Dislike(reviewDocId)) }
                     }
                 } else {
                     btnLike.setOnClickListener(null)
                     btnDislike.setOnClickListener(null)
+                    tvLikeCount.isVisible = false
+                    tvDislikeCount.isVisible = false
                 }
             }
 
