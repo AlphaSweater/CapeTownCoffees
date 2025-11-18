@@ -43,6 +43,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.model.GooglePlaceReview
 import com.synaptix.capetowncoffees.domain.model.InAppReview
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeReview.AddCoffeeReviewReactionUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
@@ -71,6 +72,7 @@ class CoffeeDetailFragment : Fragment() {
     // Provided by Hilt; we delegate work to domain/util layers.
     @Inject lateinit var locationUtil: LocationUtil
     @Inject lateinit var coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase
+    @Inject lateinit var addCoffeeReviewReactionUseCase: AddCoffeeReviewReactionUseCase
     @Inject lateinit var reviewsAdapterFactory: ReviewsAdapter.Factory
 
     // ─────────── UI & State ───────────
@@ -113,8 +115,8 @@ class CoffeeDetailFragment : Fragment() {
     private fun setupRecyclers() = with(binding) {
         val clickHandler: (ReviewsAdapter.Click) -> Unit = { click ->
             when (click) {
-                is ReviewsAdapter.Click.Like      -> vm.onReviewLike(click.reviewId)
-                is ReviewsAdapter.Click.Dislike   -> vm.onReviewDislike(click.reviewId)
+                is ReviewsAdapter.Click.Like      -> onReviewReactionClick(click.reviewId, isLike = true)
+                is ReviewsAdapter.Click.Dislike   -> onReviewReactionClick(click.reviewId, isLike = false)
                 is ReviewsAdapter.Click.OpenPhoto -> vm.onOpenPhoto(
                     reviewId = click.reviewId,
                     startIndex = click.startIndex,
@@ -165,6 +167,60 @@ class CoffeeDetailFragment : Fragment() {
             updateInAppReviewsDisplay()
         }
     }
+
+    /**
+     * Handles a like/dislike click for a given review by calling the domain use case.
+     *
+     * @param reviewId The ID of the review being reacted to.
+     * @param isLike True if the user clicked Like, false if they clicked Dislike.
+     */
+    private fun onReviewReactionClick(reviewId: String, isLike: Boolean) {
+        val placeId = vm.placeId
+        if (placeId.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Missing place id for review reaction", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Find the in-memory review and apply optimistic update so UI reflects the action immediately
+        val idx = allInAppReviews.indexOfFirst { it is InAppReview && it.id == reviewId }
+        val oldItem = if (idx >= 0) allInAppReviews[idx] as InAppReview else null
+
+        val desiredType = if (isLike) "like" else "dislike"
+        val newType = if (oldItem?.userReactionType == desiredType) null else desiredType
+
+        if (oldItem != null) {
+            // Apply optimistic change locally and refresh the visible slice
+            val newItem = oldItem.copy(userReactionType = newType)
+            allInAppReviews = allInAppReviews.toMutableList().also { it[idx] = newItem }
+            updateInAppReviewsDisplay()
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = addCoffeeReviewReactionUseCase(
+                placeId = placeId,
+                reviewId = reviewId,
+                isLike = isLike,
+                userId = vm.currentUserId
+            )
+
+            result
+                .onFailure {
+                    Timber.e(it, "Failed to react to review (reviewId=$reviewId)")
+                    Toast.makeText(requireContext(), it.message ?: "Failed to update reaction", Toast.LENGTH_SHORT).show()
+
+                    // Revert optimistic change on failure
+                    if (oldItem != null) {
+                        allInAppReviews = allInAppReviews.toMutableList().also { it[idx] = oldItem }
+                        updateInAppReviewsDisplay()
+                    }
+                }
+                .onSuccess {
+                    // Refresh reviews to sync aggregate counts and authoritative reaction state
+                    vm.retryReviews()
+                }
+        }
+    }
+
 
     // ─────────── Collectors (Effects & State) ───────────
     // Consume one-shot effects and state streams from the VM.

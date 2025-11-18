@@ -83,7 +83,12 @@ data class InAppReview(
     // in-app specific metadata (extend freely)
     val isEdited: Boolean = false,
     val helpfulCount: Int = 0,
+    // per-current-user reaction (nullable). null == not reacted; "like"/"dislike" etc. when set.
+    val userReactionType: String? = null,
 ) : CoffeeReview() {
+    // derived boolean for convenience (not stored separately)
+    val isReacted: Boolean get() = userReactionType != null
+
     override fun withOrder(order: Int): InAppReview = copy(order = order)
     override fun resetToDefaultOrder(): InAppReview = copy(order = defaultOrder)
 }

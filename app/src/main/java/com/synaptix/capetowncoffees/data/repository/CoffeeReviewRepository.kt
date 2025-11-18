@@ -9,7 +9,7 @@
 //References:
 //======================================================================================
 //* ChatGPT was used to clarify repository patterns, data source integration, and best
-//practices for separating data access logic from UI components.
+//* practices for separating data access logic from UI components.
 //* It also provided suggestions to improve maintainability and consistency.
 //* It also helped generate useful comments
 //======================================================================================
@@ -18,6 +18,7 @@ package com.synaptix.capetowncoffees.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.FieldValue
 import com.synaptix.capetowncoffees.data.common.BaseRepository
 import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import com.synaptix.capetowncoffees.data.mapper.toDTO
@@ -68,7 +69,11 @@ class CoffeeReviewRepository @Inject constructor(
         val placesSnapshot = firestore.collection("coffee_places").get().await()
         val placeIds = placesSnapshot.documents.mapNotNull { it.id }
 
-        Timber.d("GamificationRepo: scanning %d coffee_places for userId=%s", placeIds.size, reviewerId)
+        Timber.d(
+            "GamificationRepo: scanning %d coffee_places for userId=%s",
+            placeIds.size,
+            reviewerId
+        )
 
         if (placeIds.isEmpty()) return@runCatching emptyList<CoffeeReview>()
 
@@ -94,7 +99,11 @@ class CoffeeReviewRepository @Inject constructor(
             if (limit != null && allDtos.size >= limit) break
         }
 
-        Timber.d("GamificationRepo: collected %d AppReviewDTOs for userId=%s", allDtos.size, reviewerId)
+        Timber.d(
+            "GamificationRepo: collected %d AppReviewDTOs for userId=%s",
+            allDtos.size,
+            reviewerId
+        )
 
         // 3) Map DTOs to domain using a single user profile
         val userDto = getUserProfileUseCase(reviewerId).getOrNull()?.toDTO()
@@ -104,6 +113,7 @@ class CoffeeReviewRepository @Inject constructor(
 
     override suspend fun getReviewsForPlace(
         placeId: String,
+        userId: String,
         limit: Int?
     ): Result<List<CoffeeReview>> = coroutineScope {
         val dbDeferred = async { getAll(limit = limit, parentDocId = placeId) }
@@ -121,8 +131,44 @@ class CoffeeReviewRepository @Inject constructor(
         } else {
             // Build users map only when needed
             val userIds: List<String> = dtos.mapNotNull { it.userId }.distinct()
-            val users = if (userIds.isEmpty()) emptyMap() else buildUserMapFromUseCase(userIds, strict = false)
-            dtos.toDomainListWithUsers(users = users, strict = false)
+            val users =
+                if (userIds.isEmpty()) emptyMap() else buildUserMapFromUseCase(
+                    userIds,
+                    strict = false
+                )
+
+            // --- New: fetch current user's reaction per review (parallel) ---
+            val reviewIds: List<String> = dtos.mapNotNull { it.id }
+            val reactionMap: Map<String, String?> = if (reviewIds.isEmpty()) {
+                emptyMap()
+            } else {
+                // Launch parallel reads for each review's reaction doc for this user
+                try {
+                    val reactions = reviewIds.map { rid ->
+                        async {
+                            val reactionDoc = firestore
+                                .collection("coffee_places")
+                                .document(placeId)
+                                .collection("reviews")
+                                .document(rid)
+                                .collection("reactions")
+                                .document(userId)
+                                .get()
+                                .await()
+
+                            val type = if (reactionDoc.exists()) reactionDoc.getString("type") else null
+                            rid to type
+                        }
+                    }.awaitAll()
+
+                    reactions.toMap()
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to load reaction docs for user=%s on place=%s", userId, placeId)
+                    emptyMap()
+                }
+            }
+
+            dtos.toDomainListWithUsers(users = users, strict = false, reviewIdToReaction = reactionMap)
         }
 
         // --- Google reviews: failure -> empty list (don’t block in-app) ---
@@ -130,7 +176,6 @@ class CoffeeReviewRepository @Inject constructor(
 
         Result.success((inApp + google).myOrder(OrderMode.DefaultSectioned))
     }
-
 
     override suspend fun addReview(
         coffeeReview: InAppReview,
@@ -152,6 +197,73 @@ class CoffeeReviewRepository @Inject constructor(
                 ?: placeholderUser(uid.ifBlank { "unknown" })
             dto?.toDomain(userDto)
         }
+
+    override suspend fun reactToReview(
+        placeId: String,
+        reviewId: String,
+        userId: String,
+        isLike: Boolean
+    ): Result<Unit> = runCatching {
+        val placeRef = firestore.collection("coffee_places").document(placeId)
+        val reviewRef = placeRef.collection("reviews").document(reviewId)
+        val reactionRef = reviewRef.collection("reactions").document(userId)
+
+        firestore.runTransaction { tx ->
+            val reviewSnap = tx.get(reviewRef)
+            val reactionSnap = tx.get(reactionRef)
+
+            val currentType: String? =
+                if (reactionSnap.exists()) reactionSnap.getString("type") else null
+            val desiredType = if (isLike) "like" else "dislike"
+
+            // Decide what the new type should be after toggling.
+            val newType: String? = when (currentType) {
+                desiredType -> null // same button twice -> clear reaction
+                "like", "dislike" -> desiredType // opposite -> switch
+                else -> desiredType // no existing reaction -> set
+            }
+
+            var likeCount = (reviewSnap.getLong("likeCount") ?: 0L).coerceAtLeast(0L)
+            var dislikeCount = (reviewSnap.getLong("dislikeCount") ?: 0L).coerceAtLeast(0L)
+
+            // Remove old reaction from counts
+            when (currentType) {
+                "like" -> if (likeCount > 0) likeCount--
+                "dislike" -> if (dislikeCount > 0) dislikeCount--
+            }
+
+            // Add new reaction to counts
+            when (newType) {
+                "like" -> likeCount++
+                "dislike" -> dislikeCount++
+            }
+
+            // Write / delete reaction document
+            if (newType == null) {
+                if (reactionSnap.exists()) {
+                    tx.delete(reactionRef)
+                }
+            } else {
+                tx.set(
+                    reactionRef,
+                    mapOf(
+                        "userId" to userId,
+                        "type" to newType,
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                )
+            }
+
+            // Update aggregate counts on the review document
+            tx.update(
+                reviewRef,
+                mapOf(
+                    "likeCount" to likeCount,
+                    "dislikeCount" to dislikeCount
+                )
+            )
+        }.await()
+    }
 
     // ----------------------------
     // Pagination

@@ -24,6 +24,7 @@ import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.GetCoffeePlaceDetailsUseCase
 import com.synaptix.capetowncoffees.domain.usecase.coffeeReview.GetCoffeeReviewsForPlaceUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.SimpleViewModel
@@ -43,7 +44,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CafeDetailViewModel @Inject constructor(
     private val getCoffeePlaceDetailsUseCase: GetCoffeePlaceDetailsUseCase,
-    private val getCoffeeReviewsForPlaceUseCase: GetCoffeeReviewsForPlaceUseCase
+    private val getCoffeeReviewsForPlaceUseCase: GetCoffeeReviewsForPlaceUseCase,
+    private val getUserProfileUseCase: GetUserProfileUseCase
 ) : SimpleViewModel() {
 
     // ─────────── Screen Args & Route Keys ───────────
@@ -54,6 +56,10 @@ class CafeDetailViewModel @Inject constructor(
         private const val ROUTE_DIAL_PHONE = "action_dial_phone"
         private const val ROUTE_OPEN_REVIEW_GALLERY = "action_open_review_gallery"
     }
+
+    // Cached current user id resolved at ViewModel start so callers (Fragments) can pass it
+    // into write operations to avoid duplicate network lookups.
+    public var currentUserId: String? = null
 
     // ─────────── UI Model ───────────
     // Flattened, render-ready fields; compute-heavy work stays out of the Fragment.
@@ -96,8 +102,21 @@ class CafeDetailViewModel @Inject constructor(
         }
         placeId = id
 
+        // Kick off resolving current user profile early so we can reuse the id for writes.
+        viewModelScope.launch {
+            runCatching { getUserProfileUseCase() }
+                .onSuccess { res ->
+                    val user = res.getOrNull()
+                    if (user != null) {
+                        currentUserId = user.id
+                        Timber.d("Resolved current user id for CafeDetailViewModel: %s", user.id)
+                    }
+                }
+                .onFailure { Timber.w(it, "Failed to resolve current user profile in CafeDetailViewModel") }
+        }
+
         fetchResultInto(place, { getCoffeePlaceDetailsUseCase(placeId!!) }, label = "place")
-        fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(placeId!!) }, label = "reviews")
+        fetchResultInto(reviews, { getCoffeeReviewsForPlaceUseCase(placeId!!, currentUserId) }, label = "reviews")
 
         viewModelScope.launch {
             place.flow.collect { loadable ->

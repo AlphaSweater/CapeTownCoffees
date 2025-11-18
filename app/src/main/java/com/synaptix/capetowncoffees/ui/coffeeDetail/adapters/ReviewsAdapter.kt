@@ -25,6 +25,7 @@ import com.bumptech.glide.Glide
 import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.ItemCoffeeReviewBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
+import com.synaptix.capetowncoffees.domain.model.InAppReview
 import com.synaptix.capetowncoffees.domain.model.avatarModelOrNull
 import com.synaptix.capetowncoffees.domain.model.isInApp
 import com.synaptix.capetowncoffees.domain.model.photoUrlsOrEmpty
@@ -126,9 +127,74 @@ class ReviewsAdapter @AssistedInject constructor(
                 val inApp = item.isInApp
                 actionsContainer.isVisible = inApp
                 if (inApp) {
-                    val key = item.safeReviewKey()
-                    btnLike.setOnClickListener { onClick(Click.Like(key)) }
-                    btnDislike.setOnClickListener { onClick(Click.Dislike(key)) }
+                    val inAppItem = item as? InAppReview
+                    val reviewDocId = inAppItem?.id
+
+                    // Initialize button visibility based on whether current user reacted
+                    val currentReaction = inAppItem?.userReactionType
+                    when (currentReaction) {
+                        null -> {
+                            btnLike.isVisible = true
+                            btnDislike.isVisible = true
+                        }
+                        "like" -> {
+                            btnLike.isVisible = true
+                            btnDislike.isVisible = false
+                        }
+                        "dislike" -> {
+                            btnLike.isVisible = false
+                            btnDislike.isVisible = true
+                        }
+                        else -> {
+                            btnLike.isVisible = true
+                            btnDislike.isVisible = true
+                        }
+                    }
+
+                    if (reviewDocId.isNullOrBlank()) {
+                        // Cannot perform server reaction without a document id; disable clicks.
+                        btnLike.setOnClickListener(null)
+                        btnDislike.setOnClickListener(null)
+                    } else {
+                        // Optimistic UI toggle: update buttons immediately, then call host to persist
+                        btnLike.setOnClickListener {
+                            val cur = inAppItem.userReactionType
+                            val willBe = if (cur == "like") null else "like"
+
+                            // Apply optimistic UI change
+                            when (willBe) {
+                                null -> {
+                                    btnLike.isVisible = true
+                                    btnDislike.isVisible = true
+                                }
+                                "like" -> {
+                                    btnLike.isVisible = true
+                                    btnDislike.isVisible = false
+                                }
+                            }
+
+                            onClick(Click.Like(reviewDocId))
+                        }
+
+                        btnDislike.setOnClickListener {
+                            val cur = inAppItem.userReactionType
+                            val willBe = if (cur == "dislike") null else "dislike"
+
+                            // Apply optimistic UI change
+                            when (willBe) {
+                                null -> {
+                                    btnLike.isVisible = true
+                                    btnDislike.isVisible = true
+                                }
+                                "dislike" -> {
+                                    btnLike.isVisible = false
+                                    btnDislike.isVisible = true
+                                }
+                            }
+
+                            onClick(Click.Dislike(reviewDocId))
+                        }
+                    }
                 } else {
                     btnLike.setOnClickListener(null)
                     btnDislike.setOnClickListener(null)

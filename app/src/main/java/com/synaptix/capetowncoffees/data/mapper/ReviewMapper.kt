@@ -34,7 +34,8 @@ public object ReviewMapper {
         dto: AppReviewDTO,
         userDto: CoffeeUserDTO,
         placeIdOverride: String? = null,
-        defaultOrder: Int = 1
+        defaultOrder: Int = 1,
+        userReactionType: String? = null
     ): InAppReview {
         return InAppReview(
             id = dto.id,
@@ -49,7 +50,8 @@ public object ReviewMapper {
             defaultOrder = defaultOrder,
             order = defaultOrder,
             isEdited = false,
-            helpfulCount = 0
+            helpfulCount = 0,
+            userReactionType = userReactionType
         )
     }
 
@@ -58,13 +60,15 @@ public object ReviewMapper {
         dtoList: List<AppReviewDTO>,
         userDto: CoffeeUserDTO,
         placeIdOverride: String? = null,
-        startIndex: Int = 1
+        startIndex: Int = 1,
+        reviewIdToReaction: Map<String, String?>? = null
     ): List<InAppReview> = dtoList.mapIndexed { index, dto ->
         fromAppReviewDto(
             dto = dto,
             userDto = userDto,
             placeIdOverride = placeIdOverride,
-            defaultOrder = startIndex + index
+            defaultOrder = startIndex + index,
+            userReactionType = reviewIdToReaction?.get(dto.id)
         )
     }
 
@@ -74,7 +78,8 @@ public object ReviewMapper {
         userDtosMap: Map<String, CoffeeUserDTO>,
         placeIdOverride: String? = null,
         startIndex: Int = 1,
-        strict: Boolean = true
+        strict: Boolean = true,
+        reviewIdToReaction: Map<String, String?>? = null
     ): List<InAppReview> {
         require(userDtosMap.isNotEmpty()) { "Users map must not be empty." }
 
@@ -90,7 +95,8 @@ public object ReviewMapper {
                 dto = dto,
                 userDto = userDto,
                 placeIdOverride = placeIdOverride,
-                defaultOrder = startIndex + index
+                defaultOrder = startIndex + index,
+                userReactionType = reviewIdToReaction?.get(dto.id)
             )
         }
     }
@@ -176,27 +182,31 @@ public fun AppReviewDTO.toDomain(userDto: CoffeeUserDTO, defaultOrder: Int = 1):
 public fun List<AppReviewDTO>.toDomainListForSingleUser(
     user: CoffeeUserDTO,
     placeIdOverride: String? = null,
-    startIndex: Int = 1
+    startIndex: Int = 1,
+    reviewIdToReaction: Map<String, String?>? = null
 ): List<InAppReview> =
     ReviewMapper.fromAppReviewList(
         dtoList = this,
         userDto = user,
         placeIdOverride = placeIdOverride,
-        startIndex = startIndex
+        startIndex = startIndex,
+        reviewIdToReaction = reviewIdToReaction
     )
 
 public fun List<AppReviewDTO>.toDomainListWithUsers(
     users: Map<String, CoffeeUserDTO>,
     placeIdOverride: String? = null,
     startIndex: Int = 1,
-    strict: Boolean = true
+    strict: Boolean = true,
+    reviewIdToReaction: Map<String, String?>? = null
 ): List<InAppReview> =
     ReviewMapper.fromAppReviewList(
         dtoList = this,
         userDtosMap = users,
         placeIdOverride = placeIdOverride,
         startIndex = startIndex,
-        strict = strict
+        strict = strict,
+        reviewIdToReaction = reviewIdToReaction
     )
 
 public fun InAppReview.toDto(): AppReviewDTO =
