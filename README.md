@@ -49,6 +49,7 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 <li><strong>Secure Sign-up/Login</strong> with Firebase Authentication</li>
 <li><strong>Google Single Sign-On</strong> for quick access</li>
 <li><strong>Input Validation</strong> and security measures</li>
+<li><strong>Biometric Authentication</strong>, uses fingerprint recognition for secure authentication</li>
 </ul>
 
 ### ☕ Coffee Shop Discovery
@@ -65,7 +66,9 @@ Whether you’re searching for a cozy spot to study, a trendy café to meet frie
 <ul style="margin-top: 0; padding-left: 20px;">
 <li><strong>Favorites System</strong> - Save your go-to spots</li>
 <li><strong>Downloads</strong> - Access café info offline</li>
+<li><strong>Multi-language Support</strong> - Users can change the language of the app to English, Afrikaans or Xhosa</li>
 <li><strong>Detailed Café Views</strong> - Comprehensive information including ratings, descriptions, and hours</li>
+<li><strong>Real-time Notifications</strong> - Users can choose to enable notifications for real-time updates and alerts</li>
 </ul>
 
 ### 🛠️ Technical Excellence
