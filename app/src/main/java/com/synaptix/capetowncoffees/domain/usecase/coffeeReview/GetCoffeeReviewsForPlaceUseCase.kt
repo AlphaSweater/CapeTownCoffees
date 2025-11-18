@@ -19,6 +19,7 @@ import com.google.firebase.firestore.Query
 import com.synaptix.capetowncoffees.data.common.PaginatedResult
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
 import com.synaptix.capetowncoffees.domain.repository.ICoffeeReviewRepository
+import com.synaptix.capetowncoffees.domain.usecase.coffeeUser.GetUserProfileUseCase
 import javax.inject.Inject
 
 /* ──────────────────────────────────────────────────────────────────────────────
@@ -74,7 +75,8 @@ import javax.inject.Inject
  * ```
  */
 class GetCoffeeReviewsForPlaceUseCase @Inject constructor(
-    private val coffeeReviewRepository: ICoffeeReviewRepository
+    private val coffeeReviewRepository: ICoffeeReviewRepository,
+    private val getUserProfileUseCase: GetUserProfileUseCase
 ) {
 
     /**
@@ -84,8 +86,16 @@ class GetCoffeeReviewsForPlaceUseCase @Inject constructor(
      * @param limit Optional cap on result size; `null` lets the repository fetch “all”.
      * @return `Result<List<CoffeeReview>>` (errors are wrapped; success may be empty).
      */
-    suspend operator fun invoke(placeId: String, limit: Int? = null): Result<List<CoffeeReview>> {
-        return coffeeReviewRepository.getReviewsForPlace(placeId, limit)
+    suspend operator fun invoke(placeId: String, userId: String? = null, limit: Int? = null): Result<List<CoffeeReview>> {
+
+        // Resolve user id: use provided id or fetch current user via GetUserProfileUseCase
+        val resolvedUserId = userId ?: run {
+            val userResult = getUserProfileUseCase()
+            val user = userResult.getOrElse { return Result.failure(it) }
+            user.id
+        }
+
+        return coffeeReviewRepository.getReviewsForPlace(placeId, resolvedUserId, limit)
     }
 
     /**

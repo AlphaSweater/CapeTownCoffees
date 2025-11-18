@@ -40,7 +40,10 @@ import com.synaptix.capetowncoffees.R
 import com.synaptix.capetowncoffees.databinding.FragmentCoffeeDetailBinding
 import com.synaptix.capetowncoffees.domain.model.CoffeePlaceFull
 import com.synaptix.capetowncoffees.domain.model.CoffeeReview
+import com.synaptix.capetowncoffees.domain.model.GooglePlaceReview
+import com.synaptix.capetowncoffees.domain.model.InAppReview
 import com.synaptix.capetowncoffees.domain.usecase.coffeePlace.CoffeePlaceUtilsUseCase
+import com.synaptix.capetowncoffees.domain.usecase.coffeeReview.AddCoffeeReviewReactionUseCase
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Effect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.Loadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
@@ -69,6 +72,7 @@ class CoffeeDetailFragment : Fragment() {
     // Provided by Hilt; we delegate work to domain/util layers.
     @Inject lateinit var locationUtil: LocationUtil
     @Inject lateinit var coffeePlaceUtilsUseCase: CoffeePlaceUtilsUseCase
+    @Inject lateinit var addCoffeeReviewReactionUseCase: AddCoffeeReviewReactionUseCase
     @Inject lateinit var reviewsAdapterFactory: ReviewsAdapter.Factory
 
     // ─────────── UI & State ───────────
@@ -78,7 +82,12 @@ class CoffeeDetailFragment : Fragment() {
     private var _binding: FragmentCoffeeDetailBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var reviewsAdapter: ReviewsAdapter
+    private lateinit var inAppReviewsAdapter: ReviewsAdapter
+    private lateinit var googleReviewsAdapter: ReviewsAdapter
+
+    private var allInAppReviews: List<CoffeeReview> = emptyList()
+    private var currentInAppDisplayCount = 3
+    private val inAppReviewsPageSize = 3
 
     // ─────────── Lifecycle: View Creation ───────────
     // Inflate view binding and return root for rendering.
@@ -104,10 +113,10 @@ class CoffeeDetailFragment : Fragment() {
     // ─────────── Recycler & Adapter ───────────
     // Sets up the reviews list and routes item interactions to the VM.
     private fun setupRecyclers() = with(binding) {
-        reviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope) { click ->
+        val clickHandler: (ReviewsAdapter.Click) -> Unit = { click ->
             when (click) {
-                is ReviewsAdapter.Click.Like      -> vm.onReviewLike(click.reviewId)
-                is ReviewsAdapter.Click.Dislike   -> vm.onReviewDislike(click.reviewId)
+                is ReviewsAdapter.Click.Like      -> onReviewReactionClick(click.reviewId, isLike = true)
+                is ReviewsAdapter.Click.Dislike   -> onReviewReactionClick(click.reviewId, isLike = false)
                 is ReviewsAdapter.Click.OpenPhoto -> vm.onOpenPhoto(
                     reviewId = click.reviewId,
                     startIndex = click.startIndex,
@@ -116,9 +125,17 @@ class CoffeeDetailFragment : Fragment() {
             }
         }
 
-        rvReviews.layoutManager = LinearLayoutManager(requireContext())
-        rvReviews.adapter = reviewsAdapter
-        rvReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+        // In-App Reviews Adapter
+        inAppReviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope, clickHandler)
+        rvInAppReviews.layoutManager = LinearLayoutManager(requireContext())
+        rvInAppReviews.adapter = inAppReviewsAdapter
+        rvInAppReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+
+        // Google Reviews Adapter
+        googleReviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope, clickHandler)
+        rvGoogleReviews.layoutManager = LinearLayoutManager(requireContext())
+        rvGoogleReviews.adapter = googleReviewsAdapter
+        rvGoogleReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
     }
 
     // ─────────── UI Listeners ───────────
@@ -143,7 +160,67 @@ class CoffeeDetailFragment : Fragment() {
             }
             findNavController().navigate(R.id.action_cafeDetailFragment_to_reviewContainerFragment, args)
         }
+
+        // Show More button for in-app reviews
+        tvShowMoreInApp.setOnClickListener {
+            currentInAppDisplayCount += inAppReviewsPageSize
+            updateInAppReviewsDisplay()
+        }
     }
+
+    /**
+     * Handles a like/dislike click for a given review by calling the domain use case.
+     *
+     * @param reviewId The ID of the review being reacted to.
+     * @param isLike True if the user clicked Like, false if they clicked Dislike.
+     */
+    private fun onReviewReactionClick(reviewId: String, isLike: Boolean) {
+        val placeId = vm.placeId
+        if (placeId.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Missing place id for review reaction", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Find the in-memory review and apply optimistic update so UI reflects the action immediately
+        val idx = allInAppReviews.indexOfFirst { it is InAppReview && it.id == reviewId }
+        val oldItem = if (idx >= 0) allInAppReviews[idx] as InAppReview else null
+
+        val desiredType = if (isLike) "like" else "dislike"
+        val newType = if (oldItem?.userReactionType == desiredType) null else desiredType
+
+        if (oldItem != null) {
+            // Apply optimistic change locally and refresh the visible slice
+            val newItem = oldItem.copy(userReactionType = newType)
+            allInAppReviews = allInAppReviews.toMutableList().also { it[idx] = newItem }
+            updateInAppReviewsDisplay()
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = addCoffeeReviewReactionUseCase(
+                placeId = placeId,
+                reviewId = reviewId,
+                isLike = isLike,
+                userId = vm.currentUserId
+            )
+
+            result
+                .onFailure {
+                    Timber.e(it, "Failed to react to review (reviewId=$reviewId)")
+                    Toast.makeText(requireContext(), it.message ?: "Failed to update reaction", Toast.LENGTH_SHORT).show()
+
+                    // Revert optimistic change on failure
+                    if (oldItem != null) {
+                        allInAppReviews = allInAppReviews.toMutableList().also { it[idx] = oldItem }
+                        updateInAppReviewsDisplay()
+                    }
+                }
+                .onSuccess {
+                    // Refresh reviews to sync aggregate counts and authoritative reaction state
+                    vm.retryReviews()
+                }
+        }
+    }
+
 
     // ─────────── Collectors (Effects & State) ───────────
     // Consume one-shot effects and state streams from the VM.
@@ -241,9 +318,47 @@ class CoffeeDetailFragment : Fragment() {
     // ─────────── Render Helpers ───────────
     // Small view helpers to keep collectors tidy.
     private fun renderReviews(list: List<CoffeeReview>) = with(binding) {
+        // Separate reviews by type
+        val inAppReviews = list.filterIsInstance<InAppReview>()
+        val googleReviews = list.filterIsInstance<GooglePlaceReview>()
+
+        // Store all in-app reviews and reset pagination
+        allInAppReviews = inAppReviews
+        currentInAppDisplayCount = inAppReviewsPageSize
+
+        // Show empty state if no reviews
         reviewsEmpty.isVisible = list.isEmpty()
-        rvReviews.isVisible = list.isNotEmpty()
-        reviewsAdapter.updateItems(list)
+
+        // Update in-app reviews section
+        if (inAppReviews.isNotEmpty()) {
+            inAppReviewsSection.isVisible = true
+            updateInAppReviewsDisplay()
+        } else {
+            inAppReviewsSection.isVisible = false
+        }
+
+        // Update Google reviews section
+        if (googleReviews.isNotEmpty()) {
+            googleReviewsSection.isVisible = true
+            googleReviewsAdapter.updateItems(googleReviews)
+        } else {
+            googleReviewsSection.isVisible = false
+        }
+    }
+
+    private fun updateInAppReviewsDisplay() = with(binding) {
+        val displayReviews = allInAppReviews.take(currentInAppDisplayCount)
+        inAppReviewsAdapter.updateItems(displayReviews)
+
+        // Show/hide "Show More" button
+        val hasMore = allInAppReviews.size > currentInAppDisplayCount
+        tvShowMoreInApp.isVisible = hasMore
+
+        // Update button text with count
+        if (hasMore) {
+            val remaining = allInAppReviews.size - currentInAppDisplayCount
+            tvShowMoreInApp.text = getString(R.string.show_more_with_count, remaining)
+        }
     }
 
     private fun showReviewsSkeleton() = with(binding) {
