@@ -142,6 +142,7 @@
     <string name="no_reviews_yet">Akukho kuphononongwa kufunyenweyo</string>
     <string name="coffee_review_chip_in_app">Uluntu</string>
     <string name="coffee_review_chip_google">Google</string>
+    <string name="show_more_with_count">Bonisa Okungakumbi (%d kuseleyo)</string>
     <string name="coffee_image">Umfanekiso wendawo</string>
     <string name="location_permission_required">Imvume yendawo iyafuneka ukuze usetyenziso lusebenze!</string>
     <string name="location_fetch_failed">Ayiphumelelanga ukufumana indawo!!</string>
@@ -228,9 +229,14 @@
     <string name="loading">Ilayisha...</string>
     <string name="latte_lover">Umthandi weLatte</string>
     <string name="coffee_explorer">Umphandi wekofu</string>
-    <string name="level_3">Inqanaba 3</string>
-    <string name="_65_100_points_to_next_level">65/100 amanqaku ukuya kwinqanaba elilandelayo</string>
-    <string name="points">Amanqaku</string>
+    <string name="cafe_connoisseur">Ingcaphephe yeKofu</string>
+    <string name="roast_master">Inguqulelo yoKhitshi</string>
+    <string name="coffee_legend">Iqhawe leKofu</string>
+    <string name="level_dynamic">Inqanaba %d</string>
+    <string name="gamification_summary">%d/%d izimvo • %d ukuya kwibheji elandelayo</string>
+    <string name="gamification_summary_max_level">%d izimvo • Ifikile inqanaba eliphezulu</string>
+    <string name="level">Inqanaba 1</string>
+    <string name="comments_to_next_badge">1/5 izimvo, 4 ukuya kwibheji elandelayo</string>    <string name="points">Amanqaku</string>
     <string name="progress">Inkqubela</string>
     <string name="badges">Iibhajhi</string>
     <string name="review_posted">Uphononongo luthunyelwe</string>
@@ -317,4 +323,17 @@
     <string name="category_pet_friendly">Zilungele izilwanyana zasekhaya</string>
     <string name="category_nearby">Kufuphi</string>
     <string name="category_dates">Ii-date</string>
+
+    <!-- Popular Tag -->
+    <string name="popular_tag">Edumileyo</string>
+
+    <!-- Nav Bar -->
+    <string name="nav_explore">Hlola</string>
+    <string name="nav_saved">Gciniwe</string>
+    <string name="nav_profile">Iprofayile</string>
+
+
+    <string name="in_app_reviews_title">Uphengululo lwe-App</string>
+    <string name="google_reviews_title">Uphengululo lweGoogle</string>
+    <string name="show_more">Bonisa Okungakumbi</string>
 </resources>
