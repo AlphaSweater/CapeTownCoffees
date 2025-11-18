@@ -319,19 +319,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        rvCategories.apply {
-            layoutManager = LinearLayoutManager(
-                requireContext(),
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
-            adapter = categoryAdapter
-            setHasFixedSize(true)
-            isNestedScrollingEnabled = false
-            overScrollMode = View.OVER_SCROLL_NEVER
-            (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
-        }
-
         rvFeatured.tune(horizontal = true)
         rvNearMe.tune(horizontal = false)
     }
@@ -640,7 +627,6 @@ class HomeFragment : Fragment() {
             rvFeatured.isGone = true
             tvNearTitle.isGone = true
             rvNearMe.isGone = true
-            rvCategories.isGone = true
             return
         }
 
@@ -653,7 +639,6 @@ class HomeFragment : Fragment() {
         rvFeatured.isGone = !showFeatured
         tvNearTitle.isGone = !showNear
         rvNearMe.isGone = !showNear
-        rvCategories.isGone = false
     }
 
     // ─────────── UI Helpers ───────────
