@@ -85,6 +85,8 @@ data class InAppReview(
     val helpfulCount: Int = 0,
     // per-current-user reaction (nullable). null == not reacted; "like"/"dislike" etc. when set.
     val userReactionType: String? = null,
+    val likeCount: Int = 0,
+    val dislikeCount: Int = 0,
 ) : CoffeeReview() {
     // derived boolean for convenience (not stored separately)
     val isReacted: Boolean get() = userReactionType != null

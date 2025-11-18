@@ -210,8 +210,29 @@ class CoffeeDetailFragment : Fragment() {
         val newType = if (oldItem?.userReactionType == desiredType) null else desiredType
 
         if (oldItem != null) {
-            // Apply optimistic change locally and refresh the visible slice
-            val newItem = oldItem.copy(userReactionType = newType)
+            // Apply optimistic change locally and refresh the visible slice, including counts
+            val oldType = oldItem.userReactionType
+            var likeCount = oldItem.likeCount.coerceAtLeast(0)
+            var dislikeCount = oldItem.dislikeCount.coerceAtLeast(0)
+
+            // Remove previous reaction from counts
+            when (oldType) {
+                "like" -> if (likeCount > 0) likeCount--
+                "dislike" -> if (dislikeCount > 0) dislikeCount--
+            }
+
+            // Apply new reaction to counts
+            when (newType) {
+                "like" -> likeCount++
+                "dislike" -> dislikeCount++
+            }
+
+            val newItem = oldItem.copy(
+                userReactionType = newType,
+                likeCount = likeCount,
+                dislikeCount = dislikeCount
+            )
+
             allInAppReviews = allInAppReviews.toMutableList().also { it[idx] = newItem }
             updateInAppReviewsDisplay()
         }
