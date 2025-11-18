@@ -3,15 +3,15 @@
     <item
         android:id="@+id/homeFragment"
         android:icon="@drawable/ic_ctc_compass"
-        android:title="Explore" />
+        android:title="@string/nav_explore" />
 
     <item
         android:id="@+id/savedFragment"
         android:icon="@drawable/ic_ctc_bookmark"
-        android:title="Saved" />
+        android:title="@string/nav_saved" />
 
     <item
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_ctc_person_circled"
-        android:title="Profile" />
+        android:title="@string/nav_profile" />
 </menu>

@@ -109,7 +109,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
                             }
                         }
                         is Resource.Error -> {
-                            Timber.e("Error loading user: ${res.message}")
+                            Timber.e("Error loading user: ${'$'}{res.message}")
                             binding.ivProfilePicture.setImageResource(R.drawable.ic_ctc_person)
                             binding.tvUserName.text = getString(R.string.app_name)
                         }
@@ -129,16 +129,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
                     binding.progressBarExplorer.max = 100
                     binding.progressBarExplorer.progress = state.progressPercent
 
-                    binding.tvLevel.text = "Level ${state.level}"
+                    binding.tvLevel.text = getString(R.string.level_dynamic, state.level)
 
                     // Level-based label used for both the header tagline and the
                     // gamification card title so they always stay in sync.
                     val levelLabel = when (state.level) {
-                        1 -> "Latte Lover"
-                        2 -> "Coffee Explorer"
-                        3 -> "Cafe Connoisseur"
-                        4 -> "Roast Master"
-                        else -> "Coffee Legend"
+                        1 -> getString(R.string.latte_lover)
+                        2 -> getString(R.string.coffee_explorer)
+                        3 -> getString(R.string.cafe_connoisseur)
+                        4 -> getString(R.string.roast_master)
+                        else -> getString(R.string.coffee_legend)
                     }
                     binding.tvUserTagline.text = levelLabel
                     binding.tvGamificationTitle.text = levelLabel
@@ -157,9 +157,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile_new) {
                     val next = state.nextTarget
                     val summary = if (next != null) {
                         val remaining = (next - state.reviewCount).coerceAtLeast(0)
-                        "${state.reviewCount}/${next} comments • ${remaining} to next badge"
+                        getString(R.string.gamification_summary, state.reviewCount, next, remaining)
                     } else {
-                        "${state.reviewCount} comments • Max level reached"
+                        getString(R.string.gamification_summary_max_level, state.reviewCount)
                     }
                     binding.tvLevelSummary.text = summary
 

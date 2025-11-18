@@ -130,6 +130,7 @@
     <string name="no_reviews_yet">Geen resensies vir hierdie plek gevind nie</string>
     <string name="coffee_review_chip_in_app">Gemeenskap</string>
     <string name="coffee_review_chip_google">Google</string>
+    <string name="show_more_with_count">Wys Meer (%d oor)</string>
     <string name="coffee_image">Beeld van plek</string>
     <string name="location_permission_required">Liggingstoestemmings word vereis vir hierdie toepassing om te funksioneer!</string>
     <string name="location_fetch_failed">Kon nie ligging ophaal nie!!</string>
@@ -217,9 +218,9 @@
     <string name="loading">Laai tans...</string>
     <string name="latte_lover">Latte-liefhebber</string>
     <string name="coffee_explorer">Koffieverkenner</string>
-    <string name="level_3">Vlak 3</string>
-    <string name="_65_100_points_to_next_level">65/100 punte tot volgende vlak</string>
-    <string name="points">Punte</string>
+    <string name="gamification_summary_max_level">%d kommentaar • Maksimum vlak bereik</string>
+    <string name="level">Vlak 1</string>
+    <string name="comments_to_next_badge">1/5 kommentaar, 4 tot volgende kenteken</string>    <string name="points">Punte</string>
     <string name="progress">Vordering</string>
     <string name="badges">Wapens</string>
     <string name="review_posted">Resensie geplaas</string>
@@ -306,4 +307,22 @@
     <string name="category_pet_friendly">Troeteldiervriendelik</string>
     <string name="category_nearby">Naby</string>
     <string name="category_dates">Datums</string>
+
+    <!-- Popular Tag -->
+    <string name="popular_tag">Gewild</string>
+
+    <!-- Nav Bar -->
+    <string name="nav_explore">Verken</string>
+    <string name="nav_saved">Gestoor</string>
+    <string name="nav_profile">Profiel</string>
+
+
+    <string name="in_app_reviews_title">In-app resensies</string>
+    <string name="google_reviews_title">Google-resensies</string>
+    <string name="show_more">Wys Meer</string>
+    <string name="cafe_connoisseur">Koffiewinkelkenner</string>
+    <string name="roast_master">Brandmeester</string>
+    <string name="coffee_legend">Koffie-legende</string>
+    <string name="level_dynamic">Vlak %d</string>
+    <string name="gamification_summary">%d/%d kommentaar • %d tot volgende kenteken</string>
 </resources>
