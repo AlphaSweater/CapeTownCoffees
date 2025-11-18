@@ -148,11 +148,35 @@ class CapeTownCoffeesApp : Application() {
                             change.document.reference.path,
                             change.document.data
                         )
-                        NotificationHelper.showSimple(
-                            applicationContext,
-                            "Your comment was liked",
-                            "Someone liked your comment."
-                        )
+
+                        val likerId = change.document.getString("userId")
+                        if (likerId.isNullOrBlank()) {
+                            NotificationHelper.showSimple(
+                                applicationContext,
+                                "Your comment was liked",
+                                "Someone liked your comment."
+                            )
+                        } else {
+                            FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(likerId)
+                                .get()
+                                .addOnSuccessListener { snap ->
+                                    val likerName = snap.getString("fullName") ?: "Someone"
+                                    NotificationHelper.showSimple(
+                                        applicationContext,
+                                        "Your comment was liked",
+                                        "$likerName liked your comment."
+                                    )
+                                }
+                                .addOnFailureListener {
+                                    NotificationHelper.showSimple(
+                                        applicationContext,
+                                        "Your comment was liked",
+                                        "Someone liked your comment."
+                                    )
+                                }
+                        }
                     }
                 }
             }
