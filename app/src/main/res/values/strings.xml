@@ -132,6 +132,10 @@
     <string name="no_reviews_yet">No reviews for this place found</string>
     <string name="coffee_review_chip_in_app">Community</string>
     <string name="coffee_review_chip_google">Google</string>
+    <string name="in_app_reviews_title">In-App Reviews</string>
+    <string name="google_reviews_title">Google Reviews</string>
+    <string name="show_more">Show More</string>
+    <string name="show_more_with_count">Show More (%d remaining)</string>
     <string name="coffee_image">Image of place</string>
     <string name="location_permission_required">Location Permissions are required for this app to function!</string>
     <string name="location_fetch_failed">Failed to fetch location!!</string>

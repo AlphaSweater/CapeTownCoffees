@@ -281,26 +281,86 @@
                     android:background="@drawable/bg_pill_dark"/>
             </LinearLayout>
 
-            <!-- Top Reviews header -->
+            <!-- In-App Reviews Section -->
+            <LinearLayout
+                android:id="@+id/inAppReviewsSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/top_reviews"
+                    android:text="In-App Reviews"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:textSize="20sp"/>
 
-            <!-- Reviews section -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvReviews"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvInAppReviews"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:paddingTop="8dp"
+                    android:nestedScrollingEnabled="false"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/item_coffee_review"/>
+
+                <TextView
+                    android:id="@+id/tvShowMoreInApp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:paddingVertical="12dp"
+                    android:gravity="center"
+                    android:text="@string/show_more"
+                    android:textStyle="bold"
+                    android:textColor="@color/coffee_accent"
+                    android:textSize="14sp"
+                    android:background="?attr/selectableItemBackground"
+                    android:visibility="gone"
+                    tools:visibility="visible"/>
+            </LinearLayout>
+
+            <!-- Google Reviews Section -->
+            <LinearLayout
+                android:id="@+id/googleReviewsSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:paddingTop="8dp"
-                android:paddingBottom="16dp"
-                android:nestedScrollingEnabled="false"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/icon_divider"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/google_reviews_title"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:letterSpacing="0.01"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvGoogleReviews"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="16dp"
+                    android:nestedScrollingEnabled="false"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            </LinearLayout>
 
             <!-- Optional empty-state text -->
             <TextView

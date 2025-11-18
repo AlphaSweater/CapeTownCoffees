@@ -24,21 +24,20 @@
             android:id="@+id/ivAvatar"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:layout_marginTop="7dp"
             android:contentDescription="@string/profile_photo"
             android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="@+id/constraintLayout"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/constraintLayout"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Ctc.Circle"
             tools:src="@drawable/bg_skeleton_circle" />
 
         <!-- Header (name + rating + chip) -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:padding="6dp"
             app:layout_constraintStart_toEndOf="@+id/ivAvatar"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints">
@@ -48,8 +47,7 @@
                 android:id="@+id/tvAuthor"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="40dp"
-                android:layout_marginTop="-6dp"
+                android:includeFontPadding="false"
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                 android:textColor="@color/text_primary"
@@ -63,19 +61,21 @@
                 android:id="@+id/tvDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="-4dp"
+                android:layout_marginStart="4dp"
                 android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
                 android:textColor="@color/text_tip"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="2d ago" />
+                android:includeFontPadding="false"
+                app:layout_constraintBottom_toBottomOf="@+id/tvAuthor"
+                app:layout_constraintStart_toEndOf="@+id/tvAuthor"
+                app:layout_constraintTop_toTopOf="@+id/tvAuthor"
+                tools:text="• 2d ago" />
 
             <!-- Rating container -->
             <LinearLayout
                 android:id="@+id/ratingContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 app:layout_constraintStart_toStartOf="@id/tvAuthor"
@@ -119,6 +119,46 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <!-- Actions (only for InAppReview; hide in code otherwise) -->
+        <LinearLayout
+            android:id="@+id/actionsContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="@+id/constraintLayout"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/constraintLayout"
+            tools:visibility="visible">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLike"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/like"
+                app:backgroundTint="@color/success_green"
+                app:icon="@drawable/ic_ctc_thumbs_up"
+                app:iconGravity="textStart"
+                app:iconSize="18dp"
+                app:iconTint="@color/white" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDislike"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/like"
+                app:backgroundTint="@color/error_red"
+                app:icon="@drawable/ic_ctc_thumbs_down"
+                app:iconGravity="textStart"
+                app:iconSize="18dp"
+                app:iconTint="@color/white" />
+
+        </LinearLayout>
+
 
         <!-- Review text -->
         <TextView
@@ -144,7 +184,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvBody"
             app:layout_constraintDimensionRatio="16:9"
-            tools:visibility="visible"
             tools:layout_height="200dp">
 
             <!-- Guidelines split -->
@@ -256,43 +295,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/photosMosaic" />
 
-        <!-- Actions (only for InAppReview; hide in code otherwise) -->
-        <LinearLayout
-            android:id="@+id/actionsContainer"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="end"
-            android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="@id/tvBody"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dividerActions"
-            tools:visibility="visible">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLike"
-                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:contentDescription="@string/like"
-                app:icon="@drawable/ic_ctc_thumbs_up"
-                app:iconGravity="textStart"
-                app:iconSize="18dp"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/success_green" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDislike"
-                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:contentDescription="@string/like"
-                app:icon="@drawable/ic_ctc_thumbs_down"
-                app:iconGravity="textStart"
-                app:iconSize="18dp"
-                app:iconTint="@color/white"
-                app:backgroundTint="@color/error_red" />
-
-        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

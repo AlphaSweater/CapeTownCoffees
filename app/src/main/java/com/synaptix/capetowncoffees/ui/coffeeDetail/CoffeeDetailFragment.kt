@@ -78,7 +78,12 @@ class CoffeeDetailFragment : Fragment() {
     private var _binding: FragmentCoffeeDetailBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var reviewsAdapter: ReviewsAdapter
+    private lateinit var inAppReviewsAdapter: ReviewsAdapter
+    private lateinit var googleReviewsAdapter: ReviewsAdapter
+
+    private var allInAppReviews: List<CoffeeReview> = emptyList()
+    private var currentInAppDisplayCount = 4
+    private val inAppReviewsPageSize = 4
 
     // ─────────── Lifecycle: View Creation ───────────
     // Inflate view binding and return root for rendering.
@@ -104,7 +109,7 @@ class CoffeeDetailFragment : Fragment() {
     // ─────────── Recycler & Adapter ───────────
     // Sets up the reviews list and routes item interactions to the VM.
     private fun setupRecyclers() = with(binding) {
-        reviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope) { click ->
+        val clickHandler: (ReviewsAdapter.Click) -> Unit = { click ->
             when (click) {
                 is ReviewsAdapter.Click.Like      -> vm.onReviewLike(click.reviewId)
                 is ReviewsAdapter.Click.Dislike   -> vm.onReviewDislike(click.reviewId)
@@ -116,9 +121,17 @@ class CoffeeDetailFragment : Fragment() {
             }
         }
 
-        rvReviews.layoutManager = LinearLayoutManager(requireContext())
-        rvReviews.adapter = reviewsAdapter
-        rvReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+        // In-App Reviews Adapter
+        inAppReviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope, clickHandler)
+        rvInAppReviews.layoutManager = LinearLayoutManager(requireContext())
+        rvInAppReviews.adapter = inAppReviewsAdapter
+        rvInAppReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+
+        // Google Reviews Adapter
+        googleReviewsAdapter = reviewsAdapterFactory.create(viewLifecycleOwner.lifecycleScope, clickHandler)
+        rvGoogleReviews.layoutManager = LinearLayoutManager(requireContext())
+        rvGoogleReviews.adapter = googleReviewsAdapter
+        rvGoogleReviews.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
     }
 
     // ─────────── UI Listeners ───────────
@@ -142,6 +155,12 @@ class CoffeeDetailFragment : Fragment() {
                 putString(ReviewViewModel.ScreenArgs.PLACE_NAME, placeName)
             }
             findNavController().navigate(R.id.action_cafeDetailFragment_to_reviewContainerFragment, args)
+        }
+
+        // Show More button for in-app reviews
+        tvShowMoreInApp.setOnClickListener {
+            currentInAppDisplayCount += inAppReviewsPageSize
+            updateInAppReviewsDisplay()
         }
     }
 
@@ -241,9 +260,47 @@ class CoffeeDetailFragment : Fragment() {
     // ─────────── Render Helpers ───────────
     // Small view helpers to keep collectors tidy.
     private fun renderReviews(list: List<CoffeeReview>) = with(binding) {
+        // Separate reviews by type
+        val inAppReviews = list.filterIsInstance<com.synaptix.capetowncoffees.domain.model.InAppReview>()
+        val googleReviews = list.filterIsInstance<com.synaptix.capetowncoffees.domain.model.GooglePlaceReview>()
+
+        // Store all in-app reviews and reset pagination
+        allInAppReviews = inAppReviews
+        currentInAppDisplayCount = inAppReviewsPageSize
+
+        // Show empty state if no reviews
         reviewsEmpty.isVisible = list.isEmpty()
-        rvReviews.isVisible = list.isNotEmpty()
-        reviewsAdapter.updateItems(list)
+
+        // Update in-app reviews section
+        if (inAppReviews.isNotEmpty()) {
+            inAppReviewsSection.isVisible = true
+            updateInAppReviewsDisplay()
+        } else {
+            inAppReviewsSection.isVisible = false
+        }
+
+        // Update Google reviews section
+        if (googleReviews.isNotEmpty()) {
+            googleReviewsSection.isVisible = true
+            googleReviewsAdapter.updateItems(googleReviews)
+        } else {
+            googleReviewsSection.isVisible = false
+        }
+    }
+
+    private fun updateInAppReviewsDisplay() = with(binding) {
+        val displayReviews = allInAppReviews.take(currentInAppDisplayCount)
+        inAppReviewsAdapter.updateItems(displayReviews)
+
+        // Show/hide "Show More" button
+        val hasMore = allInAppReviews.size > currentInAppDisplayCount
+        tvShowMoreInApp.isVisible = hasMore
+
+        // Update button text with count
+        if (hasMore) {
+            val remaining = allInAppReviews.size - currentInAppDisplayCount
+            tvShowMoreInApp.text = getString(R.string.show_more_with_count, remaining)
+        }
     }
 
     private fun showReviewsSkeleton() = with(binding) {

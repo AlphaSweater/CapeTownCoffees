@@ -111,7 +111,7 @@ class ReviewsAdapter @AssistedInject constructor(
                 ratingBar.rating = (rating ?: 0.0).toFloat()
 
                 // Relative date for readability
-                tvDate.text = CoffeeTimeUtils.formatRelativeTime(item.publishTime)
+                "• ${CoffeeTimeUtils.formatRelativeTime(item.publishTime)}".also { tvDate.text = it }
                 tvDate.isGone = tvDate.text.isNullOrBlank()
 
                 // Review body shown only when present
