@@ -163,7 +163,10 @@ class CoffeePlaceItemAdapter @AssistedInject constructor(
             val tokenAtBind = bindToken
 
             with(vb) {
-                pillPopular.isVisible = showPopularChip
+                pillPopularContainer.isVisible = showPopularChip
+                if (showPopularChip) {
+                    pillPopular.text = root.context.getString(R.string.popular_tag)
+                }
 
                 tvCafeName.text = item.name.orEmpty()
                 tvCafeName.contentDescription = item.name.orEmpty()
