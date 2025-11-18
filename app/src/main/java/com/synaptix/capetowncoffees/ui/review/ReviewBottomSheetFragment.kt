@@ -137,6 +137,10 @@ class ReviewBottomSheetFragment : BottomSheetDialogFragment() {
         // Auto-close when submission flow reaches COMPLETE
         collect(vm.currentStep.flow) { step ->
             if (step == ReviewViewModel.ReviewStep.COMPLETE) {
+                // Notify host fragments/activities that a review was submitted so they can refresh
+                val result = Bundle().apply { putString("place_id", vm.placeId.value) }
+                parentFragmentManager.setFragmentResult("review_submitted", result)
+
                 // Let the ViewModel clean up, then dismiss
                 vm.finalizeReviewFlow()
                 dismissAllowingStateLoss()

@@ -109,6 +109,19 @@ class CoffeeDetailFragment : Fragment() {
         setupUiListeners()
         setupCollectors()
         getCurrentLocation() // kick off distance once location is available
+
+        // Listen for review submissions from the review bottom sheet and refresh data
+        parentFragmentManager.setFragmentResultListener("review_submitted", viewLifecycleOwner) { _, bundle ->
+            val placeId = bundle.getString("place_id")
+            // If this fragment is showing the same place, refresh full place + reviews
+            if (placeId != null && placeId == vm.placeId) {
+                vm.refresh()
+                // Optionally, scroll to reviews section when refreshed: keep it for UX later
+            } else {
+                // Just refresh reviews if placeId mismatches (defensive)
+                vm.refresh()
+            }
+        }
     }
 
     // ─────────── Recycler & Adapter ───────────
@@ -456,6 +469,10 @@ class CoffeeDetailFragment : Fragment() {
     // Clear binding references to avoid leaks.
     override fun onDestroyView() {
         super.onDestroyView()
+        // Clear any fragment result listeners registered with this view lifecycle owner
+        try {
+            parentFragmentManager.clearFragmentResult("review_submitted")
+        } catch (_: Exception) { /* ignore */ }
         _binding = null
     }
 }
