@@ -40,7 +40,7 @@
 
         <!-- Popular / Featured pill -->
         <LinearLayout
-            android:id="@+id/pillPopular"
+            android:id="@+id/pillPopularContainer"
             android:layout_width="wrap_content"
             android:layout_height="28dp"
             android:minWidth="0dp"
@@ -65,7 +65,7 @@
                 app:tint="@color/white" />
 
             <TextView
-                android:id="@+id/tvPopular"
+                android:id="@+id/pillPopular"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Popular"
