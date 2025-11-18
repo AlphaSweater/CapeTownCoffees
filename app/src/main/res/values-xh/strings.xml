@@ -1,0 +1,320 @@
+<resources>
+
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile">Hlela iprofayile</string>
+    <string name="profile_picture">Umfanekiso weprofayile</string>
+    <string name="change_photo">Tshintsha umfanekiso</string>
+    <string name="account_information">Iinkcukacha zeakhawunti</string>
+    <string name="first_name">Igama</string>
+    <string name="last_name">Ifani</string>
+    <string name="full_name">Igama elipheleleyo</string>
+    <string name="current_password">Iphasiwedi yangoku</string>
+    <string name="new_password">Iphasiwedi entsha</string>
+    <string name="confirm_new_password">Qinisekisa iphasiwedi entsha</string>
+    <string name="save_changes">Gcina utshintsho</string>
+    <string name="saving">Igcina…</string>
+    <string name="profile_updated">Iprofayile ihlaziyiwe ngempumelelo</string>
+    <string name="error_updating_profile">Ayiphumelelanga ukuhlaziya iprofayile</string>
+    <string name="password_updated">Iphasiwedi ihlaziyiwe ngempumelelo</string>
+    <string name="error_updating_password">Ayiphumelelanga ukuhlaziya iphasiwedi</string>
+    <string name="password_change_success">Iphasiwedi itshintshwe ngempumelelo</string>
+    <string name="password_change_failed">Ayiphumelelanga ukutshintsha iphasiwedi</string>
+    <string name="password_mismatch">Iiphasiwedi ezintsha azihambelani</string>
+    <string name="current_password_required">Nceda ngenisa iphasiwedi yangoku ukuze uyitshintshe</string>
+    <string name="fullname_example">Jane Doe</string>
+    <string name="password_hash">••••••••</string>
+
+    <!-- App Name -->
+    <string name="app_name">Cape Town Coffees</string>
+
+    <!-- Login + Register Screen -->
+    <string name="app_logo">Ilogo yeCape Town Coffees</string>
+    <string name="cape_towns">Cape Town</string>
+    <string name="coffees">COFFEES</string>
+    <string name="email">Imele</string>
+    <string name="password">Iphasiwedi</string>
+    <string name="confirm_password">Qinisekisa iphasiwedi</string>
+    <string name="forgot_password">Ulibele iphasiwedi?</string>
+    <string name="sign_in">Ngena</string>
+    <string name="or_continue_with">okanye qhubeka ngo</string>
+    <string name="sign_in_with_google">Ngena ngeGoogle</string>
+    <string name="continue_with_google">Qhubeka ngeGoogle</string>
+    <string name="dont_have_an_account">Awunayo iakhawunti?</string>
+    <string name="sign_up">Bhalisa</string>
+
+    <!-- Home placeholders -->
+    <string name="good_morning">Molo</string>
+    <string name="guest">Undwendwe</string>
+    <string name="order_now">Oda ngoku</string>
+    <string name="coffee_illustration">Umfanekiso wekofu</string>
+    <string name="popular_items">Ezidumileyo</string>
+    <string name="categories">Iindidi</string>
+    <string name="scan_qr_code">Skena ikhowudi yeQR</string>
+    <string name="search">Khangela</string>
+    <string name="notifications">Izaziso</string>
+    <string name="explore">Phonononga</string>
+
+    <!-- Common actions -->
+    <string name="action_next">Okulandelayo</string>
+    <string name="no_opening_hours_available">Akhafumaneki amaxesha okuvula</string>
+    <string name="directions">Fumana indlela</string>
+    <string name="action_back">Emva</string>
+
+    <!-- Theme -->
+    <string name="theme">Umxholo</string>
+    <string name="theme_light">Ukukhanya</string>
+    <string name="theme_dark">Ubumnyama</string>
+    <string name="theme_system">Umxholo wesystem</string>
+
+    <!-- Privacy Policy () -->
+    <string name="privacy_policy_title">Umgaqo-nkqubo wabucala</string>
+    <string name="privacy_section_overview">Isishwankathelo</string>
+    <string name="privacy_overview_body">Siyawuhlonipha umthetho wabucala bakho. Lo mgaqo uchaza ukuba yeyiphi idatha iCape Town Coffees eqokelela yona, indlela esiyisebenzisa ngayo, kunye nokhetho onalo. Ngokusebenzisa usetyenziso, uyavumelana nendlela esisebenzisa ngayo ezi nkcukacha.</string>
+    <string name="privacy_data_collect_intro">Siqokelela kuphela idatha esiyifunayo ukuze sisebenze kakuhle kwaye siphucule amava akho. Oku kungabandakanya:</string>
+    <string name="privacy_data_collect_bullet1">• Ulwazi lweakhawunti (igama, imeyile)</string>
+    <string name="privacy_data_collect_bullet2">• Idatha yokusebenzisa usetyenziso (iintshukumo, iingxaki/ukudilika)</string>
+    <string name="privacy_data_collect_bullet3">• Indawo (ukuba uyivumile, ukufumana iindawo zekofu ezikufuphi)</string>
+    <string name="privacy_data_collect_bullet4">• Iimpawu zesixhobo (uhlalutyo/kuthintelo ubuqhetseba)</string>
+
+    <string name="privacy_use_data_title">Indlela esisebenzisa ngayo idatha</string>
+    <string name="privacy_use_data_bullet1">• Ukunika nokuphucula izinto ezisebenzayo</string>
+    <string name="privacy_use_data_bullet2">• Ukwenza umxholo uhlengahlengiswe kuwe</string>
+    <string name="privacy_use_data_bullet3">• Ukuqinisekisa ukhuseleko nokungqina abasebenzisi</string>
+    <string name="privacy_use_data_bullet4">• Uhlalutyo, ukulungisa iingxaki, nokusebenza kakuhle</string>
+    <string name="privacy_use_data_bullet5">• Ukuthumela izaziso (ungazicima kwiisetingi)</string>
+
+    <string name="privacy_sharing_title">Ukwabelana</string>
+    <string name="privacy_sharing_body">
+        Asithengisi datha yakho. Sabelana ngolwazi olulinganiselweyo kuphela nababoneleli beenkonzo (umz. uhlalutyo, iimephu, ingxelo yeengxaki) ukuze sisebenze ngcono, phantsi kwemigaqo-nkqubo yokhuseleko, okanye xa kufuneka ngumthetho.
+    </string>
+
+    <string name="privacy_permissions_title">Iimvume</string>
+    <string name="privacy_permissions_body">
+        Ezinye izinto zisebenza kuphela xa unike imvume (umz. indawo). Ungazilawula nangaliphi na ixesha kwiisetingi zesixhobo. Ukuba uyasusa imvume, ezinye izinto zingasebenzi.
+    </string>
+
+    <string name="privacy_your_choices_title">Ukhetho lwakho</string>
+    <string name="privacy_your_choices_bullet1">• Lawula iimvume kwiisetingi zesixhobo</string>
+    <string name="privacy_your_choices_bullet2">• Cima izaziso kwiisetingi</string>
+    <string name="privacy_your_choices_bullet3">• Cela ukucinywa kweakhawunti yakho</string>
+    <string name="privacy_your_choices_bullet4">• Sula idatha egciniweyo kwiisetingi → Idatha</string>
+
+    <string name="privacy_contact_title">Qhagamshelana nathi</string>
+    <string name="privacy_contact_body">Imibuzo okanye inkxalabo? Sibhalele ku: support@capetowncoffees.app</string>
+
+    <!-- Home Page -->
+    <string name="cafe_featured">Ezikhethiweyo</string>
+    <string name="see_all">Jonga zonke</string>
+    <string name="near_me">Ezikufutshane</string>
+
+    <!-- Near Me Item -->
+    <string name="cafe_name">Igama leKhefi</string>
+    <string name="location">I-Cape Town, Isixeko</string>
+    <string name="cafe_rating">4.6 (5203)</string>
+    <string name="distance">1.2 km kude</string>
+    <string name="featured_label">EPHAMBILI</string>
+    <string name="about">Ngokuphathelele</string>
+    <string name="opening_hours">Amaxesha okuvula</string>
+    <string name="contact">Qhagamshelana</string>
+    <string name="top_reviews">Uphononongo oluphambili</string>
+    <string name="address">Idilesi</string>
+    <string name="phone_number">021 201 7000</string>
+    <string name="description">Inkcazelo yevenkile yekofu.</string>
+    <string name="_4_5">4.5</string>
+    <string name="_1_2_km_away">1.2 km kude</string>
+    <string name="coffee_address">Idilesi</string>
+    <string name="btn_review">Uphononongo</string>
+
+    <!-- Change Password -->
+    <string name="change_password">Tshintsha iphasiwedi</string>
+    <string name="change_password_description">
+        Ukutshintsha iphasiwedi yakho, ngenisa eyangoku uze wenze entsha. Qinisekisa ukuba entsha ikhuselekile.
+    </string>
+    <string name="empty_state">Akukho nto apha</string>
+    <string name="retry">Zama kwakhona</string>
+    <string name="addToList">Yongeza kuluhlu</string>
+    <string name="add_to_favorites">Yongeza ezintandokazi</string>
+    <string name="cafe_image">Umfanekiso wekhefi</string>
+    <string name="add_to_list">Yongeza kuluhlu</string>
+    <string name="profile_photo">Umfanekiso womvavanyi</string>
+    <string name="like">Ndiyathanda</string>
+    <string name="dislike">Andiyithandi</string>
+    <string name="no_reviews_yet">Akukho kuphononongwa kufunyenweyo</string>
+    <string name="coffee_review_chip_in_app">Uluntu</string>
+    <string name="coffee_review_chip_google">Google</string>
+    <string name="coffee_image">Umfanekiso wendawo</string>
+    <string name="location_permission_required">Imvume yendawo iyafuneka ukuze usetyenziso lusebenze!</string>
+    <string name="location_fetch_failed">Ayiphumelelanga ukufumana indawo!!</string>
+    <string name="search_hint_coffee_shops">Iindawo zekofu</string>
+    <string name="search_radius">Ummandla wokukhangela</string>
+    <string name="filters">Iifilitha</string>
+    <string name="strict_coffee_only">Iindawo zekofu kuphela</string>
+    <string name="suggestions">Iingcebiso</string>
+    <string name="delete_list">Cima uluhlu</string>
+    <string name="cafe_photo">Umfanekiso wendawo</string>
+    <string name="remove_from_list">Susa kolu luhlu</string>
+    <string name="unknown">Akwaziwa</string>
+    <string name="list_name">Igama loluhlu</string>
+    <string name="list_name_hint">Umzekelo: Iindawo ezilula zokufunda</string>
+    <string name="required_field">Umhlaba ofunekayo</string>
+    <string name="description_hint">Umzekelo: Ndiyazithanda ezi ndawo xa ndifunda</string>
+    <string name="privacy_level">Imfihlo</string>
+    <string name="privacy_public_dropdown">Bucala</string>
+    <string name="save">Gcina</string>
+    <string name="create_list">Yenza uluhlu</string>
+    <string name="settings">Iisetingi</string>
+    <string name="account">Iakhawunti</string>
+    <string name="push_notification">Izaziso</string>
+    <string name="privacy_policy">Umgaqo-nkqubo wabucala</string>
+    <string name="delete_account">Cima iakhawunti</string>
+    <string name="appearance">Inkangeleko</string>
+    <string name="dark_mode">Imo emnyama / ekhanyayo</string>
+    <string name="offline_mode">Imo engaxhunyiwanga</string>
+    <string name="offline_mode_description">Ivimbela izicelo zenethiwekhi kwaye isebenzise idatha egciniweyo kuphela</string>
+    <string name="offline_mode_enabled">Imo engaxhunyiwanga ivuliwe</string>
+    <string name="offline_mode_disabled">Imo engaxhunyiwanga icinyiwe</string>
+    <string name="data">Idatha yeApp</string>
+    <string name="clear_cached_data">Sula yonke idatha egciniweyo</string>
+    <string name="logout">Phuma</string>
+    <string name="share_with_friends">Yabelana nabahlobo</string>
+    <string name="cache_cleared">Idatha isuliwe! (WIP)</string>
+    <string name="generic_error">Kukho ingxaki!</string>
+    <string name="delete_failed">Ayiphumelelanga ukucima iakhawunti</string>
+    <string name="account_deleted">Iakhawunti icinyiwe ngempumelelo!</string>
+    <string name="logout_failed">Ayiphumelelanga ukuphuma</string>
+    <string name="clear_cache">Sula ikheche</string>
+    <string name="clear_cache_confirm_message">Uqinisekile ufuna ukusula ikheche?</string>
+    <string name="cancel">Rhoxisa</string>
+    <string name="delete_account_confirm_message">Uqinisekile ufuna ukucima iakhawunti?</string>
+    <string name="delete">Cima iakhawunti</string>
+    <string name="logout_confirm_message">Ufuna ukuphuma ngoku?</string>
+    <string name="enabled">Ivuliwe</string>
+    <string name="disabled">Icinyiwe</string>
+    <string name="ctc_login_invalid_creds">Iinkcukacha ezingachanekanga. Zama kwakhona.</string>
+    <string name="ctc_login_success">Wamkelekile kwakhona!</string>
+    <string name="ctc_login_loading">Ngena...</string>
+    <string name="ctc_login_google_failed">Ukungena ngeGoogle akuphumelelanga.</string>
+    <string name="ctc_register_loading">Kuyenziwa iakhawunti yakho...</string>
+    <string name="ctc_register_success">Iakhawunti yenziwe! Wamkelekile 👋</string>
+    <string name="ctc_register_error_generic">Ayiphumelelanga ukwenza iakhawunti. Zama kwakhona.</string>
+    <string name="ctc_register_fix_errors">Nceda lungisa iindawo ezigxininisiweyo.</string>
+    <string name="ctc_register_google_failed">Ukubhalisa ngeGoogle akuphumelelanga.</string>
+    <string name="private_label">Bucala</string>
+    <string name="public_label">Uluntu</string>
+    <string name="profile_edit_image_load_failed">Ayiphumelelanga ukulayisha umfanekiso weprofayile</string>
+
+    <!-- Favourites -->
+    <string name="favourites">Ezintandokazi</string>
+
+    <!-- Search Page -->
+    <string name="search_for_coffee_shops">Khangela iindawo zekofu...</string>
+    <string name="search_filters">Iifilitha</string>
+    <string name="search_radius_number">30 km</string>
+    <string name="category">Udidi</string>
+    <string name="search_radius_km">Ummandla wokukhangela (km)</string>
+
+    <!-- Lists -->
+    <string name="saved_list">Uluhlu olugcinweyo</string>
+    <string name="chill_spots">Iindawo zokuphumla</string>
+
+    <string name="saved">Izigciniweyo</string>
+    <string name="lists">Uluhlu</string>
+    <string name="your_lists">Iiluhlu zakho</string>
+    <string name="create_new_list">Yenza uluhlu olutsha</string>
+
+    <!-- Profile -->
+    <string name="account_security">Ukhuseleko lweakhawunti</string>
+    <string name="change">Tshintsha</string>
+    <string name="loading">Ilayisha...</string>
+    <string name="latte_lover">Umthandi weLatte</string>
+    <string name="coffee_explorer">Umphandi wekofu</string>
+    <string name="level_3">Inqanaba 3</string>
+    <string name="_65_100_points_to_next_level">65/100 amanqaku ukuya kwinqanaba elilandelayo</string>
+    <string name="points">Amanqaku</string>
+    <string name="progress">Inkqubela</string>
+    <string name="badges">Iibhajhi</string>
+    <string name="review_posted">Uphononongo luthunyelwe</string>
+    <string name="you_reviewed_truth_coffee_roasting">Uphengulule iTruth Coffee Roasting</string>
+    <string name="_1_day_ago">Usuku olunye oludlulileyo</string>
+    <string name="view_all_activity">Jonga yonke imisebenzi</string>
+
+    <!-- Review Pages -->
+    <string name="close">Vala</string>
+    <string name="completed_review">UPHONONONGO\nLUGQITYIWE</string>
+    <string name="done">Kugqityiwe</string>
+    <string name="how_was_your_experience">Ibikunjani\namava akho?</string>
+    <string name="share_your_experience_with_the_community">Yabelana ngamava akho noluntu</string>
+    <string name="next">Okulandelayo</string>
+    <string name="tell_others_about_your_experience">Xelela abanye\nngamava akho</string>
+    <string name="consider_discussing_the_facilities_pricing_and_taste">Ungakhankanya indawo, amaxabiso, kunye nencasa</string>
+    <string name="share_images">Yabelana ngemifanekiso</string>
+    <string name="coffee_review">UPHONONONGO\nLWEEKOFU</string>
+    <string name="thanks_for_your_review">Enkosi ngokuphonononga!</string>
+    <string name="thank_you_message">Ingxelo yakho inceda abanye bafumane iindawo ezintle zekofu.</string>
+    <string name="review_step1_title">Ibikunjani utyelelo?</string>
+    <string name="review_step1_message">Nika inqanaba lamava akho ukuze abanye bakwazi ukhetho.</string>
+    <string name="review_back">Emva</string>
+    <string name="review_next">Okulandelayo</string>
+    <string name="review_step2_title">Xelela abanye ngamava akho</string>
+    <string name="review_step2_message">Ayinamsebenzi ukuyizalisa kodwa iyanceda: khankanya imo, inkonzo, kunye nekofu.</string>
+    <string name="review_step2_example">Umzekelo: Indawo intle, iibarista bayancuma, i-flat white imnandi kwaye ayibukhali.</string>
+    <string name="review_step3_title">Isishwankathelo sophononongo</string>
+    <string name="review_step3_description">Qinisekisa yonke into phambi kokuba uthumele.</string>
+    <string name="review_step3_your_review">Uphononongo lwakho</string>
+    <string name="review_step3_user_review">Ulinike inqanaba kwaye wabhala uphononongo.</string>
+    <string name="review_submit_button">Thumela</string>
+
+    <!-- Add Places to List -->
+    <string name="add_to_lists">Yongeza kwiiluhlu</string>
+    <string name="search_lists">Khangela iiluhlu</string>
+    <string name="add">Yongeza</string>
+    <string name="data_we_collect_title">Idatha esiyiqokelelayo</string>
+    <string name="distance_in_km">1 km</string>
+
+    <!-- Coffee Near Me Item -->
+    <string name="near_me_shop_name">Truth Coffee Roasting</string>
+    <string name="near_me_location">36 Buitenkant St, Cape Town</string>
+    <string name="near_me_distance">1.2 km</string>
+    <string name="near_me_rating">4.6 (1.2k)</string>
+
+    <!-- Coffee Review Item -->
+    <string name="coffee_review_name">Alex Johnson</string>
+    <string name="google">Google</string>
+    <string name="coffee_review_time_since_reviewed">2 iintsuku ezidlulileyo</string>
+    <string name="coffee_review_rating">4.6</string>
+    <string name="coffee_review_comment">I-flat white imnandi, indawo ithambile, abasebenzi bayancuma — neWi-Fi iyasebenza.</string>
+
+    <!-- Favourites Item -->
+    <string name="favourite_cafe_name">Igama leKhefi</string>
+    <string name="favourite_location">I-Cape Town, Isixeko</string>
+    <string name="favourite_rating">4.6 (5203)</string>
+
+    <!-- List Place Item -->
+    <string name="list_place_name">Truth Coffee Roasting</string>
+    <string name="list_place_location">36 Buitenkant St, Cape Town</string>
+    <string name="list_place_rating">4.6 (1.2k)</string>
+    <string name="list_place_distance">1.2 km</string>
+
+    <!-- Offline Item -->
+    <string name="offline_title">Awuxhunyiwanga</string>
+    <string name="offline_description">Idatha ayinakulayishwa. Cofa *hlaziya* ukuze uzame kwakhona.</string>
+    <string name="offline_refresh_button">Hlaziya</string>
+
+    <!-- Review Item -->
+    <string name="review_title">Truth Coffee</string>
+    <string name="review_time_since_created">2 iintsuku ezidlulileyo</string>
+    <string name="review_description">Indawo ilungile kakhulu!! Zininzi iindlela onokukhetha ngazo</string>
+
+    <!-- Search Suggestion Item -->
+    <string name="search_suggestion_title">Truth Coffee Roasting</string>
+    <string name="search_suggestion_location">36 Buitenkant St, Cape Town City Centre</string>
+    <string name="search_suggestion_distance">1.2 km</string>
+    <string name="settings_display_language">Ulwimi Lokubonisa</string>
+
+    <!-- Categories -->
+    <string name="category_all">Zonke</string>
+    <string name="category_popular">Ezidumileyo</string>
+    <string name="category_pet_friendly">Zilungele izilwanyana zasekhaya</string>
+    <string name="category_nearby">Kufuphi</string>
+    <string name="category_dates">Ii-date</string>
+</resources>

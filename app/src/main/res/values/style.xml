@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <!-- res/values/styles.xml -->
-<!--    <style name="Theme.CapeTowns" parent="Theme.MaterialComponents.Light.NoActionBar">-->
-<!--        <item name="colorPrimary">@color/coffee_dark</item>-->
-<!--        <item name="colorOnPrimary">@color/white</item>-->
-<!--        &lt;!&ndash; other theme items &ndash;&gt;-->
-<!--    </style>-->
-
     <style name="ShapeAppearanceOverlay.App.CornerExtraLarge" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">20dp</item>

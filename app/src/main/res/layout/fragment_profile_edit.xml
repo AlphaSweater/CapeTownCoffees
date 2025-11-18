@@ -160,7 +160,7 @@
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary"
                                 android:textSize="16sp"
-                                tools:text="Jane Doe" />
+                                tools:text="@string/fullname_example" />
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -274,7 +274,7 @@
                                 android:paddingTop="14dp"
                                 android:paddingBottom="14dp"
                                 android:singleLine="true"
-                                android:text="••••••••"
+                                android:text="@string/password_hash"
                                 android:textColor="@color/text_primary"
                                 android:textColorHint="@color/text_secondary" />
                         </com.google.android.material.textfield.TextInputLayout>

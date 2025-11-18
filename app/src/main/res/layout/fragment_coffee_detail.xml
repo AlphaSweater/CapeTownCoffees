@@ -125,7 +125,7 @@
                         android:id="@+id/tvRating"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="4.5"
+                        android:text="@string/_4_5"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintTop_toTopOf="parent"
@@ -159,7 +159,7 @@
                         android:id="@+id/tvDistance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1.2 km away"
+                        android:text="@string/_1_2_km_away"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp"
                         app:layout_constraintTop_toTopOf="parent"
@@ -238,7 +238,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="Address"
+                        android:text="@string/coffee_address"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"/>
                 </LinearLayout>
@@ -275,7 +275,7 @@
                     android:layout_marginTop="16dp"
                     android:paddingVertical="14dp"
                     android:gravity="center"
-                    android:text="Review"
+                    android:text="@string/btn_review"
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
                     android:background="@drawable/bg_pill_dark"/>

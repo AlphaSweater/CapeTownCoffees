@@ -12,7 +12,7 @@
     android:paddingEnd="14dp"
     android:insetTop="0dp"
     android:insetBottom="0dp"
-    android:text="Category"
+    android:text="@string/category"
     android:textAllCaps="false"
     android:textColor="@color/button_category"
     android:textStyle="bold"

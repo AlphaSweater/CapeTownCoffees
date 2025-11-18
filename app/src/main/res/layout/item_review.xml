@@ -32,16 +32,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Truth Coffee"
-                    android:textStyle="bold"
+                    android:text="@string/review_title"
                     android:textColor="@color/text_primary"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2 days ago"
+                    android:text="@string/review_time_since_created"
                     android:textColor="@color/text_primary"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -66,7 +66,7 @@
                 android:id="@+id/tvReviewText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="This place is the best!! So many different options"
+                android:text="@string/review_description"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:layout_marginTop="8dp" />

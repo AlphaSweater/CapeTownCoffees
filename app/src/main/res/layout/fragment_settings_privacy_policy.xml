@@ -25,7 +25,7 @@
             android:paddingEnd="8dp"
             app:navigationIcon="@drawable/ic_ctc_arrow_back"
             app:navigationIconTint="@color/text_primary"
-            app:title="Privacy Policy"
+            app:title="@string/privacy_policy_title"
             app:titleTextColor="@color/text_primary" />
 
         <!-- Hairline divider under toolbar -->
@@ -57,7 +57,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="We care about your privacy. This page explains what we collect, how we use it, when we share it, and the choices you have. By using Cape Town Coffees you agree to these practices."
+                android:text="@string/privacy_overview_body"
                 android:textSize="16sp"
                 android:lineSpacingExtra="4dp"
                 android:letterSpacing="0.005"
@@ -85,7 +85,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Data We Collect"
+                        android:text="@string/data_we_collect_title"
                         android:textStyle="bold"
                         android:textSize="18sp"
                         android:includeFontPadding="false"
@@ -101,7 +101,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="We collect only what we need to run the app and improve your experience."
+                        android:text="@string/privacy_data_collect_intro"
                         android:textSize="15sp"
                         android:lineSpacingExtra="3dp"
                         android:letterSpacing="0.005"
@@ -116,7 +116,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Account info (name, email)"
+                            android:text="@string/privacy_data_collect_bullet1"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"
@@ -125,7 +125,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Usage data (interactions, crash logs)"
+                            android:text="@string/privacy_data_collect_bullet2"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"
@@ -134,7 +134,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Location (if granted, to find nearby coffee places)"
+                            android:text="@string/privacy_data_collect_bullet3"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"
@@ -170,7 +170,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="How We Use Data"
+                        android:text="@string/privacy_use_data_title"
                         android:textStyle="bold"
                         android:textSize="18sp"
                         android:includeFontPadding="false"
@@ -191,7 +191,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Provide and improve features"
+                            android:text="@string/privacy_use_data_bullet1"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"/>
@@ -199,7 +199,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Personalize content"
+                            android:text="@string/privacy_use_data_bullet2"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"/>
@@ -207,7 +207,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Authenticate and secure the app"
+                            android:text="@string/privacy_use_data_bullet3"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"/>
@@ -215,7 +215,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Debug, analytics, and performance monitoring"
+                            android:text="@string/privacy_use_data_bullet4"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"/>
@@ -223,7 +223,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Send push notifications (you can toggle this in Settings)"
+                            android:text="@string/privacy_use_data_bullet5"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"/>
@@ -250,7 +250,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Sharing"
+                        android:text="@string/privacy_sharing_title"
                         android:textStyle="bold"
                         android:textSize="18sp"
                         android:includeFontPadding="false"
@@ -266,7 +266,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="We do not sell your personal information. We may share limited data with service providers to operate the app (e.g., analytics, crash reporting), bound by confidentiality and data-processing terms."
+                        android:text="@string/privacy_sharing_body"
                         android:textSize="15sp"
                         android:lineSpacingExtra="4dp"
                         android:letterSpacing="0.005"
@@ -294,7 +294,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Permissions"
+                        android:text="@string/privacy_permissions_title"
                         android:textStyle="bold"
                         android:textSize="18sp"
                         android:includeFontPadding="false"
@@ -310,7 +310,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Some features require permissions (like Location to find nearby cafés). You are in control—you can grant or revoke permissions in Android Settings at any time."
+                        android:text="@string/privacy_permissions_body"
                         android:textSize="15sp"
                         android:lineSpacingExtra="4dp"
                         android:letterSpacing="0.005"
@@ -338,7 +338,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Your Choices"
+                        android:text="@string/privacy_your_choices_title"
                         android:textStyle="bold"
                         android:textSize="18sp"
                         android:includeFontPadding="false"
@@ -359,7 +359,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Manage permissions in Android Settings"
+                            android:text="@string/privacy_your_choices_bullet1"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"
@@ -368,7 +368,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Toggle push notifications in Settings"
+                            android:text="@string/privacy_your_choices_bullet2"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"
@@ -377,7 +377,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Request account deletion in Settings"
+                            android:text="@string/privacy_your_choices_bullet3"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"
@@ -386,7 +386,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="•  Clear cached data in Settings → Data"
+                            android:text="@string/privacy_your_choices_bullet4"
                             android:textSize="15sp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="@color/text_primary"/>
@@ -413,7 +413,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Contact"
+                        android:text="@string/privacy_contact_title"
                         android:textStyle="bold"
                         android:textSize="18sp"
                         android:includeFontPadding="false"
@@ -429,7 +429,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Questions or concerns? Email us at support@capetowncoffees.app"
+                        android:text="@string/privacy_contact_body"
                         android:textSize="15sp"
                         android:lineSpacingExtra="4dp"
                         android:letterSpacing="0.005"
