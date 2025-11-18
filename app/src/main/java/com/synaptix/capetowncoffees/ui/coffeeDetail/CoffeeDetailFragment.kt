@@ -9,7 +9,7 @@
 //References:
 //======================================================================================
 //* ChatGPT assisted in designing and structuring this Fragment, including lifecycle
-//handling, navigation setup, and interaction with the ViewModel.
+//* handling, navigation setup, and interaction with the ViewModel.
 //* It also provided guidance on ConstraintLayout usage and UI event handling.
 //* It also helped generate useful comments
 //======================================================================================
@@ -31,7 +31,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.synaptix.capetowncoffees.ui.review.ReviewViewModel
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -50,6 +49,8 @@ import com.synaptix.capetowncoffees.ui.common.viewmodel.collect
 import com.synaptix.capetowncoffees.ui.common.viewmodel.collectLoadable
 import com.synaptix.capetowncoffees.ui.common.viewmodel.start
 import com.synaptix.capetowncoffees.ui.coffeeDetail.adapters.ReviewsAdapter
+import com.synaptix.capetowncoffees.ui.review.ReviewBottomSheetFragment
+import com.synaptix.capetowncoffees.ui.review.ReviewViewModel
 import com.synaptix.capetowncoffees.util.LocationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -108,6 +109,19 @@ class CoffeeDetailFragment : Fragment() {
         setupUiListeners()
         setupCollectors()
         getCurrentLocation() // kick off distance once location is available
+
+        // Listen for review submissions from the review bottom sheet and refresh data
+        parentFragmentManager.setFragmentResultListener("review_submitted", viewLifecycleOwner) { _, bundle ->
+            val placeId = bundle.getString("place_id")
+            // If this fragment is showing the same place, refresh full place + reviews
+            if (placeId != null && placeId == vm.placeId) {
+                vm.refresh()
+                // Optionally, scroll to reviews section when refreshed: keep it for UX later
+            } else {
+                // Just refresh reviews if placeId mismatches (defensive)
+                vm.refresh()
+            }
+        }
     }
 
     // ─────────── Recycler & Adapter ───────────
@@ -144,13 +158,17 @@ class CoffeeDetailFragment : Fragment() {
         btnBack.setOnClickListener { findNavController().navigateUp() }
         tvDistance.setOnClickListener { getCurrentLocation() } // quick refresh for distance
 
-        // Open review flow
+        // Open review flow (NEW bottom sheet system)
         btnReview.setOnClickListener {
             val placeId = vm.placeId ?: ""
             val placeName = vm.ui.value.name
 
             if (placeId.isBlank()) {
-                Toast.makeText(requireContext(), "Cannot open review: missing place id", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Cannot open review: missing place id",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
@@ -158,7 +176,10 @@ class CoffeeDetailFragment : Fragment() {
                 putString(ReviewViewModel.ScreenArgs.PLACE_ID, placeId)
                 putString(ReviewViewModel.ScreenArgs.PLACE_NAME, placeName)
             }
-            findNavController().navigate(R.id.action_cafeDetailFragment_to_reviewContainerFragment, args)
+
+            ReviewBottomSheetFragment().apply {
+                arguments = args
+            }.show(parentFragmentManager, "reviewBottomSheet")
         }
 
         // Show More button for in-app reviews
@@ -448,6 +469,10 @@ class CoffeeDetailFragment : Fragment() {
     // Clear binding references to avoid leaks.
     override fun onDestroyView() {
         super.onDestroyView()
+        // Clear any fragment result listeners registered with this view lifecycle owner
+        try {
+            parentFragmentManager.clearFragmentResult("review_submitted")
+        } catch (_: Exception) { /* ignore */ }
         _binding = null
     }
 }

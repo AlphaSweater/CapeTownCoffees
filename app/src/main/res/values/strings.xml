@@ -130,10 +130,6 @@
     <string name="no_reviews_yet">No reviews for this place found</string>
     <string name="coffee_review_chip_in_app">Community</string>
     <string name="coffee_review_chip_google">Google</string>
-    <string name="in_app_reviews_title">In-App Reviews</string>
-    <string name="google_reviews_title">Google Reviews</string>
-    <string name="show_more">Show More</string>
-    <string name="show_more_with_count">Show More (%d remaining)</string>
     <string name="coffee_image">Image of place</string>
     <string name="location_permission_required">Location Permissions are required for this app to function!</string>
     <string name="location_fetch_failed">Failed to fetch location!!</string>
@@ -238,7 +234,6 @@
     <string name="view_all_activity">View All Activity</string>
 
     <!-- Review Pages -->
-    <string name="close">Close</string>
     <string name="completed_review">COMPLETED\nREVIEW</string>
     <string name="done">Done</string>
     <string name="how_was_your_experience">How was your\nexperience?</string>
@@ -250,18 +245,13 @@
     <string name="coffee_review">COFFEE\nREVIEW</string>
     <string name="thanks_for_your_review">Thanks for your review!</string>
     <string name="thank_you_message">Your feedback helps other locals find great coffee spots.</string>
-    <string name="review_step1_title">How was your visit?</string>
-    <string name="review_step1_message">Rate your experience so other coffee lovers can decide where to go.</string>
     <string name="review_back">Back</string>
     <string name="review_next">Next</string>
     <string name="review_step2_title">Tell others about your experience</string>
     <string name="review_step2_message">Optional, but super helpful: mention the vibe, service, and coffee.</string>
-    <string name="review_step2_example">E.g. Cosy space, friendly baristas, flat white was smooth and not too bitter.</string>
     <string name="review_step3_title">Review overview</string>
     <string name="review_step3_description">Check everything before you submit your review.</string>
-    <string name="review_step3_your_review">Your review</string>
     <string name="review_step3_user_review">You rated this place and wrote a review.</string>
-    <string name="review_submit_button">Submit review</string>
 
     <!-- Add Places to List -->
     <string name="add_to_lists">Add to Lists</string>
@@ -303,6 +293,46 @@
     <string name="review_title">Truth Coffee</string>
     <string name="review_time_since_created">2 days ago</string>
     <string name="review_description">This place is the best!! So many different options</string>
+
+    <!-- Title when place name is known -->
+    <string name="review_title_with_place">Rate %1$s</string>
+
+    <!-- Generic title (fallback) -->
+    <string name="review_step1_title">Rate this place</string>
+
+    <!-- Subtitle under the title -->
+    <string name="review_step1_message">How was your experience?</string>
+
+    <!-- Label above the text box -->
+    <string name="review_step3_your_review">Your Review</string>
+
+    <!-- Hint for review text input -->
+    <string name="review_step2_example">Tell others what you liked (optional)</string>
+
+    <!-- Submit button -->
+    <string name="review_submit_button">Submit</string>
+
+    <!-- While submitting -->
+    <string name="review_submitting">Submitting…</string>
+
+    <!-- Close button description -->
+    <string name="close">Close</string>
+
+    <!-- “Not now” / cancel button -->
+    <string name="review_not_now">Not now</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="content_description_back">Back</string>
+    <string name="content_description_favourite">Favourite</string>
+
+    <!-- Added missing keys referenced in layouts -->
+    <string name="show_more">Show more</string>
+    <string name="google_reviews_title">Google reviews</string>
+
+    <string name="show_more_with_count">Show more (%1$d)</string>
+    <string name="show_more_reviews">Show more reviews</string>
+    <string name="show_less_reviews">Show less</string>
+
 
     <!-- Search Suggestion Item -->
     <string name="search_suggestion_title">Truth Coffee Roasting</string>

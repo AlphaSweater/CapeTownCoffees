@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Rounded corners -->
+    <corners android:radius="4dp" />
+
+    <!-- Subtle handle color -->
+    <solid android:color="@color/text_tip" />
+
+    <!-- Make it look lighter / softer -->
+    <size android:height="4dp" />
+
+</shape>
