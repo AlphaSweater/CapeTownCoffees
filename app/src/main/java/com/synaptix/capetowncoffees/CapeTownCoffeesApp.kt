@@ -17,6 +17,10 @@ package com.synaptix.capetowncoffees
 
 import android.app.Application
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.synaptix.capetowncoffees.notifications.NotificationHelper
 import com.synaptix.capetowncoffees.util.CoffeeTimeUtils
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.android.EntryPointAccessors
@@ -37,6 +41,8 @@ class CapeTownCoffeesApp : Application() {
 
     @Inject
     lateinit var offlineModeManager: OfflineModeManager
+
+    private var reactionsListener: ListenerRegistration? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -91,6 +97,15 @@ class CapeTownCoffeesApp : Application() {
                         }.addOnFailureListener { e ->
                             Timber.w(e, "Failed to get FCM token after login")
                         }
+
+                        val currentUserId = entryPoint.userRepository().getCurrentUserId()
+                        if (currentUserId != null) {
+                            startReviewLikeListener(currentUserId)
+                        } else {
+                            stopReviewLikeListener()
+                        }
+                    } else {
+                        stopReviewLikeListener()
                     }
                 }
             }
@@ -102,11 +117,51 @@ class CapeTownCoffeesApp : Application() {
     override fun onTerminate() {
         try {
             offlineModeManager.stop()
+            stopReviewLikeListener()
             Timber.d("OfflineModeManager stopped from Application")
         } catch (t: Throwable) {
             Timber.w(t, "Failed to stop OfflineModeManager")
         }
         super.onTerminate()
+    }
+
+    private fun startReviewLikeListener(authorUserId: String) {
+        reactionsListener?.remove()
+        Timber.d("Starting review like listener for authorUserId=%s", authorUserId)
+        reactionsListener = FirebaseFirestore.getInstance()
+            .collectionGroup("reactions")
+            .whereEqualTo("reviewAuthorId", authorUserId)
+            .whereEqualTo("type", "like")
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Timber.w(e, "Failed to listen for review like reactions")
+                    return@addSnapshotListener
+                }
+                if (snapshots == null) {
+                    return@addSnapshotListener
+                }
+
+                for (change in snapshots.documentChanges) {
+                    if (change.type == DocumentChange.Type.ADDED) {
+                        Timber.d(
+                            "Review like change: type=ADDED path=%s data=%s",
+                            change.document.reference.path,
+                            change.document.data
+                        )
+                        NotificationHelper.showSimple(
+                            applicationContext,
+                            "Your comment was liked",
+                            "Someone liked your comment."
+                        )
+                    }
+                }
+            }
+    }
+
+    private fun stopReviewLikeListener() {
+        Timber.d("Stopping review like listener")
+        reactionsListener?.remove()
+        reactionsListener = null
     }
 }
 
