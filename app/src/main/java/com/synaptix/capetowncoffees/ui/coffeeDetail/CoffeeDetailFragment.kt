@@ -84,8 +84,8 @@ class CoffeeDetailFragment : Fragment() {
     private lateinit var googleReviewsAdapter: ReviewsAdapter
 
     private var allInAppReviews: List<CoffeeReview> = emptyList()
-    private var currentInAppDisplayCount = 4
-    private val inAppReviewsPageSize = 4
+    private var currentInAppDisplayCount = 3
+    private val inAppReviewsPageSize = 3
 
     // ─────────── Lifecycle: View Creation ───────────
     // Inflate view binding and return root for rendering.
