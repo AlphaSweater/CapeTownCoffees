@@ -169,7 +169,7 @@ object CoffeeTimeUtils {
      * Parses a clock time into `LocalTime`.
      *
      * Details:
-     * - Accepts `h:mm a` (e.g., `"7:00 am"`, case-insensitive, dots stripped) and `HH:mm` (e.g., `"07:00"`).
+     * - Accepts `h:mm a` (e.g., `"7:00 AM"` or `"7:00 am"`, case-insensitive, dots stripped) and `HH:mm` (e.g., `"07:00"`).
      * - Returns `null` if the time cannot be parsed.
      *
      * Edge cases:
@@ -177,11 +177,22 @@ object CoffeeTimeUtils {
      */
     fun parseTimeToLocalTime(raw: String?): LocalTime? {
         if (raw.isNullOrBlank()) return null
-        val input = raw.trim().lowercase()
+        // Remove dots, normalize AM/PM to uppercase (formatter expects uppercase)
+        val input = raw.trim()
+            .replace(".", "")
+            .replace(Regex("\\s*([ap])\\.?m\\.?", RegexOption.IGNORE_CASE)) { match ->
+                " ${match.groupValues[1].uppercase()}M"
+            }
         return try {
-            LocalTime.parse(input.replace(".", ""), FORMATTER_12H)
+            // Try parsing with 12-hour format (AM/PM)
+            LocalTime.parse(input, FORMATTER_12H)
         } catch (_: Exception) {
-            try { LocalTime.parse(input, FORMATTER_24H) } catch (_: Exception) { null }
+            try {
+                // Try parsing with 24-hour format
+                LocalTime.parse(input, FORMATTER_24H)
+            } catch (_: Exception) {
+                null
+            }
         }
     }
 
@@ -413,7 +424,8 @@ object CoffeeTimeUtils {
      * ────────────────────────────────────────────────────────────────────────── */
 
     /** 12/24h parsing patterns (private). */
-    private val FORMATTER_12H = DateTimeFormatter.ofPattern("h:mm a")
+    private val FORMATTER_12H = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+        .withResolverStyle(java.time.format.ResolverStyle.SMART)
     /** 12/24h parsing patterns (private). */
     private val FORMATTER_24H = DateTimeFormatter.ofPattern("HH:mm")
 
